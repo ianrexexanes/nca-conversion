@@ -56,9 +56,12 @@ the scan path, and say what it displaces.
 
 ## 3. Language parity covers content and structured data, never internal links
 
-**Behaviour.** A multilingual WordPress site is separate sets of pages, one per language, connected
-by whatever translation layer is installed. The sets are rarely identical: a page that exists in one
-language often does not exist in another, or exists at a different depth.
+**Behaviour.** Where the translation layer gives each language its own set of pages — the common
+model, though not the only one — the sets are rarely identical: a page that exists in one language
+often does not exist in another, or exists at a different depth. A proxy layer that generates every
+URL in every language does not have that gap, but it does not remove the decision below; it only
+moves it from "does this page exist?" to "is the page it points at worth pointing a reader at in
+this language?"
 
 **The failure.** A spec that says "mirror the other language's page" gets read as mirror everything,
 and the internal links get mirrored with the rest — producing links that send a reader of one
@@ -90,10 +93,13 @@ what gets copied into a ticket.
 ## 5. An image optimiser can quietly refuse the loading priority the spec asked for
 
 **Behaviour.** WordPress image-optimisation plugins and image CDNs rewrite `<img>` tags on the way
-out. Some of them manage the `fetchpriority` attribute themselves and withhold `fetchpriority="high"`
-unless their own measurement makes that element the largest contentful paint candidate in every
-viewport they check — so an image the spec designates as the priority image can ship without the
-attribute, and nothing reports that it did.
+out. Some of them take loading-priority attributes such as `fetchpriority` under their own
+management, applying their own policy instead of preserving what the markup asked for — so an image
+a spec designates as the priority image can reach the served HTML without the attribute, and nothing
+reports that it was dropped. **What each product's policy actually is, and under what conditions it
+withholds the attribute, is deliberately not stated here: it differs by product and by version, and
+this file has not verified any of them.** The spec does not need the mechanism. It needs to survive
+the fact that there is one.
 
 **The failure.** The spec says "the hero image loads first", the designer builds around that promise,
 and the measured paint time does not move. The promise was never the build's to keep once an

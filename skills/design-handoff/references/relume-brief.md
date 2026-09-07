@@ -21,6 +21,13 @@ The one appearance-adjacent thing that does belong: **relative prominence stated
 that is written in the refinement spec rather than here, so the wireframe comes back with structure
 that can then be weighted rather than weighting that has to be unpicked.
 
+**Which is why the fold list is not in this brief either.** What has to be readable before any
+scroll is a prominence decision, and this document makes none. `figma-refinement-spec.md` sets it at
+step 3, once a layout exists to set it against. Putting it here would mean deciding what the hero
+leads with before anyone has seen a hero — you hand the generator your answer and get it back as
+confirmation, which is the specific thing the two-document split exists to prevent. In the assembled
+handoff the list is present; it arrives with the refinement spec, not with the brief.
+
 ## Shape
 
 A page preamble, then one block per section, in the page's order.
@@ -32,8 +39,6 @@ A page preamble, then one block per section, in the page's order.
 - **Who reads it** — one line from the Conversion Brief's ICP. Not the persona document; one line.
 - **The one action** — the single thing this page exists to get. If there are two, say which is
   primary and why the second one earns its place.
-- **What must be readable before any scroll** — a short ordered list. The refinement spec sets this;
-  restate the list here because whoever lays out the hero needs it in front of them.
 - **Sections, in order, with a count.** A generator handed nine blocks and no count cannot tell a
   nine-section page from an eleven-section page that lost two blocks in transit.
 - **Assets that exist, and assets that do not.** Below.

@@ -8,9 +8,9 @@ produce a real answer.
 ## When a test is worth running
 
 A test earns its place when the direction is genuinely unclear and a specific, falsifiable
-hypothesis can be written for it — not "let's see what happens," but a shape like: *because
-[something you observed or measured], we believe [a specific change] will cause [a specific outcome]
-for [a specific audience], and we'll know it worked when [a specific metric] moves.* If you can't
+hypothesis can be written for it — not "let's see what happens," but five specific things nailed
+down: *prompted by [what you observed or measured], propose [the specific change], predict [the
+specific effect], for [the specific audience], settle it with [the specific metric].* If you can't
 fill in all five blanks, the finding isn't ready to be a test yet — it's still a hunch.
 
 Not everything that looks like a test candidate is one. A confirmed defect — a broken form field, a
@@ -21,8 +21,9 @@ wrong. Route confirmed defects to "Fix now" and save testing for genuine uncerta
 
 ## What a minimum detectable effect costs at low traffic
 
-The minimum detectable effect (MDE) is the smallest lift you'd actually act on — and the smaller it
-is, the more traffic it takes to prove. The relationship is not linear, it's brutal: at a 3%
+The minimum detectable effect (MDE) sets the floor: it's the smallest lift that would actually
+change what you'd recommend if you saw it, and pushing that floor lower drives the traffic
+requirement up fast. The relationship is not linear, it's brutal: at a 3%
 baseline conversion rate, detecting a lift as large as 50% takes on the order of ten thousand
 sessions across both variants, but detecting a lift of only 10% at that same baseline takes on the
 order of a quarter million — over twenty times the traffic, to catch a change a fifth the size.
@@ -60,7 +61,8 @@ gets.
 Every entry in that section should carry enough for the reader to judge feasibility without doing
 their own arithmetic:
 
-- The hypothesis, in the because/we-believe/will-cause/measured-by shape above.
+- The hypothesis, with all five parts named in the prompted-by/propose/predict/settle-it-with
+  shape above.
 - The page's current baseline conversion rate and approximate traffic, even when both are estimates
   — say so if they are.
 - Whether, at that traffic, the test is plausibly finishable in a reasonable window, or whether it

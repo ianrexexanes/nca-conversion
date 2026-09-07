@@ -8,9 +8,10 @@ field count and type, blind to anything about layout, timing or interaction.
 
 ## Field count and friction
 
-Every field past the minimum costs completions — as a rule of thumb, three fields is close to a
-baseline, four to six fields cost roughly a tenth to a quarter of completions, and seven or more can
-cost a quarter to half. Treat those as a prioritization signal for which field to question first,
+Each field beyond the minimum a visitor must clear has a real cost in how many of them finish —
+roughly speaking, three fields sits close to a baseline completion rate, four to six fields give up
+something in the neighborhood of a tenth to a quarter of completions, and seven or more can give up
+a quarter to half. Treat those as a prioritization signal for which field to question first,
 not as a lift you can promise for this specific page — a benchmark from elsewhere does not transfer
 to this form's audience or its offer, the same caution `evidence-rules.md` applies to any borrowed
 number.
@@ -22,8 +23,10 @@ question, not a markup question.
 
 ## Required-field justification
 
-For every field marked required, ask: is this needed before the visitor can be helped at all, or
-could it be collected later, once the value has already been demonstrated? Phone number and company
+For every field marked required, separate what the business genuinely needs before it can help this
+particular visitor from what it would merely like to know sooner rather than later — the second
+category can wait until after the value has already been demonstrated, whatever the form's current
+requirements claim. Phone number and company
 name are the fields most often required out of habit rather than necessity — both are usually
 deferrable. Email (and a password, if the flow needs an account) is normally the only field that
 earns "required" outright.
@@ -34,11 +37,11 @@ named as checked, so nobody re-flags it next audit.
 
 ## Field-level friction signals
 
-- **Labels versus placeholders.** A label that only exists as placeholder text disappears the
-  moment someone starts typing, leaving them unsure what they're filling in. `page_facts.py` does
-  not currently distinguish a `<label>` element from a field's `placeholder` attribute, so this
-  check needs a rendered look at the form, not the JSON output — route it to "Could not check"
-  without one.
+- **Labels versus placeholders.** A field whose only label lives inside its `placeholder`
+  attribute loses that label the instant a visitor starts typing into it — there's nothing left on
+  screen to remind them what the field was even asking for. `page_facts.py` does not currently
+  distinguish a `<label>` element from a field's `placeholder` attribute, so this check needs a
+  rendered look at the form, not the JSON output — route it to "Could not check" without one.
 - **Single-column versus multi-column layout, and multi-step thresholds.** More than five or six
   fields is the point where a single long form usually loses to a multi-step flow with a progress
   indicator. Field count comes from `forms[].fields`; whether a progress indicator exists, or
@@ -53,15 +56,18 @@ named as checked, so nobody re-flags it next audit.
   rejecting a password for looking "too random") beat a rigid rule list shown only after a failed
   attempt. This is a rendered/interaction check — markup can tell you a password field exists, not
   how its validation behaves.
-- **Social authentication.** A "Continue with Google" or SSO option, prominently placed, often
-  converts better than the email path alone for the audiences that have it available. Watch for a
+- **Social authentication.** A "Continue with Google" or SSO option, prominently placed, frequently
+  outperforms a plain email signup for audiences where that identity provider is already trusted
+  and heavily used. Watch for a
   detection gap here: `page_facts.py`'s CTA hint list has no entry for "Google," "Microsoft," or
   "continue with," so a social-auth button will not appear in the `ctas` array even when it's the
-  most prominent action on the page — check `links` more broadly, or look at the rendered page,
-  before concluding a signup form has no social option.
-- **Single-step versus multi-step.** Three or fewer fields generally works as one step; a B2B flow
-  collecting more than that usually converts better split into steps that each feel completable in
-  seconds, hardest questions last.
+  most prominent action on the page. The script parses every `<a>` and `<button>` internally but
+  only exposes the hint-matched subset in its JSON output — it does not expose the full list — so
+  confirm a genuine absence by reading the raw markup directly or by inspecting the rendered page,
+  never by `ctas` alone coming up short of anything social-auth-shaped.
+- **Single-step versus multi-step.** Three or fewer fields tends to work fine as a single step;
+  once a B2B flow needs more than that, splitting it into steps that each take only a few seconds
+  to clear usually converts better, with anything sensitive or effortful pushed to the very end.
 
 ## Popup behaviour
 
@@ -71,8 +77,9 @@ named as checked, so nobody re-flags it next audit.
   trigger (opening a form only when the visitor asks for one) carries no annoyance cost at all.
   Judge the trigger against the page's actual traffic and purpose, not against a single "best"
   default.
-- **Frequency and dismissal.** A popup should show once per session and remember a dismissal for
-  some real span of time, not reappear on every page load. This behaviour only shows up across
+- **Frequency and dismissal.** A popup earns at most one appearance per visit and should remember
+  that it was already dismissed for a real stretch of time afterward, rather than resetting itself
+  on every fresh page load. This behaviour only shows up across
   repeated interaction — a reload, a second visit — which static markup and a single-page capture
   both miss. Route it to "Could not check" unless you've actually tested reload behaviour.
 - **Pre-checked consent.** A checkbox that starts checked for a marketing opt-in is a compliance
@@ -80,9 +87,10 @@ named as checked, so nobody re-flags it next audit.
   whether a checkbox carries a `checked` attribute — that is a real gap in what the script can tell
   you, not a "not a problem" by omission. Confirm this by reading the rendered form or the raw
   markup directly for a `checked` attribute on the relevant input.
-- **Mobile behaviour.** A full-screen interstitial that blocks content before the visitor has seen
-  anything is treated as a poor experience on mobile specifically, distinct from the same popup's
-  behaviour on desktop. This is a rendered, per-viewport check.
+- **Mobile behaviour.** A popup that covers the whole screen before a visitor has seen any of the
+  page underneath reads as significantly more hostile on a phone than the identical popup does on a
+  desktop monitor, where there's more page visible around it — judge the two viewports separately
+  rather than assuming one verdict covers both. This is a rendered, per-viewport check.
 
 ## Where this connects back
 

@@ -21,7 +21,7 @@ before you start finding things.
    them.
 2. **Gather facts.** Run
    `python3 ${CLAUDE_PLUGIN_ROOT}/skills/conversion-page-audit/scripts/page_facts.py <url>`. It
-   returns nine keys parsed from static markup only — `url`, `title`, `meta_description`,
+   returns ten keys parsed from static markup only — `url`, `title`, `meta_description`,
    `headings`, `ctas`, `forms`, `schema_types`, `images`, `lcp_candidates`, `notes`. Treat `notes`
    as an unordered set and match entries by their content, never by position — the array's order
    has already changed once between tasks and carries no guarantee it won't again. `lcp_candidates`

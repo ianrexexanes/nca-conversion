@@ -10,16 +10,19 @@ appear here; keep every entry inside the section its evidence actually earned it
 
 ## Fix now
 
-Ranked by expected impact, most impactful first — not by how easy the fix is. Every entry names the
-element, the failure mode, the specific change, and the evidence it rests on: which rung
-(`evidence-rules.md`'s hierarchy — rendered capture, fetched markup via `page_facts.py`, or a
-Conversion Brief) and the date it was checked. Never claim a percentage lift for a specific fix — a
-published case-study number does not transfer to this page. State expected direction and rank
-relatively instead.
+Order these by how much each one is likely to move the outcome, biggest first — not by which one is
+quickest to ship. Every entry names what's currently wrong, what to do about it, and the evidence
+underneath that recommendation: which rung (`evidence-rules.md`'s hierarchy — rendered capture,
+fetched markup via `page_facts.py`, or a Conversion Brief) and the date it was checked. Resist attaching a
+specific percentage to any one fix's expected effect — a lift measured on someone else's page
+belongs to that page, not this one, so borrowing the number is a promise this audit can't actually
+back up. Say which direction the metric should move and let the item's position in the list carry
+how much it matters.
 
 ```
-1. **[Element]** — [failure mode] → [specific change].
-   Evidence: [rung + what was checked + date].
+1. **[What to change]**, on [the element it affects].
+   Why it's ranked here: [expected impact relative to the other items below].
+   Basis: [rung + what was checked + date].
 ```
 
 ## Test, don't guess
@@ -32,7 +35,7 @@ runnable at all.
 
 ```
 - **[Element]**: [why the direction is genuinely unclear, not just unconfirmed].
-  Test: [hypothesis — because X, we believe Y will cause Z, measured by M].
+  Test: [the hypothesis, in the five-part shape `test-design.md` defines].
   Feasible at this page's traffic? [yes/no, and why].
 ```
 

@@ -21,24 +21,29 @@ checks.
 
 ### Hero
 
-- **Message match.** Does the headline restate the visitor's own trigger — the ad, the search
-  query, the referring page — in that source's own words, or does it fall back to a general
-  homepage claim? A mismatch here caps every other finding on the page: nothing below fixes a
-  visitor who arrived expecting one thing and read another. This is a traffic-source comparison, so
-  it needs the ad or query text as an input, not just the page — if you don't have it, say so under
-  "Could not check" rather than assuming the headline is fine.
-- **Value proposition clarity.** Can a stranger say, in five seconds, what this is, who it's for,
-  and why it matters? Feature-language ("real-time dashboards") is a common substitute for
-  benefit-language ("know which feature to build next") — check which one is doing the work in the
-  first sentence a visitor reads.
+- **Message match.** Line the headline up against whatever actually sent this visitor — the ad
+  creative, the search query, the referring page — and check whether it continues that specific
+  promise or switches to a broader, one-size-fits-all pitch instead. Get this wrong and every other
+  finding on the page loses most of its value, because a visitor who arrived expecting one thing
+  and read another rarely reads far enough to notice the rest is good. This is a traffic-source
+  comparison, so it needs the ad or query text as an input, not just the page — if you don't have
+  it, say so under "Could not check" rather than assuming the headline is fine.
+- **Value proposition clarity.** Read only the first sentence a visitor would actually see and ask
+  whether it names a benefit or just a feature — "real-time dashboards" describes what the product
+  does, "know which feature to build next" describes what the visitor gets, and pages default to
+  the first far more often than the second. If a reader would need a follow-up question to know why
+  any of this matters to them, the value proposition hasn't landed yet.
 - **Headline effectiveness.** Outcome-focused rather than company-focused, specific rather than
   clever, and consistent with the traffic source's own register. A headline that is vague enough to
   fit any page in the category is a finding, not a style preference.
-- **One primary action.** Count every competing call to action in the first viewport —
-  `page_facts.py`'s `ctas` array is a markup-level first pass (it matches on a fixed hint list, so
-  it can under-count a CTA phrased outside those hints and it cannot tell you what's visible without
-  scrolling on a phone). More than one primary action in that space is a leak; confirming what's
-  actually above the fold on a real viewport needs a rendered capture.
+- **One primary action.** Tally how many separate calls to action compete for attention in the
+  first viewport, not just how many exist on the page. `page_facts.py`'s `ctas` array is a
+  markup-level first pass (it matches on a fixed hint list, so it can under-count a CTA phrased
+  outside those hints and it cannot tell you which of them a phone screen actually shows before any
+  scrolling happens). A visitor
+  facing two or three equally weighted options above the fold has to choose which one to ignore
+  before choosing to act at all — confirming what's actually there on a real viewport needs a
+  rendered capture.
 - **LCP candidate check.** `lcp_candidates` names the first few images in document order — treat
   that as a candidate list, not an identified Largest Contentful Paint element, which depends on
   rendered layout, viewport and load timing that static markup cannot see. The one exception:
@@ -63,19 +68,23 @@ checks.
 
 ### Solution
 
-- **Offer clarity.** Can a stranger answer, without scrolling elsewhere: what it is, who it's for,
-  what it costs, and what happens when they click? Each unanswered question is a separate friction
-  point, not one combined finding.
-- **Price presented or hidden.** Hiding price is a legitimate choice only for high-ticket or
-  call-booking funnels; anywhere else, treat a hidden price as a friction finding, not a strategy
-  the page is entitled to.
+- **Offer clarity.** A visitor should be able to name the product, its intended buyer, its price
+  and what clicking actually does — all from this section alone, with no need to hunt elsewhere on
+  the page. Treat each of those four as its own check: a page can nail the price and still leave
+  the buyer guessing who it's for, and that's a separate friction point, not a rounding error on an
+  otherwise-clear offer.
+- **Showing the number, or not.** Withholding the price is defensible on a genuinely high-ticket or
+  call-booking offer, where a price needs a conversation to make sense — everywhere below that
+  tier, an invisible price reads as evasion, not positioning, and belongs on the fix list rather
+  than getting the benefit of the doubt as a deliberate choice.
 
 ### Mechanism
 
 - Does the page explain *how* the outcome happens, in a way that's specific to this product, or
   does it only assert the outcome and expect the visitor to take it on faith? A missing mechanism
-  leaves the "will this work for my situation" objection with nowhere to land — cross-check against
-  the Objections section below rather than treating it as a separate gap.
+  leaves the buyer's core doubt — that this works in general but maybe not for someone in their
+  specific situation — with nothing on the page to answer it. Cross-check against the Objections
+  section below rather than treating it as a separate gap.
 
 ### Value stack
 
@@ -85,13 +94,16 @@ checks.
 
 ### Proof
 
-- **Trust signals.** Customer logos, testimonials, case-study numbers, review scores — present, and
-  placed near the claims and CTAs they support rather than stranded in the footer. Position is a
-  rendered-layout claim; presence in the markup is not the same thing as visible near the right
-  element, so keep those two findings separate.
-- **Attribution quality.** A testimonial with a name, role and (ideally) a company reads as real; an
-  anonymous quote reads as filler and can cost more credibility than it earns. Flag anonymous proof
-  as a finding, not as proof that's merely weaker.
+- **Trust signals.** Check for the standard set — customer logos, testimonials, case-study
+  figures, review scores — and then check something the presence check alone misses: whether each
+  one sits next to the specific claim or CTA it's meant to back up, or whether all of it has been
+  swept into one footer block a visitor has to go looking for. Position is a rendered-layout claim;
+  presence in the markup is not the same thing as sitting next to the right element, so keep those
+  two findings separate.
+- **Attribution quality.** A testimonial with a name, role and (ideally) a company reads as real; a
+  quote with none of those attached reads as invented, whether or not it actually is, and
+  undermines the surrounding claims more than leaving the space blank would have. Flag unattributed
+  proof as a finding in its own right, not as proof that's merely weaker.
 - **Enumerate, don't eyeball.** If you're counting logos, testimonials or reviews, enumerate the
   whole set from a rendered DOM and de-duplicate before reporting a number — `evidence-rules.md`'s
   rule on this exists because partial counts are wrong in a way that looks exactly like a right
@@ -100,10 +112,12 @@ checks.
 
 ### Objections
 
-- Does the page address the objections a buyer in this category actually raises — price, "will this
-  work for my situation," implementation difficulty, "what if it doesn't work" — through FAQ copy, a
-  guarantee, a comparison, or process transparency? An objection with no home anywhere on the page
-  (not here, not in the FAQ) is a gap worth naming specifically, not a generic "add more trust"
+- Name the specific objections a buyer in this category actually carries — cost relative to value,
+  doubt that the approach fits their particular situation, how hard it is to get running, and what
+  happens if it doesn't deliver — and check each one against the page rather than checking for the
+  presence of an "objections section" in general. A comparison table, a process walkthrough, a
+  guarantee or an FAQ answer can each resolve one, but an objection with no answer anywhere on the
+  page (not here, not in the FAQ) is a specific, nameable gap, not a generic "add more trust"
   finding.
 - If a Conversion Brief exists, check its ranked Objections section against what the page actually
   answers — a brief that lists an objection the page never touches is a finding on the page, not on
@@ -111,24 +125,33 @@ checks.
 
 ### Guarantee
 
-- Is risk reversed at all — a guarantee, a trial, "cancel anytime," a return policy — or does the
-  full risk of being wrong sit with the buyer?
-- Is the guarantee specific (named term, named condition) or a vague "satisfaction guaranteed" that
-  reads as filler the same way an unattributed testimonial does?
+- Does the page put any of the risk back on itself — a money-back guarantee, a free trial period,
+  an easy-exit subscription policy, a straightforward returns process — or does the buyer carry the
+  entire downside of being wrong alone?
+- Where a guarantee exists, does it name concrete terms a buyer could actually hold the company to
+  — a number of days, a defined condition for a refund — or is it a generic reassurance
+  ("satisfaction guaranteed") that commits to nothing, the same emptiness an unattributed
+  testimonial has?
 
 ### CTA
 
-- **Placement, copy and hierarchy.** One clear primary action with value-bearing button copy ("Start
-  Free Trial," not "Submit"), repeated at natural decision points rather than only once at the very
-  top or bottom.
-- **The path after the button.** Does clicking lead somewhere, or does the funnel dead-end at a bare
-  confirmation with no next step? A dead-end "thanks" page is a finding about unmonetized or
-  unguided traffic, not a compliment on a working funnel. This is a separate page from the one being
-  audited — note it as a distinct finding rather than folding it into the CTA's own copy or
-  placement.
-- `page_facts.py`'s `ctas` array is a hint-matched subset of `links`, not a verified inventory —
-  a button whose copy carries no keyword from that hint list (a "Continue with Google" button, for
-  instance) will not appear in it. Absence from `ctas` is never itself a finding.
+- **One button, worded as an outcome.** A page should read as making one request, not several
+  equally-weighted ones, and the button making that request should describe the outcome of clicking
+  it rather than the mechanics of the click — "See My Personalized Quote" tells a visitor what they
+  get; "Click Here" or "Submit" tells them nothing. Whatever that primary action is, it should
+  reappear at more than one natural stopping point down the page, not sit once at the top and hope
+  the visitor scrolls back up.
+- **What happens immediately after the click.** Follow the click through: does it land somewhere
+  that keeps guiding the visitor, or does the whole experience just stop at a bare acknowledgement
+  screen with nothing to do next? Stopping there wastes traffic the page worked to earn, whatever
+  the confirmation screen's copy says. This is a separate page from the one being audited — note it
+  as a distinct finding rather than folding it into the CTA's own copy or placement.
+- `page_facts.py`'s `ctas` array is a hint-matched subset, filtered internally from a larger set of
+  links and buttons the script parses but does not expose in its JSON output — it is not a verified
+  inventory of every actionable element on the page. A button whose copy carries no keyword from
+  that hint list (a "Continue with Google" button, for instance) will not appear in `ctas` at all.
+  Confirm a genuine absence by reading the raw markup directly, or by inspecting the rendered page
+  if Playwright is available — never from `ctas` alone coming up short.
 
 ### FAQ
 
@@ -148,11 +171,14 @@ happens around it.
 
 ### Visual hierarchy and scannability
 
-Can someone scanning, not reading, get the main message? Are the most important elements the most
-visually prominent ones, and is there enough separation between sections that the page doesn't read
-as one undifferentiated block? This is a rendered-layout judgment start to finish — static markup
-carries no information about size, contrast or spacing. Without a rendered capture, this whole
-check goes to "Could not check," not to a guess based on document order.
+A visitor skims before they ever commit to reading, so the test is whether the page's main point
+survives being skimmed — a glance at the page should leave someone with roughly the right
+impression of what it's for and what to do next, without them having read a single full paragraph.
+That depends entirely on what's visually loudest, how much room sections get to breathe, and
+whether one part of the page reads as clearly more important than the rest — none of which static
+markup carries any information about at all (it has no concept of size, color or spacing). Without
+a rendered capture, this whole check goes to "Could not check," not to a guess based on document
+order.
 
 ### Page speed and Core Web Vitals
 
@@ -178,10 +204,14 @@ rather than folding it into the CTA's own copy or placement.
 
 ### Measurement
 
-Is a conversion event firing at all, and if the traffic is paid, is the platform's click identifier
-(`fbclid`, `gclid`, `ttclid`, `msclkid` or equivalent) carried through to the actual conversion? An
-unmeasured funnel cannot be optimized regardless of what else this audit finds, which is why this
-check runs even though it isn't itself a conversion leak. `page_facts.py` cannot see script-fired
+Two separate questions, both outside anything markup can answer. First: does anything actually
+register when this page's goal action happens, or does every visit vanish into an analytics
+platform with no event attached to it? Second, for paid traffic specifically: does the ad
+platform's own click identifier — Google's `gclid`, Meta's `fbclid`, TikTok's `ttclid`, Microsoft's
+`msclkid`, or whichever the traffic source uses — survive all the way from the ad click to the
+recorded conversion, or does it get dropped somewhere in between? Either failure means the traffic
+this page attracts can't actually be optimized, whatever else this audit finds, which is why this
+check runs even though it isn't a page-copy problem. `page_facts.py` cannot see script-fired
 events at all — this is a network-capture or analytics-access question. Where you don't have either,
 name the specific access that would close the gap (read access to the analytics account, or a
 network capture during a real click-through) rather than leaving it as an unexplained gap.

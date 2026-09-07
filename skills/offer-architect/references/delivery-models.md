@@ -58,11 +58,11 @@ and it produces three kinds of change:
 - **Blank pages you can pre-fill.** Starting from a structure is a categorically different task from
   starting from nothing, and this is the cheapest effort reduction available in most offers.
 
-And one that is easy to miss and belongs here rather than in a copy pass: **specifying an unspecified
-inclusion is itself an effort reduction.** For as long as nobody has said what a portal, tracker or
-workbook actually does, the buyer cannot tell whether it helps him or becomes his responsibility, so
-he prices it as a burden. Scoping it changes nothing about the delivery and flips the sign of the
-item. See `value-equation.md`'s effort section.
+And one item that is easy to miss because it looks like a writing job: **scoping an inclusion nobody
+has scoped yet counts as a change to the delivery, and belongs on this walk.** `value-equation.md`'s
+effort section explains why an unspecified asset is priced as a burden; the consequence here is that
+the fix costs no delivery work at all — the thing already exists, it just has no stated shape — which
+usually makes it the cheapest of the three changes above.
 
 ## Engineering time-to-first-value
 

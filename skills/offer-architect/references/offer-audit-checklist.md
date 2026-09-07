@@ -104,13 +104,13 @@ expensive direction, because the client acts on a strength they do not have. Ver
 record before crediting, and where verification was not possible in this pass, say that rather than
 inferring it from the fact that somebody meant to build it.
 
-## Carry assumptions, do not resolve them
+## Where the carried assumptions go
 
-Where the arithmetic rests on something unconfirmed — how many places exist, whether a figure
-includes tax, when money is actually collected — write the assumption down, with the date, and with
-what changes if it is wrong. Then continue.
+The rule itself is skill-wide: see the carried-assumption rule in `../SKILL.md`. An unconfirmed
+thing the arithmetic rests on is recorded, never settled quietly in the convenient direction.
 
-Resolving an ambiguity silently in the direction that supports your conclusion is the failure this
-rule prevents, and it is invisible in the finished document, which is why the assumption has to be
-written down rather than merely held. An audit whose arithmetic depends on an unstated reading is an
-audit nobody can check, including you, three weeks later.
+What an audit adds is **where it goes**. The assumption belongs in the report, dated, sitting next
+to the finding it holds up — not in your working notes and not in a caveats paragraph at the end. An
+audit whose arithmetic depends on an unstated reading is an audit nobody can check, including you,
+three weeks later, and a reader who has to go looking for the caveat will finish the finding before
+they reach it.

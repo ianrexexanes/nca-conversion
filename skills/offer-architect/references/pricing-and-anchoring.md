@@ -104,9 +104,10 @@ after a result suits high-confidence delivery and hurts cash flow.
 One thing to confirm rather than infer: **when the money is actually collected.** A stated total for
 a multi-part delivery says nothing about whether it is invoiced once up front or split across the
 parts, and the difference changes the buyer's commitment, the cancellation exposure and whatever
-booking system has to generate the invoice. Where it is unconfirmed, carry it as an explicit
-assumption with what changes if it is wrong. The same goes for whether a published figure includes
-tax — restate every derived number if that reading flips.
+booking system has to generate the invoice. Whether a published figure includes tax is the same kind
+of question, and it is the more expensive one to get wrong here, because flipping that reading
+restates every derived number in this file. Where either is unconfirmed it gets carried rather than
+inferred — see the carried-assumption rule in `../SKILL.md`.
 
 ## By register
 

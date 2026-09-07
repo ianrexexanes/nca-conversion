@@ -107,12 +107,12 @@ Two consequences fall out of that table and are almost never priced:
   budget against a benefit that mostly lands next year is a time-delay problem wearing an accounting
   costume, and it surfaces as a budget objection rather than as a scheduling one.
 
-**The mitigation is usually already written.** Where a long programme has an early milestone that
-already produces something complete, the cheapest available move on this variable is to make that
-milestone self-sufficient in the copy — stating what the buyer walks away holding at the *first*
-milestone rather than at the last. That converts one long wait into a short wait followed by a
-supervised extension, without changing the format at all. Check for an existing section that already
-does this job and points at the wrong date before proposing anything new.
+**The diagnosis usually ends by pointing at the first milestone, not the last.** Where the two
+numbers above are far apart, the cheapest available move on this variable is nearly always to make
+the earliest milestone stand on its own rather than to compress the whole delivery — which is a
+change to the delivery's shape, not to the diagnosis. `delivery-models.md`'s
+*Engineering time-to-first-value* section owns that move and the two checks that decide whether it
+is available here.
 
 ---
 
@@ -173,9 +173,10 @@ thing to hand a client than either "this is good" or "this is bad."
 
 Two smaller notes on this pattern. A secondary effect that operates *after* the sale — money already
 spent making abandonment harder, say — is real but does nothing for a variable measured at the moment
-of purchase, so keep it separate rather than counting it twice. And where an effect depends on a
-commercial term nobody has confirmed, such as when payment is actually collected, write the
-assumption down with what changes if it is wrong instead of picking the reading that helps.
+of purchase, so keep it separate rather than counting it twice. And a structural change's sign
+sometimes turns on a commercial term nobody has confirmed, such as when payment is actually
+collected; where it does, that dependency is part of the finding rather than a detail to settle in
+passing — carry it under the carried-assumption rule in `../SKILL.md`.
 
 ---
 

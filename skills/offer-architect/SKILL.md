@@ -103,13 +103,21 @@ writes a page's Value stack and Guarantee sections. Anything left vague here get
 a stack line with no provenance and a guarantee with no trigger are not loose ends — they are defects
 handed downstream.
 
-## NOT ESTABLISHED
+## NOT ESTABLISHED, and the carried-assumption rule
 
-A finding you cannot evidence is written `NOT ESTABLISHED — <what it would take>`, never softened
-into a hedge and never dropped. This is the same discipline `audience-research` uses and the same
-reason: a stated gap gets closed, and a quiet one gets discovered by the client.
+Two halves of one discipline. Both are skill-wide policy: the reference files apply them and point
+back here rather than restating them.
 
-Carry unresolved assumptions the same way. When an offer's arithmetic rests on something nobody has
-confirmed — how many seats, whether a figure includes tax, when money is actually collected — write
-the assumption down with what changes if it is wrong, rather than resolving it silently in your own
-favour and building three sections on top.
+**A finding you cannot evidence is written `NOT ESTABLISHED — <what it would take>`**, never
+softened into a hedge and never dropped. This is the same discipline `audience-research` uses and
+the same reason: a stated gap gets closed, and a quiet one gets discovered by the client.
+
+**An unconfirmed thing the arithmetic rests on is carried, not resolved.** When an offer's numbers
+depend on something nobody has actually confirmed — how many places genuinely exist, whether a
+stated total is per person or for the group, whether a term was agreed or merely discussed — write
+the assumption down alongside what changes if it turns out the other way, then carry on. Tax
+treatment and collection timing are the two that bite most often; both are carried in
+`references/pricing-and-anchoring.md`. What this forbids is settling the ambiguity silently in
+whichever direction supports the conclusion you were heading for, and then building three sections
+on top of it. That failure is invisible in the finished document, which is exactly why the
+assumption has to be on the page rather than in your head.

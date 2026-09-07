@@ -1,6 +1,8 @@
+import os
+import tempfile
 import unittest
 
-from check_frontmatter import ALLOWED_KEYS, check_frontmatter
+from check_frontmatter import ALLOWED_KEYS, check_frontmatter, main
 
 
 class CheckFrontmatterTest(unittest.TestCase):
@@ -42,6 +44,43 @@ class CheckFrontmatterTest(unittest.TestCase):
     def test_offenders_are_returned_in_file_order(self):
         text = "---\nname: x\nzebra: 1\ndescription: y\nalpha: 2\n---\n"
         self.assertEqual(check_frontmatter(text), ["zebra", "alpha"])
+
+    def test_quoted_disallowed_key_does_not_slip_through(self):
+        text = '---\nname: x\ndescription: y\n"argument-hint": nope\n---\n'
+        offenders = check_frontmatter(text)
+        self.assertEqual(len(offenders), 1)
+        self.assertIn("argument-hint", offenders[0])
+
+    def test_flow_mapping_frontmatter_fails_closed(self):
+        text = "---\n{name: x, argument-hint: nope}\n---\n"
+        self.assertTrue(
+            check_frontmatter(text),
+            "frontmatter the guard cannot read must be reported, never passed",
+        )
+
+    def test_comments_and_blank_lines_are_ignored(self):
+        text = "---\n# a note\n\nname: x\ndescription: y\n---\n"
+        self.assertEqual(check_frontmatter(text), [])
+
+    def test_list_items_nested_under_a_key_are_not_top_level(self):
+        text = "---\nname: x\ndescription: y\nallowed-tools:\n  - Read\n  - Bash\n---\n"
+        self.assertEqual(check_frontmatter(text), [])
+
+    def test_main_returns_1_when_a_skill_violates_the_spec(self):
+        with tempfile.TemporaryDirectory() as root:
+            skill_dir = os.path.join(root, "skills", "bad")
+            os.makedirs(skill_dir)
+            with open(os.path.join(skill_dir, "SKILL.md"), "w", encoding="utf-8") as handle:
+                handle.write("---\nname: bad\ndescription: y\nargument-hint: nope\n---\n")
+            self.assertEqual(main(root), 1)
+
+    def test_main_returns_0_on_a_clean_tree(self):
+        with tempfile.TemporaryDirectory() as root:
+            skill_dir = os.path.join(root, "skills", "good")
+            os.makedirs(skill_dir)
+            with open(os.path.join(skill_dir, "SKILL.md"), "w", encoding="utf-8") as handle:
+                handle.write("---\nname: good\ndescription: y\n---\n")
+            self.assertEqual(main(root), 0)
 
 
 if __name__ == "__main__":

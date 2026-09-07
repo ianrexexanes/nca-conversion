@@ -15,14 +15,26 @@ _TOP_LEVEL_KEY = re.compile(r"^([A-Za-z0-9_-]+):")
 
 
 def check_frontmatter(text):
-    """Return the disallowed top-level keys, in file order. Empty list means valid."""
+    """Return the disallowed top-level keys, in file order. Empty list means valid.
+
+    Fails CLOSED. A column-0 line this cannot read as a plain `key:` — a quoted key,
+    a flow mapping — is reported as an offender rather than skipped. A guard that
+    silently passes what it cannot parse is worse than no guard: it converts an
+    upload failure you would have seen into one you find out about from a user.
+    """
     match = _FRONTMATTER.match(text)
     if match is None:
         return ["<no frontmatter>"]
     offenders = []
     for line in match.group(1).splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if line[:1].isspace() or stripped.startswith("- "):
+            continue                       # nested under a key, not top level
         key_match = _TOP_LEVEL_KEY.match(line)
         if key_match is None:
+            offenders.append("<unreadable: %s>" % stripped[:40])
             continue
         key = key_match.group(1)
         if key not in ALLOWED_KEYS:

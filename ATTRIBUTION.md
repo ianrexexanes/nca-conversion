@@ -42,8 +42,8 @@ repository.
 
 Each row below names one file in this repo, the source it draws from, and the nature of the
 derivation (structural pattern, terminology, or reasoning framework — never copied text). This
-table starts empty; every later task that draws on one of the sources above adds its own row here
-when it lands.
+table is appended to by every task that draws on one of the sources above, as each one lands.
 
 | File in this repo | Source | Nature of derivation |
 | --- | --- | --- |
+| `skills/conversion-page-audit/references/evidence-rules.md` | `autonnel/autonnel-skills` (Apache-2.0) | Structural pattern only: the four-section report split by evidence status, and the "Could not check" boundary that this file's closing section makes operative. The eleven rules themselves are original, written from first-hand verification failures. No text copied. |

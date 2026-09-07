@@ -291,6 +291,26 @@ document — each of these produced output, and the output is not a result. Ther
 honest options: move it to "Could not check" with the reason, or go back and run it properly. The
 second is usually faster than writing the caveat.
 
+**The same discipline points back at your own instruments. When a check fails on something you
+have good reason to believe is correct, interrogate the check before you change the work.** Every
+rule above describes a method that returns a confident wrong answer, and a linter, a validator, a
+CI gate or a search pattern is a method like any other — it can fire on the wrong thing just as
+readily as it can stay silent on the right one. Reproduce the failure, isolate which part of the
+check actually fired, and print what it matched, before touching anything the check is complaining
+about. This is not permission to argue with a red result, because most failing checks are right.
+It is about the asymmetry in what the two mistakes cost: ignoring a true failure leaves a defect
+that the next run catches again, while silencing a false one edits finished work to satisfy an
+instrument, and that edit ships and is never revisited.
+
+This file exists partly because of a live instance. A guard scanning this repository for client
+names was built from unanchored substrings, one of which was a fragment of an ordinary English word
+used throughout a finished file. The gate fired, the writing was correct, and the fastest way to
+get a green result was to rename the concept — so the work was changed to satisfy a broken check,
+which nobody noticed until someone asked which pattern had matched and on what. Isolate first: run
+each pattern separately, print the matched text rather than the matching line, and fix the check
+when the check is what is wrong. A gate that cannot be questioned has stopped being a gate and
+started being an author.
+
 "Could not check" entries are not an apology and not padding. They are often the most actionable
 part of the report, because each one names something the client can unblock. Write each with three
 things: what you were trying to determine, what specifically stopped you (no admin access, consent

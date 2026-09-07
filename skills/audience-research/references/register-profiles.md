@@ -40,11 +40,11 @@ get a second look from anyone in the approval chain. The damage is invisible fro
 which is the whole problem: the page reads as energetic to whoever wrote it and as disqualifying to
 whoever had to sign.
 
-**The failure modes are the transferable half.** Each profile is described along seven axes, and
-each axis states what the register does and what getting it wrong looks like. The description is
-the weaker half — plenty of bland pages satisfy every description here — and the failure mode is
-what a real page can actually be tested against. A register you cannot fail is not a register, it
-is a preference.
+**The failure modes are the transferable half.** Each profile is described along the same seven
+dimensions, and each dimension states what the register does and what getting it wrong looks like.
+The description is the weaker half — plenty of bland pages satisfy every description here — and
+the failure mode is what a real page can actually be tested against. A register you cannot fail is
+not a register, it is a preference.
 
 **Not every failure costs the same.** When a page misses its register on rhythm or formality alone,
 that is an editing pass. When it misses on proof, scarcity handling and CTA at the same time, the
@@ -56,8 +56,8 @@ anything.
 character description. The signals are about the buying situation — how long the cycle runs, who
 signs, what the sector's risk posture is, whether jargon is a trust signal or a barrier — and the
 buying situation is what determines register. Where a client sits between two profiles, take the
-more conservative of the two and borrow named axes from the other rather than blending them;
-a page that averages two registers reads as neither. Where the audience is genuinely split — a
+more conservative of the two and borrow named dimensions from the other rather than blending
+them; a page that averages two registers reads as neither. Where the audience is genuinely split — a
 beneficiary and a funder, an engineer and a procurement officer — that is not a register problem,
 it is a page-count problem, and the answer is usually two pages.
 
@@ -189,7 +189,7 @@ and institutional membership carry more weight than outcome promises. And a deci
 buyer would be embarrassed to forward the page to a colleague, the register is wrong regardless of
 how the copy performs on its own.
 
-The five axes that actually carry this register are scarcity handling, proof scoping,
+The five dimensions that actually carry this register are scarcity handling, proof scoping,
 formality consistency, CTA commitment clarity and translation tells. That weighting is the useful
 part of the profile, because it tells you what a failure means. A page that misses only on rhythm
 and claim intensity is fixable in an editing pass. A page that misses on those five has the wrong
@@ -235,7 +235,7 @@ relationship rather than the sale.
 Datasheets, test standards cited by their correct designation, certification numbers, tolerance
 ranges, third-party test reports, material specifications, and reference installations described by
 application rather than by customer name. Where a standard governs the category, naming it and
-stating conformance is worth more than any adjective. Drawings, scaled diagrams and
+stating conformance is worth more than any adjective. Drawings, dimensioned diagrams and
 compatibility matrices are proof in this register, not decoration.
 
 **Failure mode: social proof standing in where a specification was expected.** A testimonial in the

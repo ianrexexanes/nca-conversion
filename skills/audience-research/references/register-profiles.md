@@ -20,8 +20,8 @@ quiet. The frameworks travel everywhere, unchanged.
 
 The second layer is register: how the page sounds, how hard it claims, what counts as proof,
 whether urgency is usable at all, how directly it asks. This varies enormously, and it is not a
-stylistic preference. Register is a claim about who is reading and what will make them trust the
-page or leave it.
+stylistic preference. Register is a claim about who is reading, and about what will make that
+reader trust the page instead of closing it.
 
 **Register is an input, never a default.** It is chosen once per client, written into the
 Conversion Brief, and inherited by offer design, page copy, hooks, audit and editing without
@@ -57,9 +57,14 @@ character description. The signals are about the buying situation — how long t
 signs, what the sector's risk posture is, whether jargon is a trust signal or a barrier — and the
 buying situation is what determines register. Where a client sits between two profiles, take the
 more conservative of the two and borrow named dimensions from the other rather than blending
-them; a page that averages two registers reads as neither. Where the audience is genuinely split — a
-beneficiary and a funder, an engineer and a procurement officer — that is not a register problem,
-it is a page-count problem, and the answer is usually two pages.
+them; a page that averages two registers reads as neither. Where the audience is genuinely split —
+an engineer and the procurement officer who signs, a practitioner and the executive he reports to —
+that is usually not a register problem but a page-count problem, and two pages each held in one
+register beat a single page trying to hold two. **`Mission / nonprofit` is the standing exception
+to that.** Its audiences are split by definition, routing them to separate pages reads as
+gatekeeping the people the organisation exists to serve, and its own `CTA directness` guidance is
+to carry several participation paths on one page instead. Where a profile's guidance and this
+general rule disagree, the profile wins.
 
 ## Conservative B2B (DACH)
 
@@ -313,6 +318,16 @@ client is being compared against them line by line. And the clearest signal of a
 trust signal rather than a barrier — if using the correct term makes the page more credible instead
 of less accessible, this is the register.
 
+The load-bearing dimensions here are claim intensity, proof requirements, CTA directness and
+terminology — the last of which lives in `Formality` and `Language notes` but behaves like a
+structural failure rather than a stylistic one, because a single misused term of art is a
+competence signal and no correct sentence after it recovers the reader. A page failing on those has
+the wrong argument: an unqualified figure, a testimonial standing where a datasheet belongs, or a
+specification gated behind a form are each a sufficient reason for this buyer to leave, and none of
+them is reachable by rewriting prose. Sentence rhythm and tone are the editing-pass pair. Urgency
+is the odd one out and worth checking separately, because its failure is binary rather than graded
+— one scarcity device on the page is disqualifying, and one deletion fixes it.
+
 ## Consumer / lifestyle
 
 Warm, sensory, emotionally direct, low jargon. An individual spending their own discretionary money
@@ -342,21 +357,25 @@ reader can put himself inside. Specificity is the intensity.
 **Failure mode: superlatives occupy the space a specific image would fill.** "Best", "amazing" and
 "unforgettable" are not disbelieved so much as unread; the cost is the sentence they displaced. The
 more expensive failure is inflating the claim past what the experience delivers, which converts
-well and reviews badly — and in consumer markets the reviews are the funnel, so an over-promising
-page damages acquisition for months after the copy is fixed.
+well and reviews badly — and where reviews carry a large share of acquisition, an over-promising
+page can keep damaging it long after the copy is fixed. How large that share is varies by category;
+check the client's own review volume rather than assuming it.
 
 ### Proof requirements
 
 Photography of the actual thing, in the actual place, showing the actual people. Reviews with
 volume, recency and a named platform. Ratings the reader can go and verify. Video where the
-experience is hard to imagine. User-generated images outperform commissioned ones for exactly the
-reason they look worse. Named locations, real timings, honest weather.
+experience is hard to imagine. The common finding is that user-generated images outperform
+commissioned ones for exactly the reason they look worse — worth testing rather than assuming,
+since it inverts where production quality is itself part of the product. Named locations, real
+timings, honest weather.
 
 **Failure mode: stock photography that reads as stock.** This reader identifies it instantly and
 concludes the real thing is worse than the picture — a conclusion no copy on the page can reverse.
 A curated wall of five-star quotes fails similarly: the absence of any three-star review is itself
-read as filtering, and a review set with visible mixed opinions converts better than a perfect one.
-Reviews without a source platform are treated as invented.
+read as filtering, and the common finding is that a review set with visible mixed opinions
+outperforms a uniformly perfect one. Treat that as a hypothesis to test on the client's own
+traffic, not as a finding to hand them. Reviews without a source platform are treated as invented.
 
 ### Urgency and scarcity handling
 
@@ -367,23 +386,25 @@ true. State the mechanism briefly rather than decorating it.
 
 **Failure mode: scarcity the reader can falsify in one click.** A countdown that resets on reload,
 a "three left" badge contradicted by the booking engine on the next page, or a sale that has been
-ending for a month — each is now widely recognised, including by non-technical readers, and each
-converts a warm page into a suspicious one. The other failure is permanent urgency: a page in
-constant promotion trains its own audience to wait, which is the opposite of the intended effect
-and is invisible in a single campaign's numbers.
+ending for a month — each is recognised widely enough now that you should plan on this reader
+spotting it, and each can turn a warm page into a suspicious one. The other failure is permanent
+urgency: a page in constant promotion trains its own audience to wait, which is the opposite of the
+intended effect and is invisible in a single campaign's numbers.
 
 ### CTA directness
 
 One obvious action, low friction, repeated as the reader scrolls, with the price visible before the
-click. Book, buy, reserve, join. The number of fields between intent and confirmation is a design
-decision with a measurable conversion cost, so ask for the minimum the transaction actually
-requires and collect the rest afterwards.
+click. Book, buy, reserve, join. The number of fields between intent and confirmation usually
+carries a conversion cost, and it is one of the few things on the page cheap enough to measure
+directly rather than argue about — so measure it, and until you have, ask for the minimum the
+transaction actually requires and collect the rest afterwards.
 
 **Failure mode: friction where the decision was already made.** A form standing where a button
 belonged loses the reader who had decided, and those are the most valuable readers on the page. The
-second failure is a hidden price: in discretionary spend, an unstated price reads as expensive, the
-reader leaves without asking, and the page records it as ordinary non-conversion rather than as the
-specific objection it was.
+second failure is a hidden price: in discretionary spend an unstated price commonly reads as
+expensive, the reader leaves without asking, and the page records it as ordinary non-conversion
+rather than as the specific objection it was. That is the default hypothesis for a hidden-price
+page, not a measured fact about this one.
 
 ### Formality
 
@@ -418,6 +439,16 @@ emotional and legitimately allowed to be. Price is low enough to decide alone an
 on the page. Reviews and photography, rather than credentials, are the trust currency. Competitors
 sell on feeling rather than on specification. If the reader would describe the purchase to a friend
 in terms of how it felt rather than what it did, this is the register.
+
+The load-bearing dimensions are proof requirements, CTA directness and urgency handling, and the
+distinctive thing about this register is that two of the three are not copy at all. Stock
+photography, unsourced reviews, a form standing where a button belongs and a price hidden until
+checkout are asset and flow problems, so a page here that reads well and converts badly is usually
+failing outside the words, and a copy rewrite will not reach it — diagnose before rewriting.
+Sentence rhythm, formality and vocabulary are the editing pass. Claim intensity sits between the
+two: inflating past what the experience delivers reads fine on the page and fails later in the
+reviews, which makes it the one failure whose cost does not appear in the conversion rate you are
+looking at.
 
 ## Mission / nonprofit
 
@@ -488,8 +519,9 @@ given amount actually does, with the same specificity you would use for a price.
 **Failure mode: one loud donate button serving every audience at once.** The signature failure of
 this register is the page that asks a person who came looking for help to give money — it is
 invisible to whoever built the page and unmistakable to the person it happens to. The second
-failure is a vague ask: "support our work" converts far worse than a stated amount tied to a stated
-outcome, and it also makes the organisation sound unsure what it needs.
+failure is a vague ask: the common finding is that "support our work" converts worse than a stated
+amount tied to a stated outcome, and a vague ask also makes the organisation sound unsure what it
+needs.
 
 ### Formality
 
@@ -527,6 +559,16 @@ cause is larger than the organisation and the copy has to keep that order. Any c
 on the page would be a reputational cost rather than a conversion gain. And a clarifying test: if
 using a persuasion technique that works elsewhere would embarrass the organisation in front of the
 people it serves, this is the register.
+
+This register has the fewest editing-pass failures of the five, because most of its failure modes
+are decisions rather than sentences. Overstated impact, manufactured urgency, saviour framing, a
+term the community has retired, and one donate button serving every audience at once are all
+choices about what the organisation is willing to do, and every one of them is load-bearing.
+Sentence rhythm is the only dimension where a miss is genuinely a rewrite. That has a practical
+consequence worth stating plainly: a page failing on the dignity dimensions cannot be signed off by
+a copywriter or a client contact alone — it needs someone from the community the organisation
+serves to read it, and where that review is not available, the honest position is that the page has
+not been checked rather than that it passed.
 
 ## Direct-response
 
@@ -641,3 +683,12 @@ claim surface, or one you have checked. And the disqualifying test, which is the
 if the buyer will forward this page to anyone who has to approve the spend, do not use this
 register — it is optimised for a reader who can say yes alone, and it actively damages the page in
 front of anyone who cannot.
+
+This register has the fewest safe failures of the five. Claim intensity, proof requirements,
+urgency handling and CTA risk reversal are all load-bearing, and `Language notes` carries a fifth
+that is not a conversion problem at all: a regulated claim is a legal exposure, and it does not
+become acceptable by converting well. Sentence rhythm and formality are nominally the editing pass,
+with one caveat worth more than the rest of this paragraph — borrowed cadence is usually a symptom,
+not a style problem. A page reaches for someone else's rhythm when the arithmetic underneath is not
+there, so treat copy that sounds like a famous marketer as a claim-intensity diagnosis first and a
+prose one second.

@@ -83,25 +83,33 @@ consent, the finding is "could not check", not "not installed".
 
 ### Pass `grep -a` when searching fetched HTML
 
-`grep` inspects the first bytes of a file, decides it is binary, and then either reports
-"Binary file matches" or — piped, or with certain flag combinations — prints nothing at all while
-looking exactly like a clean negative. Fetched pages trigger this constantly: one byte from a
-mis-declared encoding, a compression artifact, an inline base64 font or SVG, or a stray control
-character is enough. The failure is silent, and silence in a search is indistinguishable from an
-honest zero.
+`grep` inspects the first bytes of a file, decides it is binary, and stops printing matches.
+Fetched pages trigger this constantly: one byte from a mis-declared encoding, a compression
+artifact, an inline base64 font or SVG, or a stray control character is enough. At a terminal the
+short-circuit is not actually silent — on GNU grep 3.11 it writes `binary file matches` to
+**stderr** and exits **0**, where a genuine absence prints nothing and exits **1** — so two tells
+are available for free. The silent surface is narrower than the behaviour, and it is the one you
+will meet in practice: consume the result through a pipeline with stderr discarded, as in
+`grep … 2>/dev/null | wc -l`, and stdout reads `0` with no diagnostic anywhere. That is a zero
+produced by a search that never ran, and at that point it is indistinguishable from an honest one.
 
 The wrong answer: *"the page carries no organisation schema — zero matches for the type key."* The
 JSON-LD was there. The saved file contained non-UTF-8 bytes from an embedded font, `grep`
-classified it as binary, and returned nothing. Nothing in the output said "I stopped reading"; the
-exit status and the empty result were identical to a genuine absence, so a schema block that had
-been live for a year was reported as missing.
+classified it as binary, and stopped. The count came out of a pipeline that discarded stderr and
+never looked at the exit status, so both of the tells that would have caught it were thrown away
+before anyone saw them, and a schema block that had been live for a year was reported as missing.
+Note the shape of it: the instrument did report the problem, and the harness around the instrument
+deleted the report.
 
 Always pass `-a` when searching fetched markup: `grep -ao 'application/ld+json' /tmp/page.html`.
-Then prove the file is being read before trusting any zero — search for a string you know is
-present, such as the text inside `<title>` or the domain itself, and confirm it hits. `file
-/tmp/page.html` tells you what `grep` thinks it is looking at, and `LC_ALL=C grep -a` takes
-locale-driven encoding decisions out of the result. A zero-match result that has not been paired
-with a positive control is not evidence of absence.
+Read `$?` before you read the output — `1` is a genuine absence, `0` with nothing on stdout is a
+binary short-circuit — and do not discard stderr on a search whose zero you intend to act on. Then
+prove the file is being read at all: search for a string you know is present, such as the text
+inside `<title>` or the domain itself, and confirm it hits. `file /tmp/page.html` tells you what
+`grep` thinks it is looking at, and `LC_ALL=C grep -a` takes locale-driven encoding decisions out
+of the result. Those exit codes are GNU grep 3.11 and binary handling differs between
+implementations, so the positive control is the part that transfers everywhere: a zero-match result
+that has not been paired with a known-present string is not evidence of absence.
 
 ### Clear the cache before reporting a post-deploy failure
 
@@ -188,8 +196,10 @@ Run schema and markup-presence checks against the exact canonical URL, unmodifie
 response is also required, purge the cache instead of appending a parameter and prove freshness
 from the response headers. Where you suspect a difference, measure it rather than assuming:
 count the blocks in each form with
-`curl -s "$URL" | grep -ao 'application/ld+json' | wc -l` and the same command against
-`"$URL?cb=1"` — pipe to `wc -l` rather than using `grep -c`, whose behaviour with `-o` differs
+`curl -s "$URL" | grep -ao 'application/ld+json' | wc -l` and the same command against the same
+URL with a cache-busting parameter appended — `?cb=1`, or `&cb=1` if the URL already carries a
+query string, since the wrong separator produces a different page rather than an error — pipe to
+`wc -l` rather than using `grep -c`, whose behaviour with `-o` differs
 between grep implementations (some count occurrences, some count matching lines), which silently
 undercounts on minified HTML where several blocks share one line. If the counts differ, the clean
 URL is the one your finding is about. Confirm the result in a validator that fetches the URL
@@ -233,13 +243,21 @@ containing the word "logo"; the 21 came from an internal document. Nobody was ca
 number came from a method that inspected part of the set, and confidence does not distinguish that
 from a method that inspected all of it.
 
-Pull the whole page and enumerate programmatically, never by eye and never with a filter in the
-first pass. Extract every candidate — `curl -sL "$URL" | grep -aoE '<img[^>]*>' | wc -l` for images
-— then narrow by position in the DOM rather than by filename, count the raw total, de-duplicate on
-the identity that actually matters, and report both figures with the method beside them. Write "22
-elements resolving to 20 distinct companies, counted from a live fetch on 2026-09-07, de-duplicated
-by company", not "20 logos". Where the full set cannot be enumerated, state no number at all: a
-range with its boundary named is honest, and a precise wrong number is not.
+Enumerate from the rendered DOM in a real browser, never by eye and never with a filter in the
+first pass. Resist the regex: a pattern like `<img[^>]*>` over fetched markup is not the candidate
+set and will quietly return a fraction of it. HTML tag names are case-insensitive, so an
+upper-case tag is missed without `-i`; `grep` is line-oriented and cannot match a tag whose
+attributes are wrapped across lines, which most page builders do; and `<picture>`/`<source>`, CSS
+`background-image`, inline `<svg>` and lazy-loading attributes such as `data-src` all put visible
+imagery on a page without an `<img>` tag the pattern can see. Query the live DOM for every element
+type that can render one, collect each resolved URL, count the raw total, then de-duplicate on the
+identity that actually matters, because the same asset routinely appears under several filenames.
+Report both figures with the method beside them: "22 elements resolving to 20 distinct companies,
+enumerated from the rendered DOM on 2026-09-07, de-duplicated by company", not "20 logos". If you
+automate the count, run the script first against a fixture whose true content you know — the same
+positive control the binary-`grep` rule asks for — because a counting script that undercounts exits
+0 and is indistinguishable from a correct one. Where the full set cannot be enumerated, state no
+number at all: a range with its boundary named is honest, and a precise wrong number is not.
 
 ### Treat a front-end scan as a floor, not an inventory
 

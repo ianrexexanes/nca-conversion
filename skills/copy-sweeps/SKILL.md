@@ -45,7 +45,9 @@ Two opposite operations, one pass name.
 The five: `Conservative B2B (DACH)` · `Technical / industrial` · `Consumer / lifestyle` ·
 `Mission / nonprofit` · `Direct-response`. Defined in
 `../audience-research/references/register-profiles.md`. Every pass in `references/seven-sweeps.md`
-closes with a register note covering all five; read only the sentences for the one in play.
+closes with a register note naming the registers where that pass behaves differently — not all five
+every time. Where the register in play is not named, no special handling applies and the pass runs
+as written.
 
 ## The seven passes
 
@@ -73,11 +75,10 @@ none of them is allowed to ask whether the argument is the right one. `reference
 is the mode that asks — a small bench of named practitioners, each applying a position they actually
 published, to the copy as a whole.
 
-One rule governs it and that file states it in full: **nobody on the bench gets a view that cannot
-be traced to a named work, and an ungroundable seat stays empty.** The asymmetry is the reason: a
-seat left empty costs the review one angle, while a seat filled in by guesswork ships a fabrication
-wearing borrowed authority. Use the mode for high-stakes copy — a page about to take paid traffic,
-a launch email, a proposal. Skip it for a caption.
+One rule governs it: **nobody on the bench gets a view that cannot be traced to a named work, and
+an ungroundable seat stays empty.** That file states it in full, with the reason it is worth the
+cost. Use the mode for high-stakes copy — a page about to take paid traffic, a launch email, a
+proposal. Skip it for a caption.
 
 ## Vocabulary and structural tells
 

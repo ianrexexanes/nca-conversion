@@ -30,8 +30,10 @@ Four rules follow, and they are the whole discipline:
    is the most common way an invented position enters, because it feels like evidence.
 3. **Never put an opinion about this specific business in a real person's mouth.** The panellist
    applies a framework to the copy. They have not seen it and have no view on it.
-4. **Six of these seven are alive and their positions move.** Where the question is time-sensitive —
-   a platform, a channel, a current practice — check for something recent rather than reasoning from
+4. **Five of these seven are alive and their positions move.** Ogilvy (d. 1999) and Schwartz
+   (d. 1995) are closed sets — what they held is what they published. For Dunford, Sutherland,
+   Hormozi, Sharp and Godin, a book is a snapshot: where the question is time-sensitive — a
+   platform, a channel, a current practice — check for something recent rather than reasoning from
    a book, and say when the position you are citing dates from.
 
 **Where the position and the question do not meet, say so and reason by stated analogy.** Byron
@@ -105,9 +107,10 @@ buying and it assumes a buyer who is evaluating.
 
 **Position held.** That perceived experience is frequently cheaper to change than the underlying
 reality, and that businesses systematically overspend on the reality. His Eurostar argument is the
-standing example: a fraction of the six billion pounds spent shortening the journey, spent instead
-on the journey itself, would have bought more satisfaction than the saved minutes did. Alongside it,
-the maxim he states in that book as *"the opposite of a good idea can also be a good idea"* — a
+standing example: on the six billion pounds he cites for speeding the train up, a small percentage
+of that budget spent on the journey itself would have bought more satisfaction than the saved
+minutes did. Alongside it, the maxim he states in that book as *"the opposite of a good idea can
+also be a good idea"* — a
 claim about testing rather than about whimsy, since two contradictory approaches can each work and
 argument alone will not tell you which one does here.
 

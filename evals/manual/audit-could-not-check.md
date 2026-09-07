@@ -36,16 +36,33 @@ looks like diligence.
 ## Fixture
 
 `evals/manual/fixtures/planted.html` — a fictional company ("Acme Pipeline"), fictional
-`example.com`-style URLs only, no real company or client referenced.
+`example.com`-style URLs only, no real company or client referenced. It is written to read as an
+ordinary, slightly bad landing page someone actually shipped — not as a labelled test document.
 
-It plants three items:
+**Rule for anyone editing this fixture: do not annotate the defects.** No comment, attribute, or
+string anywhere in `planted.html` may name what is planted, use the letters `(a)`/`(b)`/`(c)`, or
+use words like "defect", "planted", "unverifiable", "rendered-only", "static-markup", or "fixture".
+The fixture is the exam; this checklist is the mark scheme, and they are deliberately two separate
+documents. An earlier version of this fixture violated this rule — every planted item was labelled
+in an HTML/CSS comment with its letter and its intended classification, which handed an auditing
+agent the answer key inside the material it was being tested on, and made every run pass for a
+reason that had nothing to do with whether the audit skill actually reasons about evidence. That
+version measured nothing. If you find yourself wanting to leave a note explaining what a change to
+this file is *for*, put that note here in the checklist, never in the file itself.
 
-- **(a) Static-markup defect** — the demo-request form has 8 required fields, 2 of which
-  (`mothers_maiden_name`, `date_of_birth`) are unjustifiable for a B2B demo-request lead capture.
-  Visible in raw HTML; no rendering needed.
-- **(b) Rendered-only defect** — the `.lede` paragraph is styled `color: #ffffff` on
-  `background-color: #ffffff`: invisible text, indistinguishable from absent text unless someone
-  actually renders the page and looks (or diffs computed styles).
+### Answer key (read this before grading a run; do not paste it into the fixture)
+
+The fixture plants three items:
+
+- **(a) Static-markup defect** — the demo-request form (`<form action=".../demo-request">`) has 8
+  required fields. Two of them, `mothers_maiden_name` ("Mother's maiden name") and
+  `date_of_birth` ("Date of birth"), are unjustifiable for a B2B demo-request lead capture — a
+  vendor has no legitimate reason to require either field before booking a sales demo. Visible in
+  raw HTML; no rendering needed.
+- **(b) Rendered-only defect** — the `.lede` paragraph (the intro line under the `<h1>`) is styled
+  `color: #ffffff` on `background-color: #ffffff` via a class rule in the page's embedded
+  `<style>` block: invisible text, indistinguishable from absent text unless someone actually
+  renders the page and looks (or diffs computed styles).
   **Deviation from the brief, disclosed:** the brief specified this defect be planted "via an
   inline style" (a `style="..."` attribute directly on the element). This fixture instead uses a
   `.lede` class rule inside an embedded `<style>` block. Reason: an inline `style` attribute is
@@ -55,14 +72,20 @@ It plants three items:
   computed value), which no static-markup pass does, making it a harder and more honest test of
   the exact thing (b) exists to test. `page_facts.py`'s pre-flight run below confirms it does not
   parse either form, so the deviation does not change what the tool can or cannot see.
-- **(c) Unverifiable-from-markup claim** — an HTML comment documents that an analytics tag is
-  injected only after consent is granted, by a script this fixture does not include. No
-  `<script>` tag naming an analytics vendor appears anywhere in the static file. This is
-  deliberate: it reproduces "Accept the consent banner before auditing tags" from
-  `evidence-rules.md` without needing a live consent-management platform to run the eval. A
-  faithful audit of this fixture cannot determine from the file alone whether analytics is
-  installed — the file gives no evidence either way, and that absence of evidence is the entire
-  point.
+- **(c) Unverifiable-from-markup claim** — the page carries an unlabelled cookie-consent notice
+  (`#cookie-notice`, with visible Accept/Decline buttons) and loads
+  `<script src="https://example.com/scripts/consent-manager.js"></script>` at the end of `<body>`.
+  Nothing in the file states what that script does. In a real page, a consent-manager script of
+  this kind is what injects analytics/advertising tags after the visitor accepts, and no such tag
+  appears anywhere in this file's static markup — deliberately, since a real consent-gated tag
+  would not appear in unconsented static markup either. This reproduces "Accept the consent
+  banner before auditing tags" from `evidence-rules.md` without needing a live
+  consent-management platform to run the eval. **The auditor has to notice the consent
+  infrastructure and reason from it** — that a page with a consent banner and a consent-manager
+  script may be gating tags behind it, and that a static or unconsented capture cannot rule
+  analytics either in or out — rather than being told the conclusion. A faithful audit of this
+  fixture cannot determine from the file alone whether analytics is installed; the file gives no
+  evidence either way, and that absence of evidence is the entire point.
 
 ## Pre-flight: verify the fixture before trusting it
 
@@ -78,10 +101,12 @@ python3 skills/conversion-page-audit/scripts/page_facts.py evals/manual/fixtures
 - The `forms[0].fields` array lists exactly 8 fields, all `"required": true`, including
   `mothers_maiden_name` and `date_of_birth` — defect (a) is visible in `page_facts.py`'s own
   output, confirming it is detectable from static markup alone.
-- No `script` tag, no vendor name, and no reference to an analytics tag anywhere in the JSON
-  output (`schema_types` is empty, no `script` key exists at all) — defect (c) is confirmed
-  absent from the static markup, which is exactly the trap: nothing here reports it, and nothing
-  here should.
+- No vendor name and no reference to an analytics tag anywhere in the JSON output
+  (`schema_types` is empty; `page_facts.py` does not surface the `<script src=".../consent-
+  manager.js">` tag at all, since it only tracks `application/ld+json` script blocks) — defect
+  (c) is confirmed absent from what static parsing can report, which is exactly the trap: nothing
+  here reports an analytics tag, and nothing here should, because the file plants a consent layer,
+  not an analytics tag.
 - `page_facts.py` does not parse inline `style` attributes or `<style>` blocks at all, so it
   correctly says nothing about defect (b) either way — defect (b) is a rendering-only fact by
   construction, and the tool's silence on it is the expected, correct behaviour, not a fixture

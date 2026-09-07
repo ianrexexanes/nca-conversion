@@ -6,10 +6,17 @@
 <meta name="description" content="Acme Pipeline helps mid-size teams see their pipeline clearly. Book a free demo.">
 <style>
   body { background-color: #ffffff; color: #222222; font-family: sans-serif; margin: 0; padding: 2rem; }
-  .lede { color: #ffffff; background-color: #ffffff; } /* (b) rendered-only defect: same colour as its background */
+  .lede { color: #ffffff; background-color: #ffffff; }
 </style>
 </head>
 <body>
+  <div id="cookie-notice" class="cookie-notice" role="dialog" aria-live="polite">
+    <p>We use cookies to run this site and understand how it's used.
+      <button id="cookie-accept" type="button">Accept</button>
+      <button id="cookie-decline" type="button">Decline</button>
+    </p>
+  </div>
+
   <header>
     <h1>See your whole pipeline in one dashboard</h1>
   </header>
@@ -24,7 +31,6 @@
 
     <section>
       <h2>Book your free demo</h2>
-      <!-- (a) static-markup defect: 8 required fields, 2 unjustifiable for a lead-capture form -->
       <form action="https://example.com/demo-request" method="post">
         <label>First name <input type="text" name="first_name" required></label>
         <label>Last name <input type="text" name="last_name" required></label>
@@ -32,7 +38,6 @@
         <label>Company <input type="text" name="company" required></label>
         <label>Job title <input type="text" name="job_title" required></label>
         <label>Company size <input type="text" name="company_size" required></label>
-        <!-- unjustifiable for a lead-capture form: -->
         <label>Mother's maiden name <input type="text" name="mothers_maiden_name" required></label>
         <label>Date of birth <input type="date" name="date_of_birth" required></label>
         <button type="submit">Request demo</button>
@@ -44,17 +49,6 @@
     <p>&copy; 2026 Acme Pipeline. <a href="https://example.com/privacy">Privacy policy</a></p>
   </footer>
 
-  <!--
-    (c) Unverifiable claim: the analytics tag below is injected by consent-management
-    script AFTER the visitor accepts the cookie banner. It is intentionally NOT present
-    in this file's static markup — that absence is the point of this fixture. A real
-    rendered-and-consented capture would show something equivalent to:
-
-      <script src="https://example.com/analytics.js" data-consent="granted"></script>
-
-    being appended to <body> only after the accept click fires. Static markup, and even
-    a rendered-but-not-consented capture, will correctly show nothing here — which is
-    exactly the trap: "nothing found" is not the same as "not installed".
-  -->
+  <script src="https://example.com/scripts/consent-manager.js"></script>
 </body>
 </html>

@@ -38,19 +38,44 @@ Same offer, same skill, same deliverable type. Register explicitly set to `Direc
 as `arm-b-direct-response.md`.
 
 **Arm C — No-plugin baseline (R3).**
-Disable the plugin (`claude plugin disable nca-conversion@nca-conversion`), then ask a fresh
-Claude Code session to write the same hero section for the same offer, with no register specified
-and no reference to this plugin's frameworks or terminology. Save as `arm-c-no-plugin.md`. Re-enable
-the plugin afterward.
+Disable the plugin (`claude plugin disable nca-conversion@nca-conversion`), then, **from a
+directory outside this repository** (this repo IS the plugin source — a session run from inside it
+can read `skills/` off the filesystem regardless of enablement state, which would leak the exact
+thing this arm is supposed to exclude), ask a fresh Claude Code session to write the same hero
+section for the same offer, with no register specified and no reference to this plugin's
+frameworks or terminology. Save as `arm-c-no-plugin.md`. Re-enable the plugin afterward:
+`claude plugin enable nca-conversion@nca-conversion`.
 
 > **On Arm C's evidentiary weight:** this is a hand-run substitute for `--ablation with-without`'s
 > mechanical score delta, which spec §12 criterion 1 ("the plugin beats no plugin") was meant to
 > be measured by. A human skimming two outputs and judging "the plugin version is better" is
 > weaker evidence than a scored delta across multiple runs — it has no baseline distribution, no
 > repetition, and is vulnerable to the rater's own priors about which one is "supposed" to win.
-> **Arm C on its own does not establish criterion 1.** Treat a clear Arm C failure (the plugin
-> output is no better, or worse, than the no-plugin output) as a real finding; treat a clear Arm C
-> pass as suggestive, not proof, and say so when reporting results.
+> Grading it yourself, having just written or read Arm A/B, is weaker still — you already know
+> which output is "supposed" to be the plugin's. **Arm C on its own does not establish
+> criterion 1.**
+
+**Arm C rubric.** Judge Arm C only against Arm A (the register actually chosen for the offer —
+Conservative B2B fits a B2B project-management tool best; use that arm as the comparison), on
+these three dimensions, each scored DIVERGE-FOR-PLUGIN / SAME / DIVERGE-FOR-BASELINE:
+
+1. **Proof requirements** — does Arm A back its claim with something concrete (a specific
+   mechanism, a scoped number, a named proof type) that Arm C's output lacks or does more
+   generically?
+2. **CTA directness** — does Arm A's call to action follow the value-equation-driven structure the
+   framework layer specifies (a clear next step tied to the offer's actual terms — trial length, no
+   card required) more precisely than Arm C's?
+3. **Claim intensity** — does Arm A make a sharper, more specific claim about the offer than Arm
+   C's more generic "helps you manage projects" framing, while still qualifying it the way
+   Conservative B2B requires?
+
+- **Arm C PASS** (suggestive only, per the caveat above): at least 2 of 3 dimensions score
+  DIVERGE-FOR-PLUGIN.
+- **Arm C FAIL** (a real finding, not just weak evidence): 0 or 1 of 3 dimensions score
+  DIVERGE-FOR-PLUGIN, or any dimension scores DIVERGE-FOR-BASELINE — concretely, this means the
+  no-plugin output reads as good as or better than the plugin output on that axis, which is the
+  literal failure of spec §12 criterion 1 ("the plugin beats no plugin") that this arm exists to
+  hand-check.
 
 ## Assertions — Arm A vs. Arm B
 
@@ -94,6 +119,8 @@ axis, in the direction the two profiles predict) or **SAME** (no meaningful diff
 ## Recording the result
 
 Note, per run: which skill was used, the DIVERGE/SAME call per dimension with a one-line reason,
-the overall PASS/FAIL, and the Arm C observation with its weaker-evidence caveat restated. Keep
-scratch arm outputs out of the repo (they are not fixtures with known content — they are
-one-off model output) unless a specific run needs to be preserved as a regression example.
+the overall Arm A/B PASS/FAIL, and the Arm C rubric score (which of the 3 dimensions scored
+DIVERGE-FOR-PLUGIN, with a one-line reason each) plus its PASS/FAIL verdict and the weaker-evidence
+caveat restated alongside it. Keep scratch arm outputs out of the repo (they are not fixtures with
+known content — they are one-off model output) unless a specific run needs to be preserved as a
+regression example.

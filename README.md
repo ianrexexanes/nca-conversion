@@ -55,6 +55,21 @@ Five register archetypes ship with this plugin:
 Pick the one that fits the brand, or describe your own on the spot — the framework layer doesn't
 change; only its voice does.
 
+## Evals
+
+Automated evals (`claude plugin eval`) are gated behind early access, which this account does not
+currently have — `init` and the runner both exit non-zero with that message. Until that opens up,
+the two planned cases exist as hand-run checklists under `evals/manual/`:
+
+- `evals/manual/register-fidelity.md` — the same offer at two registers, asserting the outputs
+  diverge on the dimensions `register-profiles.md` defines, plus a manual no-plugin baseline arm.
+- `evals/manual/audit-could-not-check.md` — a planted-defect fixture
+  (`evals/manual/fixtures/planted.html`) graded on whether the audit files each defect under the
+  right section, not just whether it finds it.
+
+Both carry the same assertions the automated `case.yaml` files would have encoded, so moving to
+automated form later is a transcription, not a redesign.
+
 ## Attribution
 
 The external frameworks and structural patterns this plugin draws on, and their licences, are

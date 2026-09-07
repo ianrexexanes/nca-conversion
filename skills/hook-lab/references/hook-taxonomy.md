@@ -37,10 +37,22 @@ purchase and a product sold to one person deciding alone in a single session are
 and pretending otherwise is what produces five translations of one line. Read down a column to see
 what a register does; read across a row to see what a type does.
 
-**Where a register removes a type's defining move**, the row says so and shows what stands in its
-place, marked **`SUBSTITUTED`**. That is a finding about the register, not a gap in the file, and it
-is the most useful thing here — a substituted row tells you the type is the wrong instrument before
-you have spent an afternoon polishing it.
+**Two markers, and the difference between them is the useful part.** Where a register does not take
+a type as written, the row says so and shows what stands in its place. Which marker applies is
+settled by one question — *is the promise in the type's header still being made, and still made
+about the same party?*
+
+- **`CONVERTED`** — yes. The register accepts the move and refuses its usual vehicle. Same promise,
+  same subject, different instrument. Getting this wrong produces a line that misses.
+- **`SUBSTITUTED`** — no. The register forbids the move at the party the type aims at, and what is
+  shown does a different job or speaks to a different reader. Getting this wrong produces a line
+  that does damage, which is why these are the rows to read first.
+
+Both are findings about the register rather than gaps in the file. A marked row tells you the type
+is the wrong instrument, or the wrong instrument as normally built, before you have spent an
+afternoon polishing it. **Six rows are `SUBSTITUTED` and two are `CONVERTED`; the remaining
+thirty-two take the type as written.** Five of the six substitutions fall in `Mission / nonprofit`,
+which is the single most legible pattern in this file.
 
 ---
 
@@ -85,9 +97,11 @@ works and does not believe it works soon enough to matter this quarter.
 **Turns on you** when the interval is a hope rather than a policy. A time claim is the easiest
 promise to make and the one a client is most often held to in writing.
 
-- **`Conservative B2B (DACH)`** — **`SUBSTITUTED`.** A speed promise about *his* result is both a
-  commitment he will hold you to and a device he distrusts. What survives is an interval in your own
-  process, stated as a fact about how the work runs.
+- **`Conservative B2B (DACH)`** — **`CONVERTED`.** The interval survives and still measures time
+  to something he receives; what moves is which thing. A promise about his *outcome* is a commitment
+  he will hold you to and a device he distrusts, so the clock is set on an interim deliverable
+  instead. This is a narrower licence than `Technical / industrial` has below, where the interval to
+  the finished result is itself publishable.
   > *You have the gap analysis in writing within five working days of handing over the file.*
 - **`Technical / industrial`** — time is procurement information and publishing it is the whole
   point; the quiet loss in this register is the specification that goes to whoever printed their
@@ -103,10 +117,14 @@ promise to make and the one a client is most often held to in writing.
 - **`Direct-response`** — the interval is half the claim and is stated as a bound, not an average.
   > *Your first retainer proposal goes out on day four. Signed inside thirty.*
 
-**The contrast worth looking at:** in three registers the clock is on the seller — a process
-interval, a lead time, a response time. In `Consumer / lifestyle` it is on the reader's day. Only in
-`Direct-response` is it on the reader's result, which is exactly why that is the register where a
-missed deadline becomes public.
+**The contrast worth looking at:** what the clock is set on. `Direct-response` sets it on the
+reader's result, which is the type as written and the reason that register is where a missed
+deadline becomes public. `Technical / industrial` sets it on the delivered result too, and may
+publish it. `Conservative B2B (DACH)` may not go that far and sets it on an interim deliverable —
+same subject, shorter reach, which is why it is `CONVERTED` rather than merely quieter.
+`Consumer / lifestyle` sets it on the shape of a day rather than on a duration at all.
+`Mission / nonprofit` may not set it on the beneficiary at all, which is a different kind of refusal
+and gets the other marker.
 
 ---
 
@@ -200,9 +218,11 @@ because the next thing he does is defend it — and he defends it by leaving.
 - **`Consumer / lifestyle`** — contrarian is light, and it is usually about the category rather than
   about the reader.
   > *The best day is the second one. Which is why we do not sell a day trip.*
-- **`Mission / nonprofit`** — the belief challenged belongs to the funding or policy environment and
-  the line is addressed to funders. Never a belief about the people served, and never phrased so that
-  someone who uses the service finds themselves inside the argument.
+- **`Mission / nonprofit`** — **`SUBSTITUTED`, and the substitution changes the reader.** A belief
+  about the people served may not be contradicted here at all, and no phrasing rescues it: whoever
+  uses the service would find themselves inside the argument. What remains is a belief held in the
+  funding or policy environment, contradicted in front of funders — the same reader-swap that
+  Pain makes below, and it is marked for the same reason.
   > *Food is the cheapest part of what this costs us. The advice appointment is what stops the next
   > visit.*
 - **`Direct-response`** — native, and aimed squarely at the reader's own behaviour, which is the one
@@ -243,9 +263,9 @@ reader never would, at which point it reads as a stranger explaining his own wee
   because this reader is fluent in the register and reads it as accuracy rather than pressure.
   > *You finish a project and the pipeline is empty again. Every time.*
 
-**The contrast worth looking at:** this is the only type where a register removes the move outright
-rather than toning it down, and the substitute swaps the reader as well as the line. If you find
-yourself writing a beneficiary-facing pain hook, the type is wrong, not the wording.
+**The contrast worth looking at:** this is the sharpest of the six substitutions, not the only one —
+the substitute swaps the reader as well as the line, which only Contrarian above also does. If you
+find yourself writing a beneficiary-facing pain hook, the type is wrong, not the wording.
 
 ---
 
@@ -270,8 +290,10 @@ is a promise the delivery team has to keep.
   > averaged across them.*
 - **`Consumer / lifestyle`** — **`SUBSTITUTED`.** Explaining the machinery drains the mood the page
   was built to produce, and converts a decision the reader wanted to take quickly into an appraisal.
-  Mechanism survives only where the method is itself part of the experience, at which point the line
-  is closer to proof than to mechanism: it names *who is doing it*, not *how the system works*.
+  No repeatability claim is made here at all. What stands in its place names *who is doing it*
+  rather than *how the system works*, which is a proof beat borrowed into the slot — a different job
+  from the one the type's header describes, which is why this is a substitution rather than a change
+  of vehicle.
   > *Two guides, six people, and one of the guides grew up on this coast.*
 - **`Mission / nonprofit`** — mechanism is the programme model, and it is the section an institutional
   funder actually reads before the impact figures.
@@ -301,10 +323,10 @@ converts a hook into an accusation.
 - **`Conservative B2B (DACH)`** — both states are facts about the organisation that a third party
   could check. A before-and-after about a *person* is out of register regardless of how true it is.
   > *Fourteen open corrective actions, nine with no owner. One quarter later: three open, all dated.*
-- **`Technical / industrial`** — **`SUBSTITUTED`.** This reader does not think in narrative
-  before-and-after; he thinks in a delta on one measured parameter under held conditions. The type
-  converts to a paired measurement, and the held conditions are what make it a claim rather than an
-  anecdote.
+- **`Technical / industrial`** — **`CONVERTED`.** The before and the after are both still there and
+  both still describe the reader's own operation; only the idiom changes. This reader does not read
+  narrative, he reads a delta on one measured parameter, so the pair is stated as measurements under
+  held conditions — and the held conditions are what make it a claim rather than an anecdote.
   > *Escape rate on the coated line: 1.9% before, 0.2% after. Same shift pattern, same operators.*
 - **`Consumer / lifestyle`** — transformation is a mood shift across the trip, present tense,
   sensory, and small enough to be believable.
@@ -321,9 +343,11 @@ converts a hook into an accusation.
   register's most natural sentence.
   > *From chasing three proposals a month to two clients on retainer and one call a week.*
 
-**The contrast worth looking at:** two registers change what the transformation is *about* rather
-than how it sounds — `Technical / industrial` swaps the narrative for a measurement pair, and
-`Mission / nonprofit` swaps the person for the system. The other three keep the shape.
+**The contrast worth looking at:** two registers refuse the narrative, and they refuse it for
+opposite reasons. `Technical / industrial` keeps both states and both belong to the reader — only
+the idiom becomes measurement, so the promise survives intact. `Mission / nonprofit` cannot keep the
+subject at all, and moving it from a person to the system is a different claim, not a different
+idiom. That is the whole distance between the two markers, in one type.
 
 ---
 
@@ -332,13 +356,18 @@ than how it sounds — `Technical / industrial` swaps the narrative for a measur
 Derived from the rows above; it is a lookup, not a second argument. Read the type's row before
 trusting a cell.
 
-| Register | Strongest types | Substituted or constrained |
-| --- | --- | --- |
-| `Conservative B2B (DACH)` | Mechanism, outcome, callout | Time (process interval only), contrarian (market, not reader), transformation (organisation, not person) |
-| `Technical / industrial` | Outcome-as-spec, effort, mechanism | Transformation (measurement pair, not narrative) |
-| `Consumer / lifestyle` | Outcome, time, effort, transformation | Mechanism (provenance stands in), pain (kept light) |
-| `Mission / nonprofit` | Mechanism, outcome | Pain (funder-facing only), callout (relationship, never condition), transformation (system, not person), time (responsiveness only) |
-| `Direct-response` | All eight | None — which is why this is the register that flatters a bad set of variants |
+| Register | Strongest types | `SUBSTITUTED` — a different job | `CONVERTED` — a different vehicle |
+| --- | --- | --- | --- |
+| `Conservative B2B (DACH)` | Mechanism, outcome, callout | — | Time (clock set on an interim deliverable, not his outcome) |
+| `Technical / industrial` | Outcome-as-spec, effort, mechanism | — | Transformation (a measurement pair, not a narrative) |
+| `Consumer / lifestyle` | Outcome, time, effort, transformation | Mechanism (a proof beat stands in; no repeatability claim is made) | — |
+| `Mission / nonprofit` | Mechanism, outcome | Time (our responsiveness, not their circumstances) · Callout (relationship, never condition) · Contrarian (the funder's model, and the reader changes) · Pain (funder-facing only, and the reader changes) · Transformation (the system, not a person) | — |
+| `Direct-response` | All eight | — | — |
+
+`Direct-response` carries no marker in either column, which is exactly why it is the register that
+flatters a bad set of variants: nothing in it pushes back. Test a set against
+`Mission / nonprofit` or `Conservative B2B (DACH)` if you want to find out whether the types were
+chosen or merely listed.
 
 ## Two types that collide
 

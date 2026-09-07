@@ -17,10 +17,11 @@ one's structure, and the brief's own Register section is the one input nothing d
 recover from if it's wrong (`../audience-research/SKILL.md` — register, once set, is inherited, not
 re-decided).
 
-## The two steps, and why they never merge
+## The procedure: two writing passes, then a spec
 
 Every section below gets written in two passes, in that order, and the second never leaks into the
-first:
+first. A third output — the section spec, covered later in this file — follows once the copy is
+done:
 
 1. **Decide what the section has to accomplish**, using the framework layer — the Value Equation's
    levers, obstacle reversed into solution, objection mapped to hidden objection mapped to belief
@@ -36,6 +37,10 @@ first:
 Skip step 1 and you get fluent copy arguing the wrong thing to the right person. Skip step 2 and you
 get an accurate argument nobody in this register will finish reading. Merge them into one pass and
 the result is a copy generator wearing this skill's name — the failure this skill exists to prevent.
+
+3. **Produce the section spec**, once the copy for that section is written — see `## The section
+   spec` below. A run that stops after steps 1 and 2 has copy but no handoff artifact; the spec is
+   not optional trailing paperwork, it is this skill's third output.
 
 ## The eleven sections
 
@@ -72,8 +77,8 @@ consumes it by these five key names and no others:
 section_type: <one of the eleven>
 purpose: <what this section has to accomplish, from the framework pass>
 content_hierarchy: <what a reader takes in first, second, third within the section>
-components: <the concrete elements — headline, subhead, image, form, comparison table, badge…>
-responsive_intent: <what stacks, collapses, or hides first on a narrow viewport>
+components: <the concrete elements — heading, subhead, media slot, form, comparison table, badge…>
+responsive_intent: <what stacks, collapses, reorders, or hides first on a narrow viewport>
 ```
 
 Write the spec after the copy, not before. It describes what the copy actually needs to hold, and a
@@ -91,5 +96,6 @@ matters.
 
 By convention in this vault, finished page copy lands alongside the brief it was built from —
 `03 Projects/<Project>/_Research/[C] Page Copy — <Page> — <date>.md` — or wherever your project
-keeps drafted copy if you're not running this inside that setup. Say where you filed it; a page
-nobody can find is not a shipped page.
+keeps drafted copy if you're not running this inside that setup. This skill produces two things:
+the copy itself, and the section spec per section that `design-handoff` consumes. Say where you
+filed the copy; a page nobody can find is not a shipped page.

@@ -65,8 +65,8 @@ page reached by people who already know the brand, tells you nothing about the a
 Giving the offer a name changes what it can do. Naming turns it from an instance of a category into a
 particular thing, and a particular thing can be referred to by buyers among themselves, told apart
 from the alternatives, and priced on its own terms rather than against the going rate for hours.
-Corey Haines's `marketingskills` repo makes the same three-part case, in its
-`offers/references/offer-anatomy.md`, and it is right.
+Corey Haines's `marketingskills` repo makes the same three-part case, in
+`coreyhaines31/marketingskills`'s `offers/references/offer-anatomy.md`, and it is right.
 
 Patterns that carry: named by the result, named by the method, named by who it is for, named by its
 shape or duration. Patterns that don't: a generic description of the category, an internal tier code

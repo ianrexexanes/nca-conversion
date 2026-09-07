@@ -15,9 +15,10 @@ copy for different brands rather than one house voice.
 
 ## The toggle, and why it exists
 
-Every enabled plugin's component list costs a few tokens in every conversation, whether or not you
-touch it that session. A **disabled** plugin costs zero listing tokens. There's no penalty for
-installing the whole toolkit and switching it off between projects:
+Every enabled plugin's component list costs tokens in every conversation, whether or not you touch
+it that session — for this plugin, currently about 1,140 tokens (`claude plugin details
+nca-conversion` reports the live figure, per-component). A **disabled** plugin costs zero listing
+tokens. There's no penalty for installing the whole toolkit and switching it off between projects:
 
 ```
 claude plugin disable nca-conversion@nca-conversion
@@ -35,7 +36,24 @@ session.
 - **`conversion-page-audit`** — ranked findings across four evidence-bounded sections.
 - **`copy-sweeps`** — seven editing passes, plus an expert-panel mode.
 - **`hook-lab`** — eight hook types, each run through the active register.
-- **`design-handoff`** — turns finished copy into a Relume brief and a Figma spec.
+- **`design-handoff`** — maps copy to components, then turns it into a Relume brief and a Figma
+  spec.
+
+## How the skills chain
+
+The main path is `audience-research` → `offer-architect` → `conversion-page-build` →
+`design-handoff`: the brief feeds the offer, the offer feeds the page copy, and the approved copy
+feeds the handoff. `conversion-page-audit` also works standalone, against a page that already
+exists, with no Conversion Brief required. `copy-sweeps` and `hook-lab` cross-cut — either can run
+on copy from any stage that needs editing or headline variants, not just at the end.
+
+Several skills mention `03 Projects/<Project>/...` paths. That's the author's own Obsidian vault
+convention, not a requirement of this plugin — every one of those skills also names a fallback
+("or your project's research folder"), so any project folder works.
+
+`conversion-page-build` and `conversion-page-audit` both mention an optional `humanizer` skill for
+a final pass over reader-facing copy. It isn't part of this plugin; if it isn't installed, both
+skills fall back to `copy-sweeps/references/banned-vocabulary.md` instead.
 
 ## How registers work
 

@@ -63,4 +63,6 @@ By convention in this vault, the report lands at
 audit output if you're not running this inside that setup.
 
 If the `humanizer` skill is available, run the finished report through it before sending it
-anywhere a client will read it. That step is optional — the audit is complete without it.
+anywhere a client will read it. If it isn't installed — a fresh install of this plugin has no vault
+and no `humanizer` — apply `../copy-sweeps/references/banned-vocabulary.md` to the report directly
+instead. That step is optional — the audit is complete without it.

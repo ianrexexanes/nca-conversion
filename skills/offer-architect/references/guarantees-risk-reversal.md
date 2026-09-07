@@ -50,8 +50,8 @@ artefact is produced in the room, in a scheduled block, with a named person pres
 
 Not a taxonomy of guarantee wording — a list of what the buyer's fear actually is and what removes
 it. Corey Haines's `marketingskills` repo catalogues the same instruments by type and by business
-model, in its `offers/references/guarantee-design.md`; this ordering is by the fear instead, because
-that is the order the design decision actually happens in.
+model, in `coreyhaines31/marketingskills`'s `offers/references/guarantee-design.md`; this ordering
+is by the fear instead, because that is the order the design decision actually happens in.
 
 **"What if I go through this and get nowhere?"**
 Return the money, either unconditionally or gated on something factual the buyer did. Unconditional

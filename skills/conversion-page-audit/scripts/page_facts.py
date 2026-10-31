@@ -27,12 +27,24 @@ Usage:
 """
 import json
 import sys
+import urllib.request
 from html.parser import HTMLParser
 
 HEADING_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
 CTA_HINTS = ("sign up", "get started", "book", "buy", "register", "contact",
              "demo", "anmelden", "jetzt", "kontakt", "buchen")
 LCP_CANDIDATE_CAP = 3
+CHROME_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+
+
+def fetch(url: str, timeout: float = 30.0) -> str:
+    request = urllib.request.Request(url, headers={
+        "User-Agent": CHROME_UA,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,de;q=0.8",
+    })
+    with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - operator-supplied URL
+        return response.read().decode("utf-8", errors="replace")
 
 
 class _Collector(HTMLParser):
@@ -187,9 +199,7 @@ def main(argv):
     if "--url" in argv:
         url = argv[argv.index("--url") + 1]
     if target.startswith("http"):
-        from urllib.request import urlopen
-        with urlopen(target) as response:          # noqa: S310 - operator-supplied URL
-            html = response.read().decode("utf-8", errors="replace")
+        html = fetch(target)
         url = url or target
     else:
         with open(target, encoding="utf-8") as handle:

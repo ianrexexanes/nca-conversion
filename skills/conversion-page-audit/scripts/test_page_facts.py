@@ -1,6 +1,11 @@
 import os
+import threading
 import unittest
+import urllib.error
+import urllib.request
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+import page_facts
 from page_facts import extract_facts
 
 FIXTURE = os.path.join(os.path.dirname(__file__), "fixtures", "sample.html")
@@ -79,6 +84,59 @@ class ExtractFactsTest(unittest.TestCase):
     def test_no_schema_found_is_noted_rather_than_silently_empty(self):
         notes = extract_facts("<html><body><p>hi</p></body></html>")["notes"]
         self.assertTrue(any("json-ld" in n.lower() for n in notes))
+
+
+PAGE = b"<html><head><title>Fixture</title></head><body></body></html>"
+
+
+class _AgentHandler(BaseHTTPRequestHandler):
+    seen = []
+
+    def do_GET(self):
+        agent = self.headers.get("User-Agent", "")
+        type(self).seen.append(agent)
+        if "Python-urllib" in agent:
+            self.send_response(403)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(PAGE)))
+        self.end_headers()
+        self.wfile.write(PAGE)
+
+    def log_message(self, *args):
+        pass
+
+
+class FetchUserAgentTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), _AgentHandler)
+        cls.url = "http://127.0.0.1:%d/" % cls.server.server_address[1]
+        threading.Thread(target=cls.server.serve_forever, daemon=True).start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def setUp(self):
+        _AgentHandler.seen.clear()
+
+    def test_server_rejects_python_default_agent(self):
+        with self.assertRaises(urllib.error.HTTPError) as caught:
+            urllib.request.urlopen(self.url)
+        self.assertEqual(caught.exception.code, 403)
+
+    def test_fetch_passes_a_server_that_blocks_python_default_agent(self):
+        html = page_facts.fetch(self.url)
+        self.assertIn("<title>Fixture</title>", html)
+
+    def test_fetch_sends_chrome_ua(self):
+        page_facts.fetch(self.url)
+        self.assertEqual(_AgentHandler.seen[-1], page_facts.CHROME_UA)
 
 
 if __name__ == "__main__":

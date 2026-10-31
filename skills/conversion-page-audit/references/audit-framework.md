@@ -151,7 +151,7 @@ checks.
   inventory of every actionable element on the page. A button whose copy carries no keyword from
   that hint list (a "Continue with Google" button, for instance) will not appear in `ctas` at all.
   Confirm a genuine absence by reading the raw markup directly, or by inspecting the rendered page
-  if Playwright is available — never from `ctas` alone coming up short.
+  if `render_check.py` ran — never from `ctas` alone coming up short.
 
 ### FAQ
 

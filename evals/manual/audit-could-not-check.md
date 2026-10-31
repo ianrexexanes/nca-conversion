@@ -123,7 +123,7 @@ eval is trusted again.
    if the skill insists on a URL, serve it locally (`python3 -m http.server` from the fixture
    directory) and point it at `http://localhost:<port>/planted.html`.
 2. Optionally run it twice: once with a static-only capability (markup read only, no rendering
-   tool available) and once with a real rendered capture (e.g. via the Playwright MCP), to test
+   tool available) and once with a real rendered capture (`render_check.py`, run by the venv's Python), to test
    the "if a rendered capture ran" branch of assertion (b) below.
 3. Read the finished report's four sections, using the exact headings from
    `skills/conversion-page-audit/references/report-template.md`: **Fix now**,

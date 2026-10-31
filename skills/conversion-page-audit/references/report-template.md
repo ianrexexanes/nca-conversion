@@ -8,6 +8,43 @@ each section here is that file's discipline given a place to live, not a new set
 the bracketed instructions as you fill each section in; keep the four headers exactly as they
 appear here; keep every entry inside the section its evidence actually earned it.
 
+## Conversion Score
+
+[Scored audits only, run by `/cro audit`. An unscored audit leaves out this block and the Search check block.]
+
+[The coverage line from score.py, word for word.]
+
+**Mode:** [Search (keyword: <keyword>) / Direct] · **Page role:** [homepage / service / landing] · **Traffic:** [cold outreach / ads / search / mixed / unknown] · **Register:** [archetype]
+
+| Factor | Score | What was seen |
+| --- | --- | --- |
+| 1. What's in it for me? | [0 to 10, or not checked] | [evidence, or what blocked the check] |
+| 2. Is it for me? | [0 to 10, or not checked] | [evidence, or what blocked the check] |
+| 3. Does it work? | [0 to 10, or not checked] | [evidence, or what blocked the check] |
+| 4. What do I do next? | [0 to 10, or not checked] | [evidence, or what blocked the check] |
+| 5. Value and how it works | [0 to 10, or not checked] | [evidence, or what blocked the check] |
+| 6. Proof and trust further down the page | [0 to 10, or not checked] | [evidence, or what blocked the check] |
+| 7. Objections and risk | [0 to 10, or not checked] | [evidence, or what blocked the check] |
+| 8. The form and what happens after it | [0 to 10, or not checked] | [evidence, or what blocked the check] |
+| 9. Design that sells | [0 to 10, or not checked] | [evidence, or what blocked the check] |
+| 10. Mobile and speed, measured | [0 to 10, or not checked] | [evidence, or what blocked the check] |
+
+## Search check
+
+[Search pages only; leave this section out on a Direct page.]
+
+**Keyword:** [keyword] · **Variants:** [variants, or "none"] · **Confirmed:** [yes / no]
+
+| Placement | Status | What the page has |
+| --- | --- | --- |
+| Title | [found / missing / not applicable] | [text] |
+
+[one row per placement, in this order: Title, Meta description, URL, H1, First sentence, H2]
+
+**Headings:** H2 [exact] exact and [variant] variant of [total]; H3 [...]; H4 [...]
+
+**Body:** [exact] exact and [variant] variant uses
+
 ## Fix now
 
 Order these by how much each one is likely to move the outcome, biggest first — not by which one is
@@ -59,7 +96,7 @@ holds one. An entry written as "unable to verify" converts into nothing; write w
 what specifically stopped you, and what would fix that.
 
 ```
-- **[What you were trying to determine]**: blocked by [no Playwright MCP available / no admin
+- **[What you were trying to determine]**: blocked by [no rendered capture: `render_check.py` could not run (run `/cro setup`) / no admin
   access / consent could not be given / a cache could not be purged / behind authentication / other].
   Unblocked by: [the specific thing that would let this be checked].
 ```

@@ -1,8 +1,8 @@
 ---
 name: conversion-page-audit
-description: "Use when auditing a live landing page, sales page, pricing page or signup flow for conversion problems — given a URL or a page the user wants reviewed. Produces a ranked report: Fix now, Test don't guess, Not a problem, and Could not check. Also use when the user says 'audit this page', 'why isn't this converting', 'review my landing page', 'CRO audit', 'conversion audit', or pastes a URL and asks what is wrong with it. Works without a Conversion Brief but notes its absence as a limitation."
+description: "Use when /cro audit runs it, or when an unscored audit is asked for by name. Returns the four-section report: Fix now, Test don't guess, Not a problem, Could not check."
 license: MIT
-allowed-tools: Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/conversion-page-audit/scripts/page_facts.py *)
+allowed-tools: Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/conversion-page-audit/scripts/page_facts.py *) Bash(${CLAUDE_PLUGIN_DATA}/venv/bin/python ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/render_check.py *)
 metadata:
   version: 0.2.0
 ---
@@ -28,9 +28,13 @@ before you start finding things.
    are the first images in document order, not a measured Largest Contentful Paint; see
    `references/audit-framework.md` for exactly what that distinction does and does not license you
    to claim.
-3. **Get a rendered capture via the Playwright MCP, if it is available.** This is the single most
-   important instruction in this skill: **if Playwright is not available, every rendered-only
-   check goes to "Could not check" — never to "Not a problem."** Static markup cannot see layout,
+3. **Get a rendered capture with
+   `${CLAUDE_PLUGIN_DATA}/venv/bin/python ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/render_check.py <url> --out <dir>`.**
+   Rendered evidence comes only from `render_check.py`, the one route that blocks analytics. This
+   is the single most important instruction in this skill: **if the venv is missing, every
+   rendered-only check goes to Could not check, with the reason and "run `/cro setup`", never to
+   Not a problem.** The same holds when the script exits 3 because the page did not load; its
+   reason is under `could_not_check` in `render.json`. Static markup cannot see layout,
    scroll-gated content, consent-gated tags, or anything CSS hides. `references/evidence-rules.md`
    is the full account of what that blindness costs when it gets ignored instead of named.
 4. **Check for a Conversion Brief** at `03 Projects/<Project>/_Research/` — or your project's

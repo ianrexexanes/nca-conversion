@@ -32,7 +32,6 @@ Name the research step and the command to run, then wait for the result. The kic
 
 If your project has its own build SOP, follow its phases. The plugin does not depend on any one SOP file. These are the plugin's own phases and the command each one maps to.
 
-````markdown
 | Phase | Command | Slice 1 status |
 | --- | --- | --- |
 | 0. Decide | `/cro` with no command (this kickoff) | ready |

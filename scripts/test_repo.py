@@ -543,6 +543,7 @@ class CroRulingsTest(unittest.TestCase):
                      "starts no subagents", "claude-seo", "seo-dataforseo", "GA4"):
             self.assertIn(part, " ".join(text.split()))
         self.assertNotIn(chr(0x2014), text); self.assertNotIn(chr(0x2013), text)
+        self.assertNotIn("```", text)
 
     def test_readme_v2_section(self):
         text = README.read_text(encoding="utf-8")

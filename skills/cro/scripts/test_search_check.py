@@ -159,9 +159,9 @@ class SearchCheckTests(unittest.TestCase):
 class RulingsTest(unittest.TestCase):
     def test_normalise_folds_every_dash_and_guillemet_and_drops_invisible_marks(self):
         self.assertEqual(search_check.normalise("Bike—Repair ‹Shop› »Kit«"), "bike repair shop kit")
-        self.assertEqual(search_check.normalise("bike repair‑kit‐set‒day"), "bike repair kit set day")
-        self.assertEqual(search_check.normalise("Fahrrad­reparatur​﻿"), "fahrradreparatur")
-        self.assertTrue(search_check.matches("Fahrrad­reparatur für Kinder", ["Fahrradreparatur"]))
+        self.assertEqual(search_check.normalise("bike\u00a0repair\u2011kit\u2010set\u2012day"), "bike repair kit set day")
+        self.assertEqual(search_check.normalise("Fahrrad\u00adreparatur\u200b\ufeff"), "fahrradreparatur")
+        self.assertTrue(search_check.matches("Fahrrad\u00adreparatur für Kinder", ["Fahrradreparatur"]))
 
     def test_matches_takes_terms_literally_and_never_matches_an_empty_term(self):
         self.assertTrue(search_check.matches("Our bike.repair kit", ["bike.repair"]))

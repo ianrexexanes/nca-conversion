@@ -34,8 +34,8 @@ STOP_WORDS = {
     "that", "you", "your", "we", "our",
     "der", "die", "das", "und", "oder", "im", "für", "mit", "von", "zu", "ein", "eine", "ihr", "wir",
 }
-SPACE_MARKS = dict.fromkeys(map(ord, "-‐‑‒–—_/«»‹›"), " ")
-DROP_MARKS = dict.fromkeys(map(ord, "­​‌‍⁠﻿"), None)
+SPACE_MARKS = dict.fromkeys(map(ord, "-\u2010\u2011\u2012–—_/«»‹›"), " ")
+DROP_MARKS = dict.fromkeys(map(ord, "\u00ad\u200b\u200c\u200d\u2060\ufeff"), None)
 LANGUAGE_HOME = re.compile(r"/[a-z]{2}(-[a-z]{2})?/?", re.I)
 SENTENCE_END = re.compile(r"[.!?](?=\s|$)")
 

@@ -285,7 +285,7 @@ class AuditRulingsTest(unittest.TestCase):
         self.assertEqual([line for line in lines[1:] if line.startswith("#")], [])
         opening = "\n".join(lines[1:lines.index(next(line for line in lines if line.startswith("1. ")))])
         for part in ("/cro audit <url> [mode] [keyword] [traffic] [page role] [register]",
-                     "${CLAUDE_PLUGIN_ROOT}", "${CLAUDE_PLUGIN_DATA}", "full path"):
+                     "${CLAUDE_PLUGIN_ROOT}", "${CLAUDE_PLUGIN_DATA}", "full paths", "double quotes"):
             self.assertIn(part, opening)
 
     def test_step_11_carries_a_sample_sheet_that_score_accepts(self):

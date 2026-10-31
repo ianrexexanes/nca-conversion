@@ -53,8 +53,8 @@ handful of real user tests), and first-principles fixes for anything `audit-fram
 `form-and-signup-audit.md` can already identify as a defect rather than a genuine toss-up. Ranking
 by confidence in the reasoning is not a lesser method than testing — it is the correct method when
 testing cannot produce a trustworthy answer in a useful amount of time. Sequential or Bayesian
-analysis methods can shave some of the requirement down, but they close only part of the gap, not all of
-it. They do not rescue a test that needs far more traffic than the page actually gets.
+analysis methods can shave some of the requirement down, but they close only part of the gap. They do
+not rescue a test that needs far more traffic than the page actually gets.
 
 ## What belongs in the "Test, don't guess" entry
 

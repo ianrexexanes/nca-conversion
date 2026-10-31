@@ -3,7 +3,7 @@ name: offer-architect
 description: "Use when designing, packaging or pricing an offer — before any page exists. Covers Value Equation diagnosis, obstacle mapping, value stack, guarantees and risk reversal, price anchoring, and pitch formats. Also use when the user says 'design an offer', 'package this', 'what should I charge', 'pricing', 'guarantee', 'value stack', 'grand slam offer', or describes a service and asks how to sell it."
 license: MIT
 metadata:
-  version: 0.1.0
+  version: 0.2.0
 ---
 
 # Offer architect

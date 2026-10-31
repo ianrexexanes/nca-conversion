@@ -4,7 +4,7 @@ description: "Use when auditing a live landing page, sales page, pricing page or
 license: MIT
 allowed-tools: Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/conversion-page-audit/scripts/page_facts.py *)
 metadata:
-  version: 0.1.0
+  version: 0.2.0
 ---
 
 # Conversion page audit

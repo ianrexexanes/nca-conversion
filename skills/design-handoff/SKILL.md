@@ -3,7 +3,7 @@ name: design-handoff
 description: "Use when approved page copy becomes a design spec — before opening a design tool. Covers section type, purpose, content hierarchy, components, responsive intent, visual hierarchy, emphasis, above-the-fold priority, scan path. Also use when the user says 'hand this to design', 'wireframe this', 'Relume brief', 'Figma spec', 'turn this copy into a layout', or has finished copy and asks what's next."
 license: MIT
 metadata:
-  version: 0.1.0
+  version: 0.2.0
 ---
 
 # Design handoff

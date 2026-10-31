@@ -1,0 +1,33 @@
+{
+  "lighthouseResult": {
+    "categories": {
+      "performance": {
+        "score": 0.55
+      }
+    },
+    "audits": {
+      "largest-contentful-paint": {
+        "numericValue": 4700
+      },
+      "cumulative-layout-shift": {
+        "numericValue": 0.05
+      },
+      "total-blocking-time": {
+        "numericValue": 310
+      }
+    }
+  },
+  "loadingExperience": {
+    "metrics": {
+      "LARGEST_CONTENTFUL_PAINT_MS": {
+        "percentile": 3900
+      },
+      "INTERACTION_TO_NEXT_PAINT": {
+        "percentile": 240
+      },
+      "CUMULATIVE_LAYOUT_SHIFT_SCORE": {
+        "percentile": 5
+      }
+    }
+  }
+}

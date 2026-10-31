@@ -213,7 +213,7 @@ placed inside body copy. The two are worth very different amounts. A contextual 
 editorial signal about this specific page. A template link is site furniture that exists on every
 URL and therefore says nothing about any of them.
 
-The wrong answer: *"the service pages are well interlinked — each one links to three others."* The
+For instance, the wrong answer: *"the service pages are well interlinked — each one links to three others."* The
 three links were a navigation block present on all 240 URLs on the site. The count was accurate,
 the pages did link to each other, and the finding recommended nothing worth doing, because the
 structure it described was already universal and could not be improved by adding what was already

@@ -81,18 +81,22 @@ def read_ledger(path):
 def main(argv):
     args = argv[1:]
     ledger = None
-    if "--ledger" in args:
-        i = args.index("--ledger")
-        ledger = args[i + 1]
-        del args[i:i + 2]
-    root = args[0]
     try:
+        if "--ledger" in args:
+            i = args.index("--ledger")
+            if i + 1 >= len(args):
+                raise ValueError("--ledger needs a file")
+            ledger = args[i + 1]
+            del args[i:i + 2]
+        if len(args) != 1:
+            raise ValueError("usage: find_figures.py ROOT [--ledger FILE]")
+        root = args[0]
         if not os.path.isdir(root):
             raise OSError("not a folder: " + root)
         rows = find_rows(root)
         accounted = read_ledger(ledger) if ledger else set()
-    except OSError as err:
-        print(err, file=sys.stderr)
+    except (OSError, ValueError) as err:
+        print("find_figures: " + str(err), file=sys.stderr)
         return 2
     texts = ["%s:%d: %s | %s" % r for r in rows]
     for t in texts:

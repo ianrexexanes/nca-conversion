@@ -9,7 +9,7 @@ field count and type, blind to anything about layout, timing or interaction.
 ## Field count and friction
 
 Each field beyond the minimum a visitor must clear has a real cost in how many of them finish.
-Short forms tend to finish better than long ones, and the longest forms lose the most visitors.
+Visitors tend to finish short forms more often than long ones, and the longest forms lose the most of them.
 Treat that as a prioritization signal for which field to question first,
 not as a lift you can promise for this specific page — a benchmark from elsewhere does not transfer
 to this form's audience or its offer, the same caution `evidence-rules.md` applies to any borrowed
@@ -64,7 +64,7 @@ named as checked, so nobody re-flags it next audit.
   only exposes the hint-matched subset in its JSON output — it does not expose the full list — so
   confirm a genuine absence by reading the raw markup directly or by inspecting the rendered page,
   never by `ctas` alone coming up short of anything social-auth-shaped.
-- **Single-step versus multi-step.** Three or fewer fields tends to work fine as a single step;
+- **Single-step versus multi-step.** A short form tends to work fine as a single step;
   once a B2B flow needs more than that, splitting it into steps that each take only a few seconds
   to clear usually converts better, with anything sensitive or effortful pushed to the very end.
 

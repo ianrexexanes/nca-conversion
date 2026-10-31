@@ -121,6 +121,21 @@ class FindFiguresRulingsTest(unittest.TestCase):
         self.assertEqual([line.split(":")[0] for line in out],
                          ["skills/alpha/references/z.md", "skills/demo/references/x.md"])
 
+    def test_bad_input_exits_2_without_a_traceback(self):   # R128
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            refs = root / "skills" / "demo" / "references"
+            refs.mkdir(parents=True)
+            (root / "ledger.md").write_bytes(b"| skills/demo/references/x.md | A 3x lift \xff. |\n")
+            for text, args in ((b"A 3x lift \xff.\n", ["skills"]), (b"A 3x lift.\n", ["skills", "--ledger", "ledger.md"]),
+                               (b"A 3x lift.\n", []), (b"A 3x lift.\n", ["skills", "--ledger"]),
+                               (b"A 3x lift.\n", ["missing"])):
+                (refs / "x.md").write_bytes(text)
+                done = subprocess.run([sys.executable, SCRIPT] + args, cwd=root, capture_output=True, text=True)
+                self.assertEqual(done.returncode, 2, args)
+                self.assertNotIn("Traceback", done.stderr)
+                self.assertNotIn("can't open file", done.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

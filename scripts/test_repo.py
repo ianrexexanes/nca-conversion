@@ -31,5 +31,16 @@ class RepoStructureTest(unittest.TestCase):
         self.assertEqual(check_frontmatter.main(str(ROOT)), 0)
 
 
+class SetupReferenceTest(unittest.TestCase):
+    def test_setup_reference_names_both_commands_and_the_key_file(self):
+        text = (ROOT / "skills" / "cro" / "references" / "setup.md").read_text(encoding="utf-8")
+        for command in (
+            'python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/setup.py --data-dir ${CLAUDE_PLUGIN_DATA}',
+            'python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/doctor.py --data-dir ${CLAUDE_PLUGIN_DATA}',
+            "~/.config/nca-conversion/pagespeed.key",
+        ):
+            self.assertIn(command, text)
+
+
 if __name__ == "__main__":
     unittest.main()

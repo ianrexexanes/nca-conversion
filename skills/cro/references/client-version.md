@@ -8,9 +8,13 @@ Fill every placeholder from the audit. Keep the labels, their order and the thre
 
 ```
 **Site:** <domain>
+
 **Checked:** <date>
+
 **Pages read:** <paths on that domain>
+
 **Method:** Public pages only. No logins, and no form was sent.
+
 **Written by:** <name>
 
 <Two or three sentences on what the page already does well.>

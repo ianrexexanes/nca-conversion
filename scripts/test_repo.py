@@ -1,6 +1,8 @@
 import json
 import re
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -95,6 +97,73 @@ class ScoreAnchorsRulingsTest(unittest.TestCase):
         self.assertLess(len(section), 40)
         if len(lines) > 100:
             self.assertIn("## Contents", lines[:start], "a file over 100 lines opens with ## Contents")
+
+
+class ClientVersionTests(unittest.TestCase):
+    def test_client_version_names_every_label_and_the_check(self):
+        text = (ROOT / "skills/cro/references/client-version.md").read_text(encoding="utf-8")
+        for required in (
+            "**Site:**",
+            "**Checked:**",
+            "**Pages read:**",
+            "**Method:**",
+            "**Written by:**",
+            "**What I saw**",
+            "**Why it costs leads**",
+            "**The fix**",
+            "**Effort**",
+            "The three leaks that cost the most, in the order I would fix them",
+            "No score",
+            "python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/client_check.py <client file>",
+        ):
+            self.assertIn(required, text)
+
+
+class ClientVersionRulingsTest(unittest.TestCase):
+    PARTS = ["## Format", "## Rules", "## Language", "## Voice", "## The check"]
+
+    def read_parts(self):
+        lines = (ROOT / "skills/cro/references/client-version.md").read_text(encoding="utf-8").splitlines()
+        parts, fenced = [["", []]], False
+        for line in lines:
+            if line.startswith("```"):
+                fenced = not fenced
+            if line.startswith("## ") and not fenced:
+                parts.append([line, []])
+            else:
+                parts[-1][1].append(line)
+        return lines, parts
+
+    def test_parts_come_in_step_6_order(self):
+        lines, parts = self.read_parts()
+        self.assertTrue(lines[0].startswith("# "), lines[0])
+        self.assertEqual([head for head, _ in parts[1:]], self.PARTS)
+        self.assertTrue([line for line in parts[0][1][1:] if line.strip()], "a paragraph comes between the title and ## Format")
+
+    def test_format_block_holds_the_shape_and_passes_client_check(self):
+        body = dict(self.read_parts()[1][1:])["## Format"]
+        fences = [n for n, line in enumerate(body) if line.startswith("```")]
+        self.assertEqual(len(fences), 2, "## Format holds one fenced block")
+        block = "\n".join(body[fences[0] + 1:fences[1]]) + "\n"
+        shape = ["**Site:**", "**Checked:**", "**Pages read:**", "**Method:**", "**Written by:**", "### ", "**What I saw**",
+                 "**Why it costs leads**", "**The fix**", "**Effort**", "## Summary",
+                 "The three leaks that cost the most, in the order I would fix them."]
+        found = [block.find(part) for part in shape]
+        self.assertTrue(-1 not in found and found == sorted(found), list(zip(shape, found)))
+        self.assertEqual(re.findall(r"(?m)^([1-9])\. \S", block[found[-1]:]), ["1", "2", "3"])
+        with tempfile.TemporaryDirectory() as folder:
+            file = Path(folder) / "client.md"
+            file.write_text(block, encoding="utf-8")
+            done = subprocess.run([sys.executable, str(ROOT / "skills/cro/scripts/client_check.py"), str(file)],
+                                  capture_output=True, encoding="utf-8")
+        self.assertEqual((done.returncode, done.stdout), (0, "client_check: 0 FAIL, 0 WARN\n"))
+
+    def test_rules_flag_the_one_example_and_the_check_gives_its_rule(self):
+        parts = dict(self.read_parts()[1][1:])
+        self.assertTrue(any("Example:" in line and "PageSpeed Insights" in line for line in parts["## Rules"]))
+        check = "\n".join(parts["## The check"])
+        self.assertIn("```bash\npython3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/client_check.py <client file>\n```", check)
+        self.assertIn("fix every FAIL, read every WARN, and keep only measured facts about the client's own page", check)
 
 
 if __name__ == "__main__":

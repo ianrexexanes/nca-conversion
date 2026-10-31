@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tagged fixture</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TEST0000000"></script>
+<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-TEST000"></script>
+<script async src="https://www.clarity.ms/tag/TEST000"></script>
+<script async src="https://connect.facebook.net/en_US/fbevents.js"></script>
+<script async src="https://snap.licdn.com/li.lms-analytics/insight.min.js"></script>
+<script src="/gtag/js?id=G-TEST0000000"></script>
+</head>
+<body style="margin:0">
+<img src="/g/collect?v=2&tid=G-TEST" width="1" height="1" alt="">
+<script>fetch('/api/hit', {method: 'POST', body: 'x=1'}); navigator.sendBeacon('/beacon', 'y=1');</script>
+<h1>Fixture headline</h1>
+<p>A short paragraph in the first screen.</p>
+<a class="cta" href="#contact" style="background:#0a5; color:#fff; padding:12px 20px; display:inline-block">Book a call</a>
+<div style="height:2700px"></div>
+<form id="contact" action="/thank-you" method="post">
+<input type="text" name="name" required>
+<input type="email" name="email" required>
+<input type="text" name="company">
+<textarea name="message"></textarea>
+<button type="submit">Send</button>
+</form>
+</body>
+</html>

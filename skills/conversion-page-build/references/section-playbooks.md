@@ -121,7 +121,7 @@ register whose buyer does not evaluate offers that way.
 | Conservative B2B (DACH) | A scope table — included, excluded, priced or scoped per line. Anchors against a stated cost of inaction, never a crossed-out "total value" figure, which reads as a device in this register. |
 | Technical / industrial | A specification or compatibility matrix. The "stack" here is the spec sheet itself, not a value narrative laid over it. |
 | Consumer / lifestyle | "What's included," shown with specifics and photography, stacked by benefit rather than by dollar figure. |
-| Mission / nonprofit | No stack framing at all. Tiered participation with a concrete stated allocation per level ("$50 provides X") — a value comparison here reads as commercial pressure on a cause. |
+| Mission / nonprofit | No stack framing at all. Tiered participation with a concrete stated allocation per level (for instance "$50 provides X") — a value comparison here reads as commercial pressure on a cause. |
 | Direct-response | The full theatrical stack — itemized components, stated values, total-value-then-price reveal, anchored against a named alternative. |
 
 This is one of the three sections — with Guarantee and CTA — where the register difference is a

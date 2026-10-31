@@ -23,7 +23,7 @@ feature gap rather than a consequence in the reader's day, the job hasn't been f
 
 ## Loss Aversion / Prospect Theory
 
-Behavioral-economics research puts the sting of a loss at roughly double the pleasure of an
+Behavioral-economics research puts the sting of a loss above the pleasure of an
 equivalent gain, so avoiding a bad outcome pulls a reader harder than chasing an equally-sized good
 one ever does. Useful in **Problem** (naming the cost of the status quo continuing, not just the
 benefit of changing it), **Objections** (a resolved risk is worth more in the copy than an equivalent
@@ -51,7 +51,7 @@ of the pair and the contrast — and the two sections' whole job — collapses.
 
 ## Framing Effect
 
-Identical facts land differently depending on how they're stated — "90% success" against "10%
+Identical facts land differently depending on how they're stated — for instance "90% success" against "10%
 failure" describes the same number but not the same reader reaction. Governs phrasing in **Outcome**
 and **Objections** specifically: frame within the belief the reader already holds about their
 situation rather than against it. A related habit worth folding in here: don't open a section by
@@ -63,10 +63,10 @@ it is a tone one.
 
 Four related pricing-perception effects, treated as one decision for **Value stack**: a price ending
 just under a round number reads as meaningfully cheaper than the round number itself, while a round
-price reads as more premium and easier to process; a percentage discount feels larger below roughly
-$100 and an absolute discount feels larger above it; a middle option in a three-tier set reads as the
+price reads as more premium and easier to process; a percentage discount feels larger on a small price
+and an absolute discount feels larger on a large one; a middle option in a three-tier set reads as the
 reasonable choice specifically because a cheaper and a pricier option flank it; and the same figure
-restated as a smaller recurring unit ("$3 a day" against "$90 a month") changes how expensive it
+restated as a smaller recurring unit (for instance "$3 a day" against "$90 a month") changes how expensive it
 feels without changing what's owed. None of these four is a separate principle for a page-builder —
 they're four levers on the same one decision, which number and which framing to put in front of the
 reader, and mixing charm pricing with a premium positioning (or vice versa) undercuts whichever

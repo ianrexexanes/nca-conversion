@@ -23,10 +23,11 @@ wrong. Route confirmed defects to "Fix now" and save testing for genuine uncerta
 
 The minimum detectable effect (MDE) sets the floor: it's the smallest lift that would actually
 change what you'd recommend if you saw it, and pushing that floor lower drives the traffic
-requirement up fast. The relationship is not linear, it's brutal: at a 3%
-baseline conversion rate, detecting a lift as large as 50% takes on the order of ten thousand
-sessions across both variants, but detecting a lift of only 10% at that same baseline takes on the
-order of a quarter million — over twenty times the traffic, to catch a change a fifth the size.
+requirement up fast. The relationship is not linear, it's brutal. For instance, at a 3%
+baseline conversion rate, detecting a lift as large as 50% takes about 5,000 sessions across both
+variants (two-sided test, 95 per cent confidence, 80 per cent power, lift measured relative to the
+baseline), but detecting a lift of only 10% at that same baseline takes about 110,000: over
+twenty times the traffic, to catch a change a fifth the size.
 Every step down in the effect size you're willing to call meaningful multiplies the sample you need
 to prove it, and most pages don't have the multiplier.
 
@@ -52,9 +53,8 @@ handful of real user tests), and first-principles fixes for anything `audit-fram
 `form-and-signup-audit.md` can already identify as a defect rather than a genuine toss-up. Ranking
 by confidence in the reasoning is not a lesser method than testing — it is the correct method when
 testing cannot produce a trustworthy answer in a useful amount of time. Sequential or Bayesian
-analysis methods can shave some of the requirement down, but they close a gap of tens of percent, not
-an order of magnitude — they do not rescue a test that needs ten times the traffic the page actually
-gets.
+analysis methods can shave some of the requirement down, but they close only part of the gap, not all of
+it. They do not rescue a test that needs far more traffic than the page actually gets.
 
 ## What belongs in the "Test, don't guess" entry
 

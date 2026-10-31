@@ -10,6 +10,8 @@ Almost any construction below can be filled with almost any of the eight hook ty
 exactly why they are two files: choosing an angle and choosing a shape are separate decisions, and
 collapsing them produces a set of variants that are all the same angle in different grammar.
 
+Example lines: the quoted lines in this file are written for invented organisations; their numbers show a form and are not data.
+
 Every construction below carries a **Suits** and a **Never**, and **both are slot claims, not angle
 claims.** A slot claim is about grammar: whether this shape has room for what a register needs the
 line to carry, and whether it seats the right party in the subject position. It asks whether an

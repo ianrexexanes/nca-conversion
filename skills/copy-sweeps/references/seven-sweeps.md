@@ -4,6 +4,8 @@ One defect class per pass. Each section below gives what the pass hunts, the bou
 allowed to change, one before/after, and the register note — because several of these passes run in
 opposite directions depending on who is reading.
 
+Example lines: the before and after lines in this file are written for invented organisations; their numbers show a form and are not data.
+
 Two things hold across all seven and are not restated in each:
 
 - **The argument is the author's.** A pass changes how a claim lands, never what is being claimed.

@@ -8,10 +8,9 @@ field count and type, blind to anything about layout, timing or interaction.
 
 ## Field count and friction
 
-Each field beyond the minimum a visitor must clear has a real cost in how many of them finish —
-roughly speaking, three fields sits close to a baseline completion rate, four to six fields give up
-something in the neighborhood of a tenth to a quarter of completions, and seven or more can give up
-a quarter to half. Treat those as a prioritization signal for which field to question first,
+Each field beyond the minimum a visitor must clear has a real cost in how many of them finish.
+Short forms tend to finish better than long ones, and the longest forms lose the most visitors.
+Treat that as a prioritization signal for which field to question first,
 not as a lift you can promise for this specific page — a benchmark from elsewhere does not transfer
 to this form's audience or its offer, the same caution `evidence-rules.md` applies to any borrowed
 number.
@@ -72,8 +71,8 @@ named as checked, so nobody re-flags it next audit.
 ## Popup behaviour
 
 - **Trigger fit.** A popup's trigger should match the page it's on and the traffic reaching it: a
-  time delay of roughly thirty to sixty seconds or a scroll-depth trigger around a quarter to half
-  the page suits engaged, organic reading; exit intent suits e-commerce and lead gen; a click
+  time delay long enough for the visitor to have read something, or a scroll-depth trigger partway
+  down the page, suits engaged, organic reading; exit intent suits e-commerce and lead gen; a click
   trigger (opening a form only when the visitor asks for one) carries no annoyance cost at all.
   Judge the trigger against the page's actual traffic and purpose, not against a single "best"
   default.

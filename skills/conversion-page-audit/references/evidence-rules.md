@@ -235,7 +235,7 @@ earlier document — each returns a number that looks like the answer. The rule 
 steps: enumerate every candidate without filtering, then de-duplicate to the entity you are
 actually counting, and say which of the two numbers you are reporting.
 
-This one has a measured history. Three separate counts of the client logos on a single page came in
+For instance, three separate counts of the client logos on a single page came in
 at 19, 19 and 21, produced independently and confidently, and all three were wrong. The correct
 answer is 22 logo elements resolving to 20 distinct companies, because two companies each loaded
 twice from different filenames. The 19s came from a filename heuristic that only matched paths
@@ -267,7 +267,7 @@ admin-only, conditionally loaded, scoped to templates you did not visit, or bund
 into a single asset by an optimisation layer is invisible. A front-end scan gives a lower bound on
 what exists and no upper bound at all.
 
-The wrong answer: *"the site runs eleven plugins."* The admin screen listed thirty-four, nine of
+For instance, the wrong answer: *"the site runs eleven plugins."* The admin screen listed thirty-four, nine of
 them with updates pending and two deactivated but still present on disk. The eleven were correct as
 far as they went — each really was installed — and the sentence was read as an inventory, which
 then carried a maintenance estimate and a security assessment built on a third of the real surface.

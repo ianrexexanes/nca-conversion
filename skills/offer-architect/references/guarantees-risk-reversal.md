@@ -30,7 +30,7 @@ it whether or not the page does, so the absence is not a marketing gap, it is a 
 **3. What does honouring it cost, at what invocation rate?** Work the arithmetic at a plausible rate,
 not at zero. A refund costs revenue. Open-ended continued work costs delivery capacity indefinitely
 and has no ceiling. A deferred place in a later cohort costs capacity the business already controls
-and is close to free. Terms that look equally generous on the page differ by an order of magnitude in
+and is close to free. Terms that look equally generous on the page differ widely in
 what they cost to keep, and that difference is usually the deciding factor.
 
 ## The trigger-existence check

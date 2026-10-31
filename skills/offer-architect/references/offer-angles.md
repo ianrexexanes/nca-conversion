@@ -92,8 +92,8 @@ Three rules keep it from becoming three offers that compete with each other:
 2. **The steps have to be visible.** A buyer should be able to say what the next rung adds. Where the
    difference is only price and vague "more support," nobody upgrades.
 3. **A ladder built before the core offer has proof is a ladder of unproven rungs.** This is the
-   common failure and it is expensive: three untested offers take three times as long to learn from
-   as one, and the learning is what the first year is actually for. Prove the core, then extend.
+   common failure and it is expensive: three untested offers take longer to learn from
+   than one, and the learning is what the first year is actually for. Prove the core, then extend.
 
 ## When the answer is a different vehicle, not a different angle
 

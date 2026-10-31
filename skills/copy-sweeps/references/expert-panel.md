@@ -16,7 +16,7 @@ argued and where they argued it, that seat stays empty for this review. Three se
 seven seats where four are guesses.
 
 The reason is asymmetric damage. A missing Ogilvy take costs the review one perspective. An invented
-Ogilvy take costs it more than that, because it arrives wearing seventy years of authority and gets
+Ogilvy take costs it more than that, because it arrives wearing decades of authority and gets
 believed — the reader has no way to separate the two, and neither does the person who wrote it a
 week later. A fabricated position from a famous name is not a weaker version of a real one; it is a
 different kind of object, and it will be quoted onward.
@@ -107,7 +107,7 @@ buying and it assumes a buyer who is evaluating.
 
 **Position held.** That perceived experience is frequently cheaper to change than the underlying
 reality, and that businesses systematically overspend on the reality. His Eurostar argument is the
-standing example: on the six billion pounds he cites for speeding the train up, a small percentage
+standing example: on the sum he cites for speeding the train up, a small percentage
 of that budget spent on the journey itself would have bought more satisfaction than the saved
 minutes did. Alongside it, the maxim he states in that book as *"the opposite of a good idea can
 also be a good idea"* — a

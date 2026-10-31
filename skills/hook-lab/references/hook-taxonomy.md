@@ -4,6 +4,8 @@ Eight types. Each names the **claim a line makes** — the angle, the thing bein
 reader or the offer. Under each type, what it promises, when it earns its place, when it turns on
 you, and the same claim taken through all five registers.
 
+Example lines: the quoted lines in this file are written for invented organisations; their numbers show a form and are not data.
+
 ## The boundary: this file decides the claim
 
 **This file decides the claim. `headline-formulas.md` decides the sentence.**
@@ -176,7 +178,7 @@ strongest position on the page to say *hello*.
   names role and situation and then stops; *this is for you* is a register tell from somewhere else.
   > *For quality managers at Class IIa manufacturers preparing a first audit under the new regime.*
 - **`Technical / industrial`** — the callout names the application, because application is how this
-  reader decides in one second whether the page concerns him.
+  reader decides at a glance whether the page concerns him.
   > *For longitudinal seam welding on thin-wall tube, 0.8 to 3 mm.*
 - **`Consumer / lifestyle`** — the callout names a self-image the reader would happily claim, and it
   is allowed to be funny about it.

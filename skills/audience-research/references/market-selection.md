@@ -33,7 +33,7 @@ to sell every quarter for reasons no amount of better copy fixes.
 "Small business owners" or "people who want to get in shape" are not markets an offer can be built
 for — they're categories containing dozens of markets with different pain, different purchasing
 power, and different language. A sub-market is the point where the four signals above can actually
-be evaluated, because "SaaS founders between $1M and $5M ARR who just missed a fundraise" has a
+be evaluated, because, for instance, "SaaS founders between $1M and $5M ARR who just missed a fundraise" has a
 specific, nameable pain and a specific, findable location, where "small business owners" does not.
 
 Narrow along whichever of these actually separates the buyers who convert from the ones who don't

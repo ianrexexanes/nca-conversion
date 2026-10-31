@@ -366,5 +366,120 @@ class RenderFactsTest(_LocalPages):
             self.assertIn("MAP *.%s ~NOTFOUND" % host, rules)
 
 
+TARGETS_PAGE = """<!doctype html><title>targets</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<h1>Targets page</h1>
+<img src="/hop?via=main" width="1" height="1" alt="">
+<iframe src="http://localhost:%(port)d/frame" width="300" height="80"></iframe>
+<script>
+const opened = window.open('/popup');
+new Image().src = '/note?opened=' + (opened ? 'window' : 'null');
+new Worker('/worker.js');
+const link = document.createElement('a');
+link.href = '/link-page';
+link.target = '_blank';
+link.rel = 'opener';
+document.body.append(link);
+link.click();
+</script>
+<form action="/form-page" method="get" target="_blank"><input name="q" value="1"></form>
+<script>document.forms[0].submit();</script>
+"""
+
+
+class _TargetRecorder(_LeakRecorder):
+    requests = []
+    targets = {"/popup": '<img src="/hop?via=popup" width="1" height="1" alt="">',
+               "/frame": '<p>Frame words</p><img src="/hop?via=frame" width="1" height="1" alt="">'}
+    new_pages = {"/link-page": "link", "/form-page": "form"}
+
+    def _handle(self):
+        type(self).requests.append((self.command, self.path))
+        path, _, query = self.path.partition("?")
+        if path == "/":
+            page = TARGETS_PAGE % {"port": self.server.server_address[1]}
+            self._reply(200, page.encode(), "text/html; charset=utf-8")
+        elif path in self.targets:
+            self._reply(200, self.targets[path].encode(), "text/html; charset=utf-8")
+        elif path == "/worker.js":
+            self._reply(200, b"fetch('/hop?via=worker');", "text/javascript")
+        elif path == "/hop":
+            self._reply(302, b"", "text/plain", location="/g/collect?v=2&" + query)
+        elif path in self.new_pages:
+            self._reply(302, b"", "text/plain", location="/g/collect?v=2&via=" + self.new_pages[path])
+        else:
+            self._reply(200, b"ok", "text/plain")
+
+    do_GET = do_POST = do_HEAD = do_OPTIONS = _handle
+
+
+@SKIP
+class OtherTargetsTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), _TargetRecorder)
+        cls.server.daemon_threads = True
+        base = "http://127.0.0.1:%d/" % cls.server.server_address[1]
+        threading.Thread(target=cls.server.serve_forever, daemon=True).start()
+        cls.tmp = tempfile.TemporaryDirectory()
+        _TargetRecorder.requests.clear()
+        out = Path(cls.tmp.name) / "targets"
+        cls.proc = subprocess.run([sys.executable, str(SCRIPT), base, "--out", str(out)],
+                                  capture_output=True, text=True, timeout=120)
+        time.sleep(1.5)  # a request that outlives the run lands here
+        cls.paths = [p for _m, p in _TargetRecorder.requests]
+        cls.render = json.loads((out / "render.json").read_text())
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+        cls.tmp.cleanup()
+
+    def test_no_redirect_hop_reaches_a_tag_path_from_a_frame_popup_new_page_or_worker(self):
+        self.assertEqual(self.proc.returncode, 0, self.proc.stderr)
+        self.assertIn("/hop?via=main", self.paths)
+        self.assertFalse([p for p in self.paths if p.startswith("/g/collect")], self.paths)
+
+    def test_a_cross_site_frame_still_renders(self):
+        self.assertIn("/frame", self.paths)
+        self.assertIn("/hop?via=frame", self.paths)
+
+    def test_popups_are_blocked_as_in_a_visitors_chrome(self):
+        self.assertIn("/note?opened=null", self.paths)
+        for path in ("/popup", "/link-page", "/form-page"):
+            self.assertNotIn(path, [p.split("?")[0] for p in self.paths], path)
+
+    def test_no_worker_runs_and_none_is_reported_as_an_error(self):
+        self.assertNotIn("/worker.js", self.paths)
+        self.assertFalse([e for e in self.render["errors"] if "Worker" in e], self.render["errors"])
+
+
+@SKIP
+class LaunchTest(unittest.TestCase):
+    def test_both_launches_carry_the_host_rules_one_process_and_the_popup_blocker(self):
+        from types import SimpleNamespace
+
+        from playwright.sync_api import Error as PlaywrightError
+
+        import render_check
+
+        calls = []
+
+        def launch(**options):
+            calls.append(options)
+            if options.get("channel") == "chrome":
+                raise PlaywrightError("no Chrome here")
+            return "bundled browser"
+
+        browser = render_check.launch(SimpleNamespace(chromium=SimpleNamespace(launch=launch)))
+        self.assertEqual(browser, "bundled browser")
+        self.assertEqual([options.get("channel") for options in calls], ["chrome", None])
+        for options in calls:
+            self.assertIn(render_check.host_rules(), options["args"])
+            self.assertIn("--disable-site-isolation-trials", options["args"])
+            self.assertIn("--disable-popup-blocking", options["ignore_default_args"])
+
+
 if __name__ == "__main__":
     unittest.main()

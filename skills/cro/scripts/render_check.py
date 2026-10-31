@@ -4,7 +4,8 @@ Run by the plugin's venv python:
     render_check.py URL --out DIR [--timeout 45]
 
 Nothing is clicked, typed or sent. Only GET, HEAD and OPTIONS leave the browser, and a
-blocked request is logged instead of sent. The browser is closed last, with browser.close()
+blocked request is logged instead of sent. Frames stay in the page's process, the popup blocker
+is on and no worker runs, so the page's one URL block covers everything. The browser is closed last, with browser.close()
 alone: closing a context or page fires unload handlers whose requests are not intercepted.
 Exit 0 when the page rendered, 3 when it could not load, 2 on bad arguments.
 """
@@ -29,13 +30,20 @@ VIEWPORTS = (
 ALLOWED_METHODS = ("GET", "HEAD", "OPTIONS")
 OWN_ABORTS = ("net::ERR_FAILED", "net::ERR_BLOCKED_BY_CLIENT")
 
-# Registers first, in the capture phase, so the page's own teardown handlers never run.
+# Registers first, in the capture phase, so teardown handlers never run; no worker runs.
 INIT_SCRIPT = """
 (() => {
   for (const type of ['beforeunload', 'pagehide', 'unload', 'visibilitychange', 'freeze', 'pageswap']) {
     window.addEventListener(type, (event) => event.stopImmediatePropagation(), true);
   }
   delete window.SharedWorker;
+  window.Worker = class {
+    postMessage() {}
+    terminate() {}
+    addEventListener() {}
+    removeEventListener() {}
+    dispatchEvent() { return false; }
+  };
 })();
 """
 
@@ -216,7 +224,11 @@ def read_pass(recorder, browser, major, name, width, height, mobile, timeout_ms,
 
 
 def launch(playwright):
-    options = {"headless": True, "args": [host_rules()]}
+    options = {
+        "headless": True,
+        "args": [host_rules(), "--disable-site-isolation-trials"],
+        "ignore_default_args": ["--disable-popup-blocking"],
+    }
     try:
         return playwright.chromium.launch(channel="chrome", **options)
     except PlaywrightError:

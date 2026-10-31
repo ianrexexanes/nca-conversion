@@ -223,6 +223,7 @@ class RulingsTest(_NoKeyFile):
             (ConnectionResetError("reset " + address), "pagespeed unreachable"),
             (_Response(b"<html>" + KEY.encode()), "pagespeed bad response"),
             (_Response(b'{"error": {"message": "x"}}'), "pagespeed bad response"),
+            (ValueError("Invalid header value %r" % (KEY + "\nx").encode()), "pagespeed key unusable"),
         ]
         for index, (answer, reason) in enumerate(cases):
             with self.subTest(case=index):
@@ -235,6 +236,14 @@ class RulingsTest(_NoKeyFile):
                 self.assertEqual((data["source"], data["label"], data["reason"]), ("lighthouse-lab", "lab data", reason))
                 self.assertNotIn(KEY, out + err)
                 self.assertNotIn("googleapis", out + err)
+        for index, key in enumerate((KEY + "\nsecond line", KEY + "\u2019")):
+            with self.subTest(header_check=index):
+                with mock.patch.object(speed_check.subprocess, "run", return_value=lighthouse_ok()):
+                    code, out, err = run_main(["https://example.com/", "--strategy", "mobile"], key=key)
+                data = json.loads(out)
+                self.assertEqual(code, 0)
+                self.assertEqual((data["source"], data["reason"]), ("lighthouse-lab", "pagespeed key unusable"))
+                self.assertNotIn(KEY, out + err)
 
     def test_lighthouse_failures_give_could_not_check_with_fixed_reasons(self):
         cases = [

@@ -87,6 +87,8 @@ def pagespeed(url, strategy, key):
         raise Failure("pagespeed quota" if error.code == 429 else "pagespeed refused") from None
     except (OSError, http.client.HTTPException):
         raise Failure("pagespeed unreachable") from None
+    except ValueError:
+        raise Failure("pagespeed key unusable") from None
     try:
         data = json.loads(body)
         result = data["lighthouseResult"]

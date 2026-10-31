@@ -205,6 +205,7 @@ def read_pass(recorder, browser, major, name, width, height, mobile, timeout_ms,
         page.evaluate("window.scrollTo(0, %d)" % position)
         page.wait_for_timeout(100)
     page.evaluate("window.scrollTo(0, 0)")
+    result["final_url"] = page.url
     facts = page.evaluate(READ_PAGE, height)
     first_name, full_name = "%s-first-screen.png" % name, "%s-full.png" % name
     page.screenshot(path=str(Path(out["dir"]) / first_name))

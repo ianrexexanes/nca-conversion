@@ -18,15 +18,15 @@ What the low, middle and high anchor look like for each of the ten Conversion Sc
 
 ## How to score
 
-- Scores are whole numbers from 0 to 10. The low, middle and high anchors under each factor are points a reader can check on the page. A page between two anchors takes a score between them. A page that lacks the thing the factor looks for, or does the opposite, scores below the low anchor.
+- Scores are whole numbers from 0 to 10. The low, middle and high anchors under each factor are points a reader can check on the page. Take the highest anchor the page meets in full; the low, middle and high anchors are three, six and nine. Each element of the next anchor up that the evidence names adds one point, two at most. Ten needs the high anchor met with nothing left to fault. A page that does not reach the low anchor scores zero when the thing is absent or works against the visitor, and one or two when part of it is there.
 - Three states. A thing the page should have and lacks (a form, a button, proof) is a finding and scores low. A thing the page role does not need is handled by the role line under that factor. A thing that could not be observed is `not_checked`: it is left out of the total and lowers coverage.
-- Ask the mode first, Search or Direct. It changes what a good first screen looks like for factors 1 and 2, which carry a line for each mode. Keyword placement is not scored here: the Search check reports it outside the score, so Search and Direct pages stay on one scale and before-and-after stays comparable.
+- Ask the mode first, Search or Direct. It changes what a good first screen looks like for factors 1 and 2, which carry a line for each mode. Keyword placement is not scored here: the Search check reports the six placements (title, meta description, address, H1, first sentence, H2) outside the score, with one exception, factor 1's Search line, where the H1 is read as the headline, keyword plus promise. That keeps Search and Direct pages on one scale and before-and-after comparable.
 - Ask where the traffic comes from (cold outreach, ads, search or a mix) before scoring. It changes what a good first screen, proof order and form look like, so record it in the sheet's `traffic` field and judge the page against it.
 - Every score names what was seen: the words quoted, the element, and its position on the page. An evidence line that holds only an opinion ("looks professional") is not finished.
 - Judge both the desktop view and the phone view. When they differ, the lower view sets the score, and the evidence says which view it was. The first screen means everything visible before any scrolling.
 - Register rule: a conservative Swiss B2B page never loses points for having no urgency or scarcity, and calm, sober wording is not a fault. Judge the page against the register the sheet names.
-- Score each fault once, in the factor that owns it. A weak button label belongs to factor 4 only, and a hard-to-read headline to factor 9 only.
-- When signs from two anchors are mixed, take the lower anchor unless the evidence line can name the element that earns the higher one.
+- Score each fault once, in the factor that owns it. A headline that says nothing belongs to factor 1, and the same headline set in small or low-contrast type belongs to factor 9.
+- Owners: factor 4 owns the main action (its wording, how it stands out, where it sits, the reassurance under it, its repeats down the page); factor 8 owns the form (fields, layout, what it says happens after sending, the confirmation page), and the form's button wording is factor 4's; factor 9 owns the look and order of everything else. Factor 1 owns what the headline and subheadline say, factor 9 how they are set; factor 3 owns whether an image is evidence, factor 9 whether it is well made.
 - A role line says what good looks like for that page role (homepage, service page or landing page). It adjusts the standard for the role and never takes points for something the role does not need.
 - Factor 10 needs `speed_check.py` data, run on the audited page, with its date. Without it factor 10 is `not_checked`: never guess it from how the page looks. When the measures fall in different bands, the lowest band sets the score, and the evidence names the source label and the date.
 
@@ -34,10 +34,10 @@ What the low, middle and high anchor look like for each of the ten Conversion Sc
 
 - **3:** The headline is a slogan, a greeting, the business name or a list of features, and the first screen never says what the visitor gets; the subheadline is missing, repeats the headline or is jargon.
 - **6:** From the headline and subheadline alone, without scrolling, a visitor can tell who the page is for and what is offered, but the gain is generic (save time, better results, a trusted partner) rather than a specific result, and the subheadline does not say how.
-- **9:** From the headline and subheadline alone, without scrolling, a stranger can say who it is for, what they get and how it comes about: the headline states a specific result the visitor wants in their own words, the subheadline or short benefit lines say how, and nothing competes with them above the button.
+- **9:** From the headline and subheadline alone, without scrolling, a stranger can say who it is for, what they get and how it comes about: the headline states a specific result the visitor wants in their own words, and the subheadline or short benefit lines say how.
 - **Homepage:** The headline covers the main audience and the main offer in one line; naming what the business does for whom reaches the middle anchor, and adding the specific result reaches the high anchor.
 - **Service page:** The headline names the service together with the result it brings; the service category alone (web design, accounting) reaches the low anchor at most.
-- **Landing page:** The headline states the exact promise of its single offer, in the wording of the message that sent the visitor; a headline for the whole company on a page for one offer reaches the low anchor at most.
+- **Landing page:** The headline states the exact promise of its single offer; a headline for the whole company on a page for one offer reaches the low anchor at most.
 - **Search page:** An H1 that carries the researched keyword together with a promise can reach the high anchor; the keyword alone as the H1, with no promise, cannot score above the low anchor. If no keyword is given, judge the promise only.
 - **Direct page:** The headline states the outcome the visitor wants and short benefit lines back it up; no keyword is expected, and its absence costs nothing.
 
@@ -65,8 +65,8 @@ What the low, middle and high anchor look like for each of the ten Conversion Sc
 
 - **3:** Several actions of equal weight compete on the first screen, or the only button is generic ("Submit", "Click here") or blends into the page, or it promises something other than the headline does, so the next step is unclear.
 - **6:** One main action is visible on the first screen of both views and stands out, and its wording says what happens, but nothing reassuring sits next to it, or it appears only once on a long page.
-- **9:** One main action stands out even when the page is blurred, its label names the outcome the headline promised, a short reassurance sits right under it (no cost, a guarantee, how soon the reply comes), and the same action returns at natural stopping points and at the end; on the phone it is reachable without scrolling back up.
-- **Homepage:** A main action plus a quiet secondary route (a phone number, a contact link) is normal and a menu is expected; the main action must still clearly win the eye.
+- **9:** One main action stands out even when the page is blurred, its label names the outcome the headline promised, a short reassurance sits right under it (no cost, no obligation, a guarantee), and the same action returns at natural stopping points and at the end; on the phone it is reachable without scrolling back up.
+- **Homepage:** A main action plus a quiet secondary route (a phone number, a contact link) is normal; the main action must still clearly win the eye.
 - **Service page:** The action fits the buying step for that service (ask for a quote, book a call) and returns after each major section.
 - **Landing page:** The page keeps the visitor on the action: site menu links are gone or reduced to the logo and a contact route, and every extra exit lowers the score.
 
@@ -95,24 +95,24 @@ What the low, middle and high anchor look like for each of the ten Conversion Sc
 - **9:** The doubts a buyer in this category really carries (price, fit, effort to get started, what happens if it does not work) are each answered in plain words; the risk is turned back on the business with terms it could be held to (a stated condition, a time limit, how to cancel, what is refunded); and the FAQ answers questions customers actually ask, directly.
 - **Homepage:** A short reassurance strip with a link to the full terms is enough; the full FAQ may live elsewhere.
 - **Service page:** The doubts specific to the service are answered: how pricing works (a price may be withheld on a high-ticket service sold by call if the page says how pricing is set), how long it takes, and what happens if the result does not arrive.
-- **Landing page:** The answers sit just before the final action, with the guarantee visible near the button; a landing page with no reassurance line near the action reaches the middle anchor at most.
+- **Landing page:** The answers sit just before the final action and the guarantee is stated in full there; the short reassurance line under the button belongs to factor 4.
 
 ## 8. The form and what happens after it
 
-- **3:** The page needs a form or a contact action and has none, or the form asks for more than a visitor would give at this stage (many fields, a required phone number, side-by-side columns), has a generic button, and says nothing about what happens after sending.
-- **6:** A short form or a booking option is easy to find and asks mostly what is needed, and the button says what happens, but nothing says what comes next (who replies, how soon), or some fields could wait, or the form appears only once on a long page.
-- **9:** The form asks only for what the next step needs, in a single column with visible labels; the button names the result; beside the form it says what happens after sending (who replies, how soon, what the visitor receives) with a privacy line; a closing section repeats the headline's promise and the form; and, when the confirmation page can be viewed without sending anything, it repeats what happens next and offers a useful next step.
+- **3:** The page needs a form or a contact action and has none, or the form asks for more than a visitor would give at this stage (many fields, a required phone number, side-by-side columns), and says nothing about what happens after sending.
+- **6:** A short form or a booking option is on the page and asks mostly what is needed, but nothing says what comes next (who replies, how soon), or some fields could wait.
+- **9:** The form asks only for what the next step needs, in a single column with visible labels; beside the form it says what happens after sending (who replies, how soon, what the visitor receives) with a privacy line; and, when the confirmation page can be viewed without sending anything, it repeats what happens next and offers a useful next step.
 - **Homepage:** A form is not required; a contact route visible from the first screen (a button to the contact page, a phone number, a booking link) counts in its place, and no route at all scores below the low anchor.
 - **Service page:** A form or a booking option is on the page or one click away, and it names the service it is for.
 - **Landing page:** The form or the direct action is on the page itself, and a landing page without one scores below the low anchor.
 
 ## 9. Design that sells
 
-- **3:** Nothing leads the eye: text sizes are alike, many colours or boxes compete, the first screen looks cluttered or dated, the layout breaks familiar habits (an odd button position, centred or right-aligned paragraphs, floating pieces), autoplay motion fights the message, or large empty areas push the selling content below the first screen.
-- **6:** The layout is conventional and readable, the headline is larger than the body text and the main button is easy to find, but some things compete or clash (mixed fonts or colours, uneven spacing, a weak image, a decorative effect with no job).
-- **9:** The eye follows a clear path: the headline is clearly the largest text, then the supporting line, then the button, which is the most distinct colour on the page and used for nothing else; type, colour and spacing are consistent; the logo, menu and button sit where visitors expect them; images are real and relevant; any motion has a job, such as showing how something works, and can be ignored.
+- **3:** Nothing leads the eye: text sizes are alike, many colours or boxes compete, the first screen looks cluttered or dated, the layout breaks familiar habits (centred or right-aligned paragraphs, floating pieces), autoplay motion fights the message, or large empty areas push the selling content below the first screen.
+- **6:** The layout is conventional and readable, the headline is larger than the body text, but some things compete or clash (mixed fonts or colours, uneven spacing, a blurry or badly cropped image, a decorative effect with no job).
+- **9:** The eye follows a clear path: the headline is clearly the largest text, then the supporting line, then the rest of the first screen in order of importance; type, colour and spacing are consistent; the logo and menu sit where visitors expect them; images are sharp, cropped well and in one style; any motion has a job, such as showing how something works, and can be ignored.
 - **Homepage:** A simple, familiar menu is expected and helps; judge whether the first screen has one clear leading element, not whether the menu is short.
-- **Service page:** Clear headings and short blocks carry the reader through a longer page; a long page with no visible order cannot score above the middle anchor.
+- **Service page:** Type size, spacing and section breaks carry the reader through a longer page; a long page with no visible order cannot score above the middle anchor.
 - **Landing page:** A site-wide menu belongs to factor 4, so judge only the order and clarity of the page itself; a long page with clear section breaks is not marked down for its length.
 
 ## 10. Mobile and speed, measured

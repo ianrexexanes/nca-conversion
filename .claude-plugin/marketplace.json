@@ -11,7 +11,7 @@
   "plugins": [
     {
       "name": "nca-conversion",
-      "description": "Seven skills for conversion-centred landing page work: audience research and Conversion Briefs, Grand Slam offer architecture, section-by-section page copy, evidence-disciplined conversion audits, seven-sweep copy editing, hook and headline generation, and tool-agnostic design handoff.",
+      "description": "Eight skills for conversion-centred landing page work: audience research and Conversion Briefs, Grand Slam offer architecture, section-by-section page copy, evidence-disciplined conversion audits, seven-sweep copy editing, hook and headline generation, and tool-agnostic design handoff. Start with /nca-conversion:cro.",
       "source": "./",
       "repository": "https://github.com/ianrexexanes/nca-conversion"
     }

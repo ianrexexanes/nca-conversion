@@ -367,5 +367,217 @@ class AuditRulingsTest(unittest.TestCase):
             self.assertIn("\n\n" + label, block)
 
 
+CRO = ROOT / "skills/cro/SKILL.md"
+KICKOFF = ROOT / "skills/cro/references/kickoff.md"
+README = ROOT / "README.md"
+
+
+def frontmatter_and_body(path):
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    marks = [i for i, line in enumerate(lines) if line.rstrip("\n") == "---"][:2]
+    return "".join(lines[marks[0] + 1:marks[1]]), "".join(lines[marks[1] + 1:])
+
+
+def cro_parts():
+    text = CRO.read_text(encoding="utf-8")
+    fm, body = frontmatter_and_body(CRO)
+    name = re.search(r"^name:\s*(.+)$", fm, re.M).group(1)
+    desc = re.search(r'^description:\s*"(.+)"$', fm, re.M).group(1)
+    return text, fm, body, name, desc
+
+
+def table_words(text):
+    # first cell of each table row, backticks and <...> removed, first word kept
+    rows = [line for line in text.splitlines() if line.startswith("|")][2:]
+    return [re.sub(r"<[^>]*>", "", row.split("|")[1].replace("`", "")).split()[0] for row in rows]
+
+
+class CroSkillTests(unittest.TestCase):
+    def test_cro_skill_frontmatter(self):
+        text, fm, body, name, desc = cro_parts()
+        self.assertEqual(check_frontmatter.check_frontmatter(text), [])
+        self.assertIn("name: cro", fm); self.assertIn("license: MIT", fm); self.assertIn("version: 0.2.0", fm)
+
+    def test_cro_description_rules(self):
+        text, fm, body, name, desc = cro_parts()
+        self.assertTrue(desc.startswith("Use when")); self.assertLessEqual(len(desc), 500)
+        for s in ("audit this page", "CRO audit"): self.assertIn(s, desc)
+
+    def test_cro_body_under_500_words(self):
+        text, fm, body, name, desc = cro_parts()
+        self.assertLess(len(body.split()), 500)
+
+    def test_cro_command_table_matches_slice_1(self):
+        text, fm, body, name, desc = cro_parts()
+        words = table_words(body)
+        self.assertEqual(words, ["(none)", "audit", "setup", "doctor", "offer", "sweep", "research",
+                                 "page", "hero", "wireframe", "vsl", "design", "check", "form",
+                                 "data", "compare", "diagnose"])
+
+    def test_every_routed_file_and_skill_exists(self):
+        text, fm, body, name, desc = cro_parts()
+        # each references/<x>.md and skills/cro/scripts/<x>.py named in the body exists
+        named = re.findall(r"(?:skills/([a-z-]+)/)?(references|scripts)/([A-Za-z0-9_-]+\.(?:md|py))", body)
+        self.assertTrue(named)
+        for folder, kind, file in named:
+            self.assertTrue((ROOT / "skills" / (folder or "cro") / kind / file).is_file(), f"{folder or 'cro'}/{kind}/{file}")
+        # each of offer-architect, copy-sweeps, audience-research, conversion-page-build,
+        # hook-lab, design-handoff named in the body has a SKILL.md
+        for skill in ("offer-architect", "copy-sweeps", "audience-research", "conversion-page-build", "hook-lab", "design-handoff"):
+            self.assertIn(skill, body)
+            self.assertTrue((ROOT / "skills" / skill / "SKILL.md").is_file(), skill)
+
+    def test_allowed_tools_name_existing_scripts(self):
+        text, fm, body, name, desc = cro_parts()
+        allowed = re.search(r"^allowed-tools:\s*(.+)$", fm, re.M).group(1)
+        rules = re.findall(r"Bash\((.*?) \*\)", allowed)
+        # the path after ${CLAUDE_PLUGIN_ROOT}/ exists
+        for rule in rules:
+            self.assertTrue((ROOT / rule.split("${CLAUDE_PLUGIN_ROOT}/", 1)[1]).is_file(), rule)
+        # the scripts named are exactly setup, doctor, page_facts, render_check, speed_check, score, search_check, client_check
+        self.assertEqual(sorted(Path(rule).stem for rule in rules),
+                         sorted(["setup", "doctor", "page_facts", "render_check", "speed_check", "score", "search_check", "client_check"]))
+
+    def test_listing_estimate_within_ceiling(self):
+        # sum of len(name)+len(description) over every skills/*/SKILL.md, times 1140/3047, is <= 1350:
+        # v1's 3,047 characters measured 1,140 tokens with `claude plugin details` (v1 plan, Task 8.4),
+        # so characters/4 would under-count by about a third; the ceiling is about 3,608 characters
+        paths = sorted((ROOT / "skills").glob("*/SKILL.md"))
+        self.assertEqual(len(paths), 8)
+        total = 0
+        for path in paths:
+            fm, body = frontmatter_and_body(path)
+            total += len(re.search(r"^name:\s*(.+)$", fm, re.M).group(1))
+            total += len(re.search(r'^description:\s*"(.+)"$', fm, re.M).group(1))
+        self.assertLessEqual(total * 1140 / 3047, 1350)
+
+    def test_kickoff_names_every_phase_and_the_questions(self):
+        text = KICKOFF.read_text(encoding="utf-8").lower()
+        for s in ("decide", "research", "brief and offer", "copy", "wireframe", "style guide", "design", "build",
+                  "pre-launch", "launch", "after launch", "mode pending",
+                  "own site or client", "page type", "mode", "keyword research", "offer state", "traffic source",
+                  "language", "deadline", "material on hand"):
+            self.assertIn(s, text)
+
+    def test_manifests_name_the_front_door(self):
+        plugin = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+        market = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
+        for description in (plugin["description"], market["plugins"][0]["description"]):
+            self.assertIn("/nca-conversion:cro", description)
+
+
+class CroRulingsTest(unittest.TestCase):
+    ROOT_RULE = "Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/"
+    FRONTMATTER = (
+        "name: cro\n"
+        "description: \"Use when the user types /nca-conversion:cro, asks to audit or score a landing page or homepage, "
+        "says 'audit this page', 'CRO audit' or 'conversion audit', or starts a landing page or site project and wants "
+        "the conversion process.\"\n"
+        "license: MIT\n"
+        "allowed-tools: " + " ".join([
+            ROOT_RULE + "cro/scripts/setup.py *)", ROOT_RULE + "cro/scripts/doctor.py *)",
+            ROOT_RULE + "conversion-page-audit/scripts/page_facts.py *)",
+            "Bash(${CLAUDE_PLUGIN_DATA}/venv/bin/python ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/render_check.py *)",
+            ROOT_RULE + "cro/scripts/speed_check.py *)", ROOT_RULE + "cro/scripts/score.py *)",
+            ROOT_RULE + "cro/scripts/search_check.py *)", ROOT_RULE + "cro/scripts/client_check.py *)"]) + "\n"
+        "metadata:\n"
+        "  version: 0.2.0\n")
+    ROWS = [("(none)", "`references/kickoff.md`", "ready"), ("`audit <url>`", "`references/audit.md`", "ready"),
+            ("`setup`", "`references/setup.md`", "ready"), ("`doctor`", "`references/setup.md`", "ready"),
+            ("`offer`", "the `offer-architect` skill", "ready (v1 skill)"), ("`sweep`", "the `copy-sweeps` skill", "ready (v1 skill)"),
+            ("`research`", "the `audience-research` skill", "v1 engine until slice 2"),
+            ("`page <brief>`", "the `conversion-page-build` skill", "v1 engine until slice 2"),
+            ("`hero`", "the `hook-lab` skill", "v1 engine until slice 2"),
+            ("`wireframe`", "the `design-handoff` skill", "v1 engine until slice 3"),
+            ("`vsl`", "nothing yet", "not built yet, slice 2"), ("`design`", "nothing yet", "not built yet, slice 3"),
+            ("`check`", "nothing yet", "not built yet, slice 3"), ("`form`", "nothing yet", "on the Later list"),
+            ("`data`", "nothing yet", "on the Later list"), ("`compare`", "nothing yet", "on the Later list"),
+            ("`diagnose`", "nothing yet", "on the Later list")]
+    TABLE = "\n".join(["| Command | Goes to | Status |", "| --- | --- | --- |"] + [f"| {a} | {b} | {c} |" for a, b, c in ROWS]) + "\n"
+    PHASES = "\n".join([
+        "| Phase | Command | Slice 1 status |", "| --- | --- | --- |",
+        "| 0. Decide | `/cro` with no command (this kickoff) | ready |",
+        "| 1. Research | `/cro research` | v1 engine until slice 2; a Search project opens it with keyword research |",
+        "| 2. Brief and offer | `/cro offer` | ready (v1 skill) |",
+        "| 3. Copy | `/cro page`, `/cro hero` | v1 engines until slice 2 |",
+        "| 4. Wireframe | `/cro wireframe` | v1 engine until slice 3 |",
+        "| 5. Style guide | `/cro design` | not built yet, slice 3 |",
+        "| 6. Design | `/cro design` | not built yet, slice 3 |",
+        "| 7. Build | none | outside the plugin |",
+        "| 8. Pre-launch | `/cro check` | not built yet, slice 3 |",
+        "| 9. Launch | none | outside the plugin |",
+        "| 10. After launch | `/cro audit` again | ready: quote both score lines for before and after |"]) + "\n"
+    PATHS = ("Reference files write this plugin's folder as CLAUDE_PLUGIN_ROOT and its data folder as CLAUDE_PLUGIN_DATA, "
+             "each inside a dollar sign and braces. The shell does not know those names: in every command you run and every "
+             "file you read, put `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_PLUGIN_DATA}` in their place.")
+
+    def test_frontmatter_is_the_ruled_block(self):
+        fm, body = frontmatter_and_body(CRO)
+        self.assertEqual(fm, self.FRONTMATTER)
+
+    def test_body_routes_and_states_its_rules(self):
+        fm, body = frontmatter_and_body(CRO)
+        self.assertIn(self.TABLE, body)
+        self.assertEqual(len([line for line in body.splitlines() if line.startswith("|")]), 19)
+        for part in ("`$0`", "`$ARGUMENTS`", self.PATHS, "Rendered evidence comes only from `render_check.py`",
+                     "`python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/setup.py --data-dir ${CLAUDE_PLUGIN_DATA}`",
+                     "`python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/doctor.py --data-dir ${CLAUDE_PLUGIN_DATA}`",
+                     "`references/client-version.md`"):
+            self.assertIn(part, " ".join(body.split()))
+        self.assertRegex(body, r"(?i)no subagents")
+        self.assertRegex(body, r"(?i)show (the|this) table")
+        self.assertEqual(re.findall(r"\$[1-9]", body), [])
+        self.assertNotIn(chr(0x2014), body); self.assertNotIn(chr(0x2013), body)
+
+    def test_kickoff_parts(self):
+        text = KICKOFF.read_text(encoding="utf-8")
+        lines = text.splitlines()
+        self.assertTrue(lines[0].startswith("# ") and not lines[0].startswith("## "), lines[0])
+        self.assertLess(len(lines), 100)
+        self.assertEqual([line for line in lines if line.startswith("## ")], ["## The first questions", "## The build phases"])
+        self.assertIn(self.PHASES, text)
+        self.assertLess(text.index(self.PHASES), len(text))
+        self.assertGreater(text.index(self.PHASES), text.index("## The build phases"))
+        for part in ("${CLAUDE_PLUGIN_ROOT}/skills/cro/references/modes.md", "mode pending: keyword research",
+                     "never picks a keyword", "If your project has its own build SOP, follow its phases.",
+                     "starts no subagents", "claude-seo", "seo-dataforseo", "GA4"):
+            self.assertIn(part, " ".join(text.split()))
+        self.assertNotIn(chr(0x2014), text); self.assertNotIn(chr(0x2013), text)
+
+    def test_readme_v2_section(self):
+        text = README.read_text(encoding="utf-8")
+        self.assertIn("\n## Version 2: the front door\n", text)
+        start = text.index("\n## Version 2: the front door\n")
+        self.assertLess(text.index("\n## Install\n"), start)
+        self.assertLess(start, text.index("\n## The toggle, and why it exists\n"))
+        section = text[start:text.index("\n## ", start + 1)]
+        self.assertIn(self.TABLE, section)
+        flat = " ".join(section.split())
+        for part in ("/nca-conversion:cro", "/cro setup", "/cro doctor", "PageSpeed", "~/.config/nca-conversion/pagespeed.key",
+                     "GET, HEAD and OPTIONS", "Chrome user agent", "blocked request", "Search page", "Direct page",
+                     "outside the score", "never picks a keyword"):
+            self.assertIn(part, flat)
+        self.assertRegex(flat, r"(?i)no form")
+        self.assertNotIn(chr(0x2014), section); self.assertNotIn(chr(0x2013), section)
+
+    def test_readme_listing_sentence(self):
+        flat = " ".join(README.read_text(encoding="utf-8").split())
+        self.assertNotIn("about 1,140 tokens", flat)
+        self.assertIn("For this plugin the listing stays under about 1,350 tokens, and `claude plugin details nca-conversion` "
+                      "reports the live figure.", flat)
+
+    def test_manifests_carry_the_ruled_descriptions(self):
+        plugin = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+        market = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
+        self.assertEqual(plugin["description"], "Conversion-centred landing page work: audience research, offer design, page copy, "
+                         "conversion audit, copy editing, hooks, and design handoff. Framework-driven, register-aware. "
+                         "Start with /nca-conversion:cro.")
+        entry = market["plugins"][0]["description"]
+        self.assertTrue(entry.startswith("Eight skills for conversion-centred landing page work: "), entry[:40])
+        self.assertTrue(entry.endswith(" Start with /nca-conversion:cro."), entry[-40:])
+        self.assertEqual(market["metadata"]["description"], "The No-Code Alchemist's conversion and landing page toolkit")
+        self.assertEqual((plugin["version"], market["metadata"]["version"]), ("0.2.0", "0.2.0"))
+
+
 if __name__ == "__main__":
     unittest.main()

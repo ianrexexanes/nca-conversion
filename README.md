@@ -13,11 +13,49 @@ copy for different brands rather than one house voice.
 /plugin install nca-conversion@nca-conversion
 ```
 
+## Version 2: the front door
+
+Version 2 adds an eighth skill, `cro`, in front of the seven. Type `/nca-conversion:cro` and it either starts a project kickoff or sends you to the right skill. It starts no subagents.
+
+| Command | Goes to | Status |
+| --- | --- | --- |
+| (none) | `references/kickoff.md` | ready |
+| `audit <url>` | `references/audit.md` | ready |
+| `setup` | `references/setup.md` | ready |
+| `doctor` | `references/setup.md` | ready |
+| `offer` | the `offer-architect` skill | ready (v1 skill) |
+| `sweep` | the `copy-sweeps` skill | ready (v1 skill) |
+| `research` | the `audience-research` skill | v1 engine until slice 2 |
+| `page <brief>` | the `conversion-page-build` skill | v1 engine until slice 2 |
+| `hero` | the `hook-lab` skill | v1 engine until slice 2 |
+| `wireframe` | the `design-handoff` skill | v1 engine until slice 3 |
+| `vsl` | nothing yet | not built yet, slice 2 |
+| `design` | nothing yet | not built yet, slice 3 |
+| `check` | nothing yet | not built yet, slice 3 |
+| `form` | nothing yet | on the Later list |
+| `data` | nothing yet | on the Later list |
+| `compare` | nothing yet | on the Later list |
+| `diagnose` | nothing yet | on the Later list |
+
+### Setup and the PageSpeed key
+
+`/cro setup` builds a small Python environment with a browser for the rendered checks. `/cro doctor` changes nothing and reports what is installed and what is missing.
+
+Speed checks use a PageSpeed Insights key. Store it in `~/.config/nca-conversion/pagespeed.key` or in the `NCA_PAGESPEED_KEY` environment variable. Never type it into a chat. Without a key, the plugin falls back to local Lighthouse, labelled as lab data, or says it could not check.
+
+### Rendered checks and your client's analytics
+
+Rendered checks run only through `render_check.py`. Analytics and tag hosts are blocked, so a test visit never lands in the client's reports. Only GET, HEAD and OPTIONS leave the browser, the browser presents an ordinary Chrome user agent, and every blocked request is written to a log. No form is sent and nothing is clicked.
+
+### Two modes
+
+Every page has one mode. A Search page gets its visitors from organic search for a keyword you have researched. A Direct page gets the visitors its owner sends, such as paid ads, outreach or email. The audit asks the mode first and reads its anchors by mode. On a Search page it adds a Search check that sits outside the score. The plugin never picks a keyword: you bring it from keyword research.
+
 ## The toggle, and why it exists
 
 Every enabled plugin's component list costs tokens in every conversation, whether or not you touch
-it that session — for this plugin, currently about 1,140 tokens (`claude plugin details
-nca-conversion` reports the live figure, per-component). A **disabled** plugin costs zero listing
+it that session. For this plugin the listing stays under about 1,350 tokens, and
+`claude plugin details nca-conversion` reports the live figure. A **disabled** plugin costs zero listing
 tokens. There's no penalty for installing the whole toolkit and switching it off between projects:
 
 ```

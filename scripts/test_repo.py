@@ -166,5 +166,34 @@ class ClientVersionRulingsTest(unittest.TestCase):
         self.assertIn("fix every FAIL, read every WARN, and keep only measured facts about the client's own page", check)
 
 
+class ModesReferenceTests(unittest.TestCase):
+    def test_modes_reference_has_required_parts(self):
+        text = (ROOT / "skills" / "cro" / "references" / "modes.md").read_text(encoding="utf-8")
+        required = ("Search page", "Direct page", "GA4", "never picks a keyword",
+                    "title", "meta description", "URL", "H1", "first sentence", "H2",
+                    "home page", "not applicable")
+        for part in required:
+            self.assertIn(part, text, part)
+
+
+class ModesRulingsTest(unittest.TestCase):
+    PARTS = ["## The two modes", "## Keyword research comes first", "## The six placements", "## How the audit judges the hero"]
+
+    def test_modes_parts_come_in_step_7_order(self):
+        lines = (ROOT / "skills" / "cro" / "references" / "modes.md").read_text(encoding="utf-8").splitlines()
+        self.assertTrue(lines[0].startswith("# "), lines[0])
+        self.assertLess(len(lines), 100)
+        self.assertEqual([line for line in lines if line.startswith("## ")], self.PARTS)
+        opening = [line for line in lines[1:lines.index(self.PARTS[0])] if line.strip()]
+        self.assertTrue(opening, "a paragraph comes between the title and the first part")
+
+    def test_modes_carries_the_archetype_examples_and_no_figure(self):
+        text = (ROOT / "skills" / "cro" / "references" / "modes.md").read_text(encoding="utf-8")
+        for example in ("Harbor Lane Cycles is a family workshop that offers bike repair for commuters and weekend riders.",
+                        "Bike-Repair", "bicycle repair", "Bikerepair", "/en/"):
+            self.assertIn(example, text)
+        self.assertEqual(re.findall(r"\d", re.sub(r"\bH[1-6]s?\b|\bGA4\b", "", text)), [])
+
+
 if __name__ == "__main__":
     unittest.main()

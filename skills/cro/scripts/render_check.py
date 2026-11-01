@@ -19,6 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from playwright.sync_api import Error as PlaywrightError  # noqa: E402
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError  # noqa: E402
 from playwright.sync_api import sync_playwright  # noqa: E402
 
 import cro_runtime  # noqa: E402
@@ -198,11 +199,18 @@ def read_pass(recorder, browser, major, name, width, height, mobile, timeout_ms,
     session = context.new_cdp_session(page)
     session.send("Network.enable")
     session.send("Network.setBlockedURLs", {"urls": cro_runtime.lighthouse_block_patterns()})
-    response = page.goto(out["url"], wait_until="load", timeout=timeout_ms)
+    # domcontentloaded, not load: one file that never arrives must not cost the whole view.
+    # Then the load event gets a third of the timeout, 15 s at most, and the pass carries on without it.
+    response = page.goto(out["url"], wait_until="domcontentloaded", timeout=timeout_ms)
     status = response.status if response else None
     result = {"status": status, "final_url": page.url, "view": None}
     if status is not None and status >= 400:
         return result
+    try:
+        page.wait_for_load_state("load", timeout=min(timeout_ms / 3, 15000))
+        load_event = True
+    except PlaywrightTimeoutError:
+        load_event = False
     page.wait_for_timeout(2000)
     position = 0
     for _step in range(60):
@@ -218,7 +226,8 @@ def read_pass(recorder, browser, major, name, width, height, mobile, timeout_ms,
     first_name, full_name = "%s-first-screen.png" % name, "%s-full.png" % name
     page.screenshot(path=str(Path(out["dir"]) / first_name))
     page.screenshot(path=str(Path(out["dir"]) / full_name), full_page=True)
-    facts.update({"width": width, "height": height, "screenshots": {"first_screen": first_name, "full": full_name}})
+    facts.update({"width": width, "height": height, "screenshots": {"first_screen": first_name, "full": full_name},
+                  "load_event": load_event})
     result["view"] = facts
     return result
 

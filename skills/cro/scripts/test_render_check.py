@@ -266,6 +266,40 @@ class _LocalPages(unittest.TestCase):
         return done, json.loads((out / "render.json").read_text())
 
 
+class _HangRecorder(_LeakRecorder):
+    pages = {"/": '<html><body><h1>Hello</h1><p>Text.</p><img src="/hang" width="10" height="10"></body></html>'}
+
+    def _handle(self):
+        if self.path.split("?")[0] == "/hang":
+            time.sleep(30)  # longer than the test's --timeout; its thread is a daemon
+            return
+        super()._handle()
+
+    do_GET = do_POST = do_HEAD = do_OPTIONS = _handle
+
+
+@SKIP
+class SlowLoadEventTest(unittest.TestCase):
+    def test_a_file_that_never_arrives_does_not_stop_either_view(self):
+        server = ThreadingHTTPServer(("127.0.0.1", 0), _HangRecorder)
+        server.daemon_threads = True
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        with tempfile.TemporaryDirectory() as tmp:
+            done = subprocess.run([sys.executable, str(SCRIPT), "http://127.0.0.1:%d/" % server.server_address[1],
+                                   "--out", tmp, "--timeout", "5"], capture_output=True, text=True, timeout=120)
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+            render = json.loads((Path(tmp) / "render.json").read_text())
+            log = json.loads((Path(tmp) / "network-log.json").read_text())
+        self.assertEqual(sorted(render["viewports"]), ["desktop", "phone"])
+        self.assertEqual(render["could_not_check"], [])
+        self.assertIs(render["viewports"]["phone"]["load_event"], False)
+        hung = [e for e in log if e["url"].endswith("/hang")]
+        self.assertTrue(hung)
+        self.assertNotIn("completed", {e["outcome"] for e in hung})
+
+
 @SKIP
 class LeakPathsTest(_LocalPages):
     @classmethod

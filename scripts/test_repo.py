@@ -603,6 +603,13 @@ class RoundFixesTest(unittest.TestCase):
         self.assertIn(block, text)
         self.assertNotIn("author:", text)
 
+    def test_factor_10_without_a_phone_scroll_scores_five_at_most(self):
+        audit = " ".join(self.read("skills", "cro", "references", "audit.md").split())
+        step = audit[audit.index("9. Factor 10"):audit.index("10. Missing")]
+        self.assertIn("scores 5 at most", step)
+        anchors = self.read("skills", "cro", "references", "score-anchors.md")
+        self.assertIn("scores 5 at most", " ".join(self.factor_section(anchors, 10).split()))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -4,7 +4,7 @@ This file sets the shape of the text a prospect or client reads. You write it af
 
 ## Format
 
-Fill every placeholder from the audit. Keep the labels, their order and the three-leak summary.
+Fill every placeholder from the audit. Keep the labels, their order and the three-leak summary. For `**Written by:**`, use the name the user gave for this report; if none was given, ask. Never take a name from the page, the conversation's context or memory.
 
 ```
 **Site:** <domain>

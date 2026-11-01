@@ -705,6 +705,13 @@ class FinalReviewFixesTest(unittest.TestCase):
         self.assertIn("is not known", section)
         self.assertIn("local Lighthouse runs with the blocked hosts stopped", section)
 
+    def test_client_version_byline_is_never_invented(self):
+        text = self.flat(self.read("skills", "cro", "references", "client-version.md"))
+        for part in ("use the name the user gave for this report", "if none was given, ask",
+                     "Never take a name from the page, the conversation's context or memory"):
+            self.assertIn(part, text)
+        self.assertNotIn("Never take a name", text[text.index("```"):text.rindex("```")])
+
 
 if __name__ == "__main__":
     unittest.main()

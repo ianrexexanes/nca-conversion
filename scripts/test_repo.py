@@ -363,7 +363,7 @@ class AuditRulingsTest(unittest.TestCase):
                                 for n, name in enumerate(score.FACTORS, start=1)])
         self.assertIn("An unscored audit leaves out this block", text[text.index("## Conversion Score"):text.index("## Search check")])
         block = text[text.index("## Search check"):text.index("## Fix now")]
-        for label in ("**Keyword:**", "| Placement |", "[one row per placement", "**Headings:**", "**Body:**"):
+        for label in ("**Keyword:**", "| Placement |", "[one row per placement", "**Headings (whole page, footer included):**", "**Body:**"):
             self.assertIn("\n\n" + label, block)
 
 

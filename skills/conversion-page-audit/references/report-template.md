@@ -51,7 +51,7 @@ date: <YYYY-MM-DD>
 
 [one row per placement, in this order: Title, Meta description, URL, H1, First sentence, H2]
 
-**Headings:** H2 [exact] exact and [variant] variant of [total]; H3 [...]; H4 [...]
+**Headings (whole page, footer included):** H2 [exact] exact and [variant] variant of [total]; H3 [...]; H4 [...]
 
 **Body:** [exact] exact and [variant] variant uses
 

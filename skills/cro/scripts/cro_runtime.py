@@ -30,6 +30,17 @@ BLOCKED_HOSTS: tuple[str, ...] = (
     "mixpanel.com",
     "heapanalytics.com",
     "static.cloudflareinsights.com",
+    "stats.wp.com",
+    "pixel.wp.com",
+    "js.hs-scripts.com",
+    "js.hs-analytics.net",
+    "track.hubspot.com",
+    "static.ads-twitter.com",
+    "analytics.twitter.com",
+    "ct.pinterest.com",
+    "matomo.cloud",
+    "i.posthog.com",
+    "app.posthog.com",
 )
 
 # Each regex is paired, by position, with its Lighthouse glob below.
@@ -45,6 +56,8 @@ BLOCKED_PATH_PATTERNS: tuple[str, ...] = (
     r"piwik\.js",
     r"facebook\.com/tr",
     r"/tr\?id=",
+    r"/tr/\?id=",
+    r"/ccm/collect",
 )
 _PATH_GLOBS: tuple[str, ...] = (
     "*/gtm.js*",
@@ -58,6 +71,8 @@ _PATH_GLOBS: tuple[str, ...] = (
     "*piwik.js*",
     "*facebook.com/tr*",
     "*/tr?id=*",
+    "*/tr/?id=*",
+    "*/ccm/collect*",
 )
 
 
@@ -84,7 +99,7 @@ def is_blocked(url: str) -> str | None:
         for suffix in BLOCKED_HOSTS:
             if host == suffix or host.endswith("." + suffix):
                 return f"host:{suffix}"
-    target = parts.path + "?" + parts.query
+    target = host + parts.path + "?" + parts.query
     for pattern in BLOCKED_PATH_PATTERNS:
         if re.search(pattern, target):
             return f"path:{pattern}"

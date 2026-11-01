@@ -660,6 +660,18 @@ class FinalReviewFixesTest(unittest.TestCase):
         self.assertIn("web workers are off", section.lower())
         self.assertIn("map, video or 3D viewer", section)
 
+    def test_readme_does_not_promise_a_clean_analytics_record(self):
+        text = self.flat(self.read("README.md"))
+        self.assertNotIn("so a test visit never lands in the client's reports", text)
+        self.assertIn("common analytics and tag hosts are blocked", text)
+        self.assertIn("every request is logged in `network-log.json`", text)
+        self.assertIn("a finite list is not a guarantee", text.lower())
+
+    def test_step_5_reads_the_network_log_for_trackers(self):
+        step = self.audit_step(5)
+        self.assertIn("`network-log.json`", step)
+        self.assertIn("completed third-party requests that look like trackers", step)
+
 
 if __name__ == "__main__":
     unittest.main()

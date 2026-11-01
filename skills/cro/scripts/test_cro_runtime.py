@@ -26,6 +26,34 @@ class IsBlockedTest(unittest.TestCase):
     def test_is_blocked_passes_ordinary_assets(self):
         self.assertIsNone(cro_runtime.is_blocked("https://example.com/assets/app.js"))
 
+    def test_meta_pixel_paths_are_blocked_by_host_and_path(self):
+        for url in ("https://www.facebook.com/tr/?id=123&ev=PageView", "https://www.facebook.com/tr?id=123&ev=PageView",
+                    "https://example.com/tr/?id=123"):
+            self.assertIsNotNone(cro_runtime.is_blocked(url), url)
+
+    def test_facebook_tr_rule_matches_on_the_host(self):
+        self.assertEqual(cro_runtime.is_blocked("https://www.facebook.com/tr/?ev=PageView"), "path:facebook\\.com/tr")
+
+    def test_google_consent_collect_is_blocked(self):
+        self.assertIsNotNone(cro_runtime.is_blocked("https://www.google.com/ccm/collect?en=page_view"))
+
+    def test_added_tag_hosts_are_blocked_one_family_each(self):
+        for url in ("https://stats.wp.com/e-202544.js", "https://pixel.wp.com/g.gif?v=ext",
+                    "https://js.hs-scripts.com/123.js", "https://js.hs-analytics.net/analytics/1/123.js",
+                    "https://track.hubspot.com/__ptq.gif", "https://static.ads-twitter.com/uwt.js",
+                    "https://analytics.twitter.com/i/adsct", "https://ct.pinterest.com/v3/?tid=1",
+                    "https://example.matomo.cloud/matomo.js", "https://i.posthog.com/e/", "https://app.posthog.com/static/array.js"):
+            rule = cro_runtime.is_blocked(url)
+            self.assertIsNotNone(rule, url)
+            self.assertTrue(rule.startswith("host:"), "%s %s" % (url, rule))
+
+    def test_whole_product_domains_stay_open(self):
+        for url in ("https://posthog.com/docs", "https://www.hubspot.com/", "https://www.pinterest.com/", "https://twitter.com/x"):
+            self.assertIsNone(cro_runtime.is_blocked(url), url)
+
+    def test_ordinary_query_id_stays_unblocked(self):
+        self.assertIsNone(cro_runtime.is_blocked("https://example.com/products/shoes?id=7"))
+
     def test_lighthouse_patterns_cover_every_rule(self):
         patterns = cro_runtime.lighthouse_block_patterns()
         self.assertEqual(len(patterns), len(cro_runtime.BLOCKED_HOSTS) + len(cro_runtime.BLOCKED_PATH_PATTERNS))

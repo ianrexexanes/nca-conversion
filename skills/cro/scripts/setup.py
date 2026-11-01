@@ -37,6 +37,16 @@ def launches(command: list[str]) -> bool:
     return subprocess.run(command, capture_output=True, text=True).returncode == 0
 
 
+def step(command: list[str], name: str) -> bool:
+    """Run one install step. On failure print one line naming it, never the command or its environment."""
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError:
+        print(f"Setup stopped: the {name} step failed. Run it again, or check your network and disk space.")
+        return False
+    return True
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Set up the /cro runtime.")
     parser.add_argument("--data-dir", type=Path, default=cro_runtime.default_data_dir())
@@ -53,16 +63,19 @@ def main(argv=None) -> int:
     py = cro_runtime.venv_python(data_dir)
     if not py.exists():
         data_dir.mkdir(parents=True, exist_ok=True)
-        subprocess.run(commands["venv"], check=True)
+        if not step(commands["venv"], "virtual environment"):
+            return 1
     if installed_version(py) != cro_runtime.PLAYWRIGHT_VERSION:
-        subprocess.run(commands["pip"], check=True)
+        if not step(commands["pip"], "Playwright install"):
+            return 1
 
     if launches(commands["chrome"]):
         print("Browser: Chrome launches.")
         ok = True
     else:
         print("Chrome did not launch; installing Playwright's bundled Chromium.")
-        subprocess.run(commands["fallback_install"], check=True)
+        if not step(commands["fallback_install"], "Chromium download"):
+            return 1
         ok = launches(commands["fallback_launch"])
         print("Browser: bundled Chromium launches." if ok else "Browser: no browser launches.")
 

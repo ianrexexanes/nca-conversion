@@ -624,5 +624,28 @@ class RoundFixesTest(unittest.TestCase):
         self.assertIn("over 600 ms (Source: Google, Total Blocking Time, 2019)", low[0])
 
 
+class FinalReviewFixesTest(unittest.TestCase):
+    @staticmethod
+    def read(*parts):
+        return ROOT.joinpath(*parts).read_text(encoding="utf-8")
+
+    @staticmethod
+    def flat(text):
+        return " ".join(text.split())
+
+    def audit_step(self, number):
+        audit = self.flat(self.read("skills", "cro", "references", "audit.md"))
+        start = audit.index(" %d. " % number)
+        end = audit.find(" %d. " % (number + 1), start)
+        return audit[start:end if end != -1 else len(audit)]
+
+    def test_step_5_reads_a_partial_render_by_viewport(self):
+        step = self.audit_step(5)
+        self.assertNotIn("When the script exits 3 the page did not load", step)
+        for part in ("every viewport present under `viewports` is usable", "`could_not_check` holds the reason",
+                     "Only what is missing goes to Could not check", "exit code alone decides nothing"):
+            self.assertIn(part, step)
+
+
 if __name__ == "__main__":
     unittest.main()

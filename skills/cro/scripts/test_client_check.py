@@ -36,6 +36,23 @@ class ClientCheckTests(unittest.TestCase):
         code, out = run("According to a survey, 71 percent of visitors leave.\n")
         self.assertEqual(code, 0)
         self.assertIn("WARN citation", out); self.assertIn("WARN statistic", out)
+    def test_german_cues_are_caught(self):
+        code, out = run("Laut einer Studie steigen die Anfragen.\n")
+        self.assertEqual(code, 0); self.assertIn("WARN citation", out)
+        code, out = run("Mit künstlicher Intelligenz erstellt.\n")
+        self.assertEqual(code, 1); self.assertIn("FAIL ai-name", out)
+        code, out = run("Ein Sprachmodell schrieb das.\n")
+        self.assertEqual(code, 1); self.assertIn("FAIL ai-name", out)
+        code, out = run("Eine KI-gestützte Analyse.\n")
+        self.assertEqual(code, 0); self.assertIn("WARN ai-word", out)
+        code, out = run("Das bringt dreimal mehr Anfragen.\n")
+        self.assertEqual(code, 0); self.assertIn("WARN statistic", out)
+        code, out = run("Im Durchschnitt kommen zehn Anfragen.\n")
+        self.assertIn("WARN statistic", out)
+    def test_plain_german_text_gives_no_row(self):
+        code, out = run("Die Startseite zeigt sofort, was das Produkt kann, und der Button fällt auf.\n")
+        self.assertEqual(code, 0)
+        self.assertEqual(out.strip(), "client_check: 0 FAIL, 0 WARN")
     def test_reports_line_numbers(self):
         code, out = run("A fine line.\n\nWe used Playwright here.\n")
         self.assertIn("FAIL tool-name: line 3", out)

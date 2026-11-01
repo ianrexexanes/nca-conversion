@@ -60,7 +60,7 @@ The three leaks that cost the most, in the order I would fix them.
 
 ## Language
 
-Write in the page's language. Translate the labels, the summary heading and its lead sentence into it. German text goes to Ian for his own check before it is sent. `client_check.py`'s cue words are English, so in any other language the writer reads the text for citations, statistics and words for AI themselves.
+Write in the page's language. Translate the labels, the summary heading and its lead sentence into it. German text goes to Ian for his own check before it is sent. `client_check.py`'s cue words are English and German, so in any other language the writer reads the text for citations, statistics and words for AI themselves.
 
 ## Voice
 

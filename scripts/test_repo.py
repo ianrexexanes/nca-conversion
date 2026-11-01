@@ -616,6 +616,13 @@ class RoundFixesTest(unittest.TestCase):
                      "/nca-conversion:cro audit https://example.com/ mode: Direct; traffic: ads; page role: landing page"):
             self.assertIn(part, text)
 
+    def test_two_anchor_gaps_are_closed(self):
+        anchors = self.read("skills", "cro", "references", "score-anchors.md")
+        self.assertIn("adds one point at most", " ".join(self.factor_section(anchors, 2).split()))
+        low = [line for line in self.factor_section(anchors, 10).split("\n") if line.startswith("- **3:**")]
+        self.assertEqual(len(low), 1)
+        self.assertIn("over 600 ms (Source: Google, Total Blocking Time, 2019)", low[0])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -92,6 +92,16 @@ class ExtractFactsTest(unittest.TestCase):
         self.assertEqual(facts["title"], "Real title")
         self.assertEqual(facts["ctas"], [])
 
+    def test_svg_title_text_goes_nowhere(self):
+        html = ('<html><head><title>Real</title></head><body><a href="/"><svg><title>Logo</title></svg></a>'
+                '<h2><svg><title>Icon</title></svg>Services</h2></body></html>')
+        facts = extract_facts(html)
+        self.assertEqual(facts["title"], "Real")
+        self.assertEqual([h["text"] for h in facts["headings"]], ["Services"])
+        collector = page_facts._Collector()
+        collector.feed(html)
+        self.assertEqual([link["text"] for link in collector.links], [""])
+
     def test_a_title_only_inside_an_svg_is_no_page_title(self):
         html = '<html><body><svg><title>Logo</title></svg></body></html>'
         self.assertIsNone(extract_facts(html)["title"])

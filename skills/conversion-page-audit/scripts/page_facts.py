@@ -60,13 +60,15 @@ class _Collector(HTMLParser):
         self._stack = []
         self._buf = []
         self._svg_depth = 0
+        self._in_svg_title = False
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         if tag == "svg":
             self._svg_depth += 1
         elif tag == "title" and self._svg_depth:
-            return  # an SVG's <title> labels the graphic, not the page
+            self._in_svg_title = True  # an SVG's <title> labels the graphic: its text goes nowhere
+            return
         if tag in HEADING_TAGS or tag in ("title", "a", "button"):
             self._stack.append((tag, attrs))
             self._buf.append([])
@@ -94,10 +96,15 @@ class _Collector(HTMLParser):
             self._buf.append([])
 
     def handle_data(self, data):
+        if self._in_svg_title:
+            return
         if self._buf:
             self._buf[-1].append(data)
 
     def handle_endtag(self, tag):
+        if tag == "title" and self._in_svg_title:
+            self._in_svg_title = False
+            return
         if tag == "svg" and self._svg_depth:
             self._svg_depth -= 1
         if not self._stack or self._stack[-1][0] != tag:

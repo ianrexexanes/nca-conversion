@@ -672,6 +672,21 @@ class FinalReviewFixesTest(unittest.TestCase):
         self.assertIn("`network-log.json`", step)
         self.assertIn("completed third-party requests that look like trackers", step)
 
+    def test_no_playwright_mcp_text_is_left_in_the_tracked_repo(self):
+        phrase = "Playwright" + " MCP"
+        files = subprocess.run(["git", "-C", str(ROOT), "ls-files"], capture_output=True, text=True, check=True).stdout.split("\n")
+        hits = []
+        for name in files:
+            path = ROOT / name
+            if not name or name == "scripts/test_repo.py" or not path.is_file():
+                continue
+            try:
+                if phrase in path.read_text(encoding="utf-8"):
+                    hits.append(name)
+            except UnicodeDecodeError:
+                continue
+        self.assertEqual(hits, [])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -3,7 +3,7 @@
 
 Parses static markup. It cannot see what JavaScript renders, what CSS hides, or
 what sits behind a consent banner — those checks belong to a rendered capture
-(Playwright MCP) and their absence is reported in `notes`, never assumed fine.
+(`render_check.py`) and their absence is reported in `notes`, never assumed fine.
 
 LCP: this module reports *candidates*, not a measured Largest Contentful Paint.
 Which element is largest and above the fold is a rendered-layout result — it

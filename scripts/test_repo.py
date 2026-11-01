@@ -712,6 +712,12 @@ class FinalReviewFixesTest(unittest.TestCase):
             self.assertIn(part, text)
         self.assertNotIn("Never take a name", text[text.index("```"):text.rindex("```")])
 
+    def test_step_13_checks_a_miss_against_the_page(self):
+        step = self.audit_step(13)
+        for part in ("check each MISSING from the Search check against the page itself", "an abbreviation can end the first sentence early",
+                     "`/index.html`"):
+            self.assertIn(part, step.replace("Check each MISSING", "check each MISSING"))
+
 
 if __name__ == "__main__":
     unittest.main()

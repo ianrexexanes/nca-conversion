@@ -696,6 +696,15 @@ class FinalReviewFixesTest(unittest.TestCase):
         text = self.flat(self.read("README.md"))
         self.assertIn("Built and tested on Linux with bash; needs Python 3.10 or later and Chrome.", text)
 
+    def test_readme_says_pagespeed_runs_outside_the_block_list(self):
+        text = self.flat(self.read("README.md"))
+        section = text[text.index("### Rendered checks and your client's analytics"):]
+        section = section[:section.index("### Script permissions")]
+        self.assertIn("loads the page on Google's servers", section)
+        self.assertIn("blocks nothing", section)
+        self.assertIn("is not known", section)
+        self.assertIn("local Lighthouse runs with the blocked hosts stopped", section)
+
 
 if __name__ == "__main__":
     unittest.main()

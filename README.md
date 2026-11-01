@@ -49,6 +49,8 @@ Speed checks use a PageSpeed Insights key. Store it in `~/.config/nca-conversion
 
 Rendered checks run only through `render_check.py`. The common analytics and tag hosts are blocked, and every request is logged in `network-log.json`, so you can see what was not. A finite list is not a guarantee. Only GET, HEAD and OPTIONS leave the browser, the browser presents an ordinary Chrome user agent, and every blocked request is written to a log. No form is sent and nothing is clicked. Web workers are off in the capture, so a map, video or 3D viewer can look blank there while it shows for a visitor.
 
+With a PageSpeed key, the speed check loads the page on Google's servers, where this plugin blocks nothing, and whether that visit shows in the client's analytics is not known. Without a key, local Lighthouse runs with the blocked hosts stopped.
+
 ### Script permissions last one turn
 
 The `cro` skill pre-approves its own scripts through `allowed-tools`, and that approval lasts only for the turn that invokes the skill (see "Pre-approve tools for a skill" at https://code.claude.com/docs/en/skills). When the audit has to ask for the mode, keyword or traffic first, its scripts run in the next turn, and Claude Code asks before each one. To avoid that, give those answers in the command, for example `/nca-conversion:cro audit https://example.com/ mode: Direct; traffic: ads; page role: landing page`.

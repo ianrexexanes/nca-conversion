@@ -244,6 +244,10 @@ def launch(playwright):
         return playwright.chromium.launch(**options)
 
 
+WORKERS_NOTE = ("Web workers are off in this capture, so a map, video or 3D viewer can look blank here "
+                "while it shows for a visitor.")
+
+
 def write_json(path, data):
     Path(path).write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
@@ -263,7 +267,7 @@ def main(argv=None):
     recorder = Recorder()
     render = {"url": args.url, "final_url": None, "checked_at": datetime.now(timezone.utc).isoformat(),
               "user_agent": None, "status": None, "viewports": {}, "blocked": [], "errors": [],
-              "could_not_check": []}
+              "could_not_check": [], "notes": [WORKERS_NOTE]}
     out = {"url": args.url, "dir": str(out_dir)}
     playwright = sync_playwright().start()
     browser = None

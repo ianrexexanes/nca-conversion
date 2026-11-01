@@ -119,6 +119,12 @@ class RenderCheckTest(unittest.TestCase):
         self.assertEqual(self.render["viewports"]["phone"]["width"], 390)
         self.assertGreaterEqual(self.render["viewports"]["desktop"]["page_height"], 2700)
 
+    def test_render_json_notes_say_workers_are_off(self):
+        notes = self.render["notes"]
+        self.assertEqual(len(notes), 1)
+        self.assertIn("web workers are off", notes[0].lower())
+        self.assertIn("map, video or 3D viewer", notes[0])
+
     def test_forms_are_read_not_sent(self):
         form = self.render["viewports"]["desktop"]["forms"][0]
         self.assertEqual(form["fields"], 4)

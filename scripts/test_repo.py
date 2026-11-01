@@ -647,5 +647,19 @@ class FinalReviewFixesTest(unittest.TestCase):
             self.assertIn(part, step)
 
 
+    def test_step_7_sends_a_blank_element_to_could_not_check(self):
+        step = self.audit_step(7)
+        for part in ("looks blank or unfinished (a map, a video, a 3D viewer)", "Could not check", "not scored low",
+                     "in the other view first"):
+            self.assertIn(part, step)
+
+    def test_readme_says_a_blank_element_may_be_the_capture(self):
+        text = self.flat(self.read("README.md"))
+        section = text[text.index("### Rendered checks and your client's analytics"):]
+        section = section[:section.index("### Script permissions")]
+        self.assertIn("web workers are off", section.lower())
+        self.assertIn("map, video or 3D viewer", section)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -45,7 +45,7 @@ Speed checks use a PageSpeed Insights key. Store it in `~/.config/nca-conversion
 
 ### Rendered checks and your client's analytics
 
-Rendered checks run only through `render_check.py`. Analytics and tag hosts are blocked, so a test visit never lands in the client's reports. Only GET, HEAD and OPTIONS leave the browser, the browser presents an ordinary Chrome user agent, and every blocked request is written to a log. No form is sent and nothing is clicked.
+Rendered checks run only through `render_check.py`. Analytics and tag hosts are blocked, so a test visit never lands in the client's reports. Only GET, HEAD and OPTIONS leave the browser, the browser presents an ordinary Chrome user agent, and every blocked request is written to a log. No form is sent and nothing is clicked. Web workers are off in the capture, so a map, video or 3D viewer can look blank there while it shows for a visitor.
 
 ### Script permissions last one turn
 

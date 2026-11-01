@@ -24,7 +24,7 @@ A home page cannot carry the keyword in its address, so the URL placement is not
 
 Named variants and hyphenated compounds count as the keyword, for example "Bike-Repair" or "bicycle repair". Matching is by whole words and ignores case. There is no stemming, so a plural or a closed form such as "Bikerepair" counts only when the brief names it as a variant.
 
-"Near the front" is a writing rule. The check reports whether the keyword is in a placement, never where. Everywhere else, in the H2 to H4 headings and the body, variants, synonyms and cluster terms appear naturally. The Search check reports how many headings carry the keyword and never fails a page on that count.
+"Near the front" is a writing rule. The check reports whether the keyword is in a placement, never where. Everywhere else, in the H2 to H4 headings and the body, variants, synonyms and cluster terms appear naturally. The Search check reports how many headings carry the keyword and never fails a page on that count. These heading counts are whole-page counts (whole page, footer included, navigation too), while the body uses leave the footer and navigation out.
 
 On a service page, the FAQ and its FAQPage schema carry the content for answer engines, and the schema matches the visible text.
 

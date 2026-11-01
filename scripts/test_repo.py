@@ -580,5 +580,23 @@ class CroRulingsTest(unittest.TestCase):
         self.assertEqual((plugin["version"], market["metadata"]["version"]), ("0.2.0", "0.2.0"))
 
 
+class RoundFixesTest(unittest.TestCase):
+    """Task 12: the approved round fixes, one check each."""
+
+    @staticmethod
+    def read(*parts):
+        return ROOT.joinpath(*parts).read_text(encoding="utf-8")
+
+    @staticmethod
+    def factor_section(text, number):
+        start = text.index("\n## %d. " % number)
+        end = text.find("\n## ", start + 1)
+        return text[start:end if end != -1 else len(text)]
+
+    def test_heading_counts_say_whole_page(self):
+        for parts in (("skills", "cro", "references", "modes.md"), ("skills", "cro", "references", "audit.md")):
+            self.assertIn("whole page, footer included", " ".join(self.read(*parts).split()), "/".join(parts))
+
+
 if __name__ == "__main__":
     unittest.main()

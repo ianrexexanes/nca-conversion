@@ -47,6 +47,10 @@ Speed checks use a PageSpeed Insights key. Store it in `~/.config/nca-conversion
 
 Rendered checks run only through `render_check.py`. Analytics and tag hosts are blocked, so a test visit never lands in the client's reports. Only GET, HEAD and OPTIONS leave the browser, the browser presents an ordinary Chrome user agent, and every blocked request is written to a log. No form is sent and nothing is clicked.
 
+### Script permissions last one turn
+
+The `cro` skill pre-approves its own scripts through `allowed-tools`, and that approval lasts only for the turn that invokes the skill (see "Pre-approve tools for a skill" at https://code.claude.com/docs/en/skills). When the audit has to ask for the mode, keyword or traffic first, its scripts run in the next turn, and Claude Code asks before each one. To avoid that, give those answers in the command, for example `/nca-conversion:cro audit https://example.com/ mode: Direct; traffic: ads; page role: landing page`.
+
 ### Two modes
 
 Every page has one mode. A Search page gets its visitors from organic search for a keyword you have researched. A Direct page gets the visitors its owner sends, such as paid ads, outreach or email. The audit asks the mode first and reads its anchors by mode. On a Search page it adds a Search check that sits outside the score. The plugin never picks a keyword: you bring it from keyword research.

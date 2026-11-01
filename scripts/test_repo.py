@@ -610,6 +610,12 @@ class RoundFixesTest(unittest.TestCase):
         anchors = self.read("skills", "cro", "references", "score-anchors.md")
         self.assertIn("scores 5 at most", " ".join(self.factor_section(anchors, 10).split()))
 
+    def test_readme_says_script_permissions_last_one_turn(self):
+        text = " ".join(self.read("README.md").split())
+        for part in ("turn that invokes", "https://code.claude.com/docs/en/skills", "Pre-approve tools for a skill",
+                     "/nca-conversion:cro audit https://example.com/ mode: Direct; traffic: ads; page role: landing page"):
+            self.assertIn(part, text)
+
 
 if __name__ == "__main__":
     unittest.main()

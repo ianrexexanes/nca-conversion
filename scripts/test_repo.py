@@ -597,6 +597,12 @@ class RoundFixesTest(unittest.TestCase):
         for parts in (("skills", "cro", "references", "modes.md"), ("skills", "cro", "references", "audit.md")):
             self.assertIn("whole page, footer included", " ".join(self.read(*parts).split()), "/".join(parts))
 
+    def test_report_template_starts_with_its_own_frontmatter(self):
+        text = self.read("skills", "conversion-page-audit", "references", "report-template.md")
+        block = "---\ntype: audit\npage: <the audited URL>\ndate: <YYYY-MM-DD>\n---\n"
+        self.assertIn(block, text)
+        self.assertNotIn("author:", text)
+
 
 if __name__ == "__main__":
     unittest.main()

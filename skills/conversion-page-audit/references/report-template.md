@@ -8,6 +8,16 @@ each section here is that file's discipline given a place to live, not a new set
 the bracketed instructions as you fill each section in; keep the four headers exactly as they
 appear here; keep every entry inside the section its evidence actually earned it.
 
+**Frontmatter.** The internal report starts with this block, filled in with the audited address and the date of the audit. The client version has no frontmatter.
+
+```
+---
+type: audit
+page: <the audited URL>
+date: <YYYY-MM-DD>
+---
+```
+
 ## Conversion Score
 
 [Scored audits only, run by `/cro audit`. An unscored audit leaves out this block and the Search check block.]

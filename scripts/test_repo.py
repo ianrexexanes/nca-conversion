@@ -687,6 +687,15 @@ class FinalReviewFixesTest(unittest.TestCase):
                 continue
         self.assertEqual(hits, [])
 
+    def test_setup_reference_says_the_key_line_is_for_bash(self):
+        text = self.flat(self.read("skills", "cro", "references", "setup.md"))
+        before = text[:text.index("umask 077")]
+        self.assertIn("is for bash", before[before.rindex("5. In your own terminal"):])
+
+    def test_readme_names_platform_and_python(self):
+        text = self.flat(self.read("README.md"))
+        self.assertIn("Built and tested on Linux with bash; needs Python 3.10 or later and Chrome.", text)
+
 
 if __name__ == "__main__":
     unittest.main()

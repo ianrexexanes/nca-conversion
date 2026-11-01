@@ -41,6 +41,8 @@ Version 2 adds an eighth skill, `cro`, in front of the seven. Type `/nca-convers
 
 `/cro setup` builds a small Python environment with a browser for the rendered checks. `/cro doctor` changes nothing and reports what is installed and what is missing.
 
+Built and tested on Linux with bash; needs Python 3.10 or later and Chrome.
+
 Speed checks use a PageSpeed Insights key. Store it in `~/.config/nca-conversion/pagespeed.key` or in the `NCA_PAGESPEED_KEY` environment variable. Never type it into a chat. Without a key, the plugin falls back to local Lighthouse, labelled as lab data, or says it could not check.
 
 ### Rendered checks and your client's analytics

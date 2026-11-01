@@ -41,7 +41,7 @@ Optional. The key is yours; you create and store it, and it never goes into the 
 2. Select or create a project, and enable the PageSpeed Insights API for it.
 3. Create an API key.
 4. Restrict the key to the PageSpeed Insights API.
-5. In your own terminal, type this line. It asks for the key without showing it:
+5. In your own terminal, type this line. It asks for the key without showing it, and it is for bash:
 
 ```bash
 umask 077 && mkdir -p ~/.config/nca-conversion && read -rs -p 'PageSpeed key: ' k && printf '%s' "$k" > ~/.config/nca-conversion/pagespeed.key && unset k && echo

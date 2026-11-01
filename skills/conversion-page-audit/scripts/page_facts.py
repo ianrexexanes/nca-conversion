@@ -59,9 +59,14 @@ class _Collector(HTMLParser):
         self.jsonld = []
         self._stack = []
         self._buf = []
+        self._svg_depth = 0
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
+        if tag == "svg":
+            self._svg_depth += 1
+        elif tag == "title" and self._svg_depth:
+            return  # an SVG's <title> labels the graphic, not the page
         if tag in HEADING_TAGS or tag in ("title", "a", "button"):
             self._stack.append((tag, attrs))
             self._buf.append([])
@@ -93,6 +98,8 @@ class _Collector(HTMLParser):
             self._buf[-1].append(data)
 
     def handle_endtag(self, tag):
+        if tag == "svg" and self._svg_depth:
+            self._svg_depth -= 1
         if not self._stack or self._stack[-1][0] != tag:
             return
         _tag, attrs = self._stack.pop()
@@ -100,7 +107,8 @@ class _Collector(HTMLParser):
         if tag in HEADING_TAGS:
             self.headings.append({"level": int(tag[1]), "text": text})
         elif tag == "title":
-            self.title = text
+            if not self.title:  # keep the first non-empty document title
+                self.title = text
         elif tag in ("a", "button"):
             self.links.append({"text": text, "href": attrs.get("href"), "kind": tag})
         elif tag == "script":

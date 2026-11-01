@@ -156,6 +156,16 @@ class SearchCheckTests(unittest.TestCase):
         self.assertTrue(lines[-1].startswith("search_check: 2 misses of 6 placements"), lines[-1])
 
 
+class SvgTitleTest(unittest.TestCase):
+    def test_title_placement_reads_the_head_title_not_a_logo_svg_title(self):
+        page = ('<html><head><title>%s</title></head><body><h1>Welcome</h1>'
+                '<a href="/"><svg><title>%s</title></svg></a></body></html>')
+        found = check_html(page % ("Bike repair in town", "Harbor Lane logo"))
+        self.assertEqual(found["placements"]["title"]["status"], "found")
+        missing = check_html(page % ("Harbor Lane", "Bike repair logo"))
+        self.assertEqual(missing["placements"]["title"]["status"], "missing")
+
+
 class RulingsTest(unittest.TestCase):
     def test_normalise_folds_every_dash_and_guillemet_and_drops_invisible_marks(self):
         self.assertEqual(search_check.normalise("Bike—Repair ‹Shop› »Kit«"), "bike repair shop kit")

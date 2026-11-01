@@ -85,6 +85,17 @@ class ExtractFactsTest(unittest.TestCase):
         notes = extract_facts("<html><body><p>hi</p></body></html>")["notes"]
         self.assertTrue(any("json-ld" in n.lower() for n in notes))
 
+    def test_svg_title_in_the_body_does_not_replace_the_page_title(self):
+        html = ('<html><head><title>Real title</title></head><body>'
+                '<a href="/"><svg><title>Logo</title></svg></a></body></html>')
+        facts = extract_facts(html)
+        self.assertEqual(facts["title"], "Real title")
+        self.assertEqual(facts["ctas"], [])
+
+    def test_a_title_only_inside_an_svg_is_no_page_title(self):
+        html = '<html><body><svg><title>Logo</title></svg></body></html>'
+        self.assertIsNone(extract_facts(html)["title"])
+
 
 PAGE = b"<html><head><title>Fixture</title></head><body></body></html>"
 

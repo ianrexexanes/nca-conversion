@@ -5,7 +5,8 @@ not another one, and not a random one that happens to be common. What each secti
 accomplish inside a given register lives in `section-playbooks.md`; this file stays one level up,
 at the question of sequence and dependency. If you find yourself explaining *how* to write a
 section here, that content belongs in the playbook instead — this file only explains *why it comes
-where it comes*.
+where it comes*. The deck sections a full landing page is built from, and the playbooks that write
+each, are in `## The long-form order` below.
 
 ## The spine underneath the eleven
 
@@ -29,6 +30,43 @@ reversed, the ask made, and the leftovers mopped up.
 That's also why reordering isn't a style choice. Each section spends evidence the sections before it
 built, and promises evidence the sections after it haven't paid out yet. Move one and something
 downstream either has nothing to stand on or gets asked to do a job twice.
+
+## The long-form order
+
+A full landing page is built as a deck of sections, in the order below. Each deck section is written
+from the playbooks named in its row, in `section-playbooks.md`. The argument itself is the one this
+file already made, Hero to FAQ: the deck sections are how that argument is laid out on the page. The
+closer adds no new argument. After the FAQ it repeats the promise, the proof and the ask, as a mini
+hero. The table gives the cold visitor's order; warm visitors take proof before pain (see Skeleton by
+awareness below). The value section holds four to eight value blocks.
+
+| Order | Deck section | What the section does | Playbooks that write it |
+|---|---|---|---|
+| 1 | header | Orients the visitor and offers the one action; on a landing page it holds no exit | `Header` |
+| 2 | hero | States the promise, holds the two proof slots and the button | `Hero` |
+| 3 | pain | Names the problem and what it costs, as Problem, Agitate, Solve or the old way against the new | `Problem` |
+| 4 | proof | Stacked proof that backs the promise, with the button repeated beside it | `Proof` |
+| 5 | value | Four to eight value blocks: the outcome, what the offer is and what is inside it | `Outcome`, `Solution` and `Value stack` |
+| 6 | compare | Sets the offer against competitors and the status quo, every claim checkable | `Compare` |
+| 7 | how | Shows how it works in three or four steps and what happens next | `Mechanism` |
+| 8 | team | Puts the founder or the team on the page, with real names and photos | `Team` |
+| 9 | guarantee | Reverses the remaining risk with terms the business can keep | `Guarantee` |
+| 10 | faq | Answers what the page has not, built from the buyer's real objections | `FAQ`, its questions from `Objections` |
+| 11 | closer | A mini hero: the promise, the proof and the ask again | `Closer` and `CTA` |
+
+## Skeleton by awareness
+
+Awareness picks the skeleton. It is asked beside mode and traffic and is a separate answer: a Direct
+page can have warm visitors, so the skeleton follows awareness, not mode.
+
+- **Cold, problem-aware visitors** (outreach, social ads) get an image or video hero. For them pain comes before
+  proof: the pain section earns their attention first, and proof follows it.
+- **Warm, solution-aware visitors** (search, retargeting, email to known leads) get a form hero. For them proof
+  comes before pain: they already know the problem, so they need a reason to trust this answer first.
+
+Both run the long-form order; the hero and the swap of pain and proof are what differ. The hero build in
+`../../hook-lab/references/hero-build.md` says the same under By awareness, and `page-types.md` describes
+the four skeletons in words.
 
 ## Register sensitivity, at a glance
 
@@ -239,10 +277,12 @@ the reader.
 
 **Register sensitivity: high.** Directness itself is register-defined, not a copywriting choice
 layered on top of a fixed action: one commanded action with explicit risk reversal for a reader
-deciding alone in one session; one primary action plus a lower-commitment second option for a reader
-who has to bring this to someone else; several parallel, non-competing participation paths where the
-audience is legitimately split. Using the wrong one of these three shapes is a structural mismatch,
-not a wording problem.
+deciding alone in one session. Two registers can want more than the one action. A reader who has to
+bring this to someone else may be given a lower-commitment second option beside the primary one, and an
+audience that is legitimately split may be given several parallel, non-competing participation paths.
+Both are a register's departure from the one action, written in the deck's `## Register notes` (the
+rule, what changed, why), and the user decides per page. Using the wrong shape is a structural
+mismatch, not a wording problem.
 
 ### FAQ
 

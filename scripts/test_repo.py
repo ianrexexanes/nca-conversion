@@ -989,5 +989,155 @@ class HeroBuildTests(unittest.TestCase):
         self.assertTrue("Front-load" in row or "front-load" in row)
 
 
+BUILD_REFERENCES = ROOT / "skills" / "conversion-page-build" / "references"
+PLAYBOOKS = BUILD_REFERENCES / "section-playbooks.md"
+PROOF_LIBRARY = BUILD_REFERENCES / "proof-library.md"
+ARCHITECTURE = BUILD_REFERENCES / "page-architecture.md"
+PAGE_TYPES = BUILD_REFERENCES / "page-types.md"
+SECTION_TO_COMPONENT = ROOT / "skills" / "design-handoff" / "references" / "section-to-component.md"
+ORDER_HEADERS = ("Order", "Deck section", "What the section does", "Playbooks that write it")
+
+
+def md_section(path, heading):
+    # heading is a whole heading line ("## Hero", "### 10. CTA"); the text runs from that line to the next
+    # heading of the same or a higher level, or to the end of the file; "" when no line equals it
+    lines = Path(path).read_text(encoding="utf-8").splitlines()
+    level = len(heading) - len(heading.lstrip("#"))
+    for start, line in enumerate(lines):
+        if line.rstrip() == heading:
+            break
+    else:
+        return ""
+    end = len(lines)
+    for n in range(start + 1, len(lines)):
+        found = re.match(r"(#+) ", lines[n])
+        if found and len(found.group(1)) <= level:
+            end = n
+            break
+    return "\n".join(lines[start:end])
+
+
+def playbook(name):
+    return md_section(PLAYBOOKS, "## " + name)
+
+
+def proof_section(name):
+    return md_section(PROOF_LIBRARY, "## " + name)
+
+
+def architecture(name):
+    return md_section(ARCHITECTURE, "## " + name)
+
+
+def page_types(name):
+    return md_section(PAGE_TYPES, "## " + name)
+
+
+def s2c_section(name):
+    return md_section(SECTION_TO_COMPONENT, "### " + name)
+
+
+def split_cells(line):
+    return [c.strip().replace("\\|", "|") for c in re.split(r"(?<!\\)\|", line.strip().strip("|"))]
+
+
+def order_rows(text):
+    # the table whose header holds the four ORDER_HEADERS, read by header name:
+    # one (deck section, what the section does, playbooks) tuple per body row
+    block = []
+    for line in text.splitlines() + [""]:
+        if line.lstrip().startswith("|"):
+            block.append(split_cells(line))
+            continue
+        if block and all(h in block[0] for h in ORDER_HEADERS):
+            at = [block[0].index(h) for h in ORDER_HEADERS]
+            body = [r for r in block[1:] if not all(re.fullmatch(r":?-+:?", c) for c in r)]
+            return [tuple((r[i] if i < len(r) else "") for i in at[1:]) for r in body]
+        block = []
+    return []
+
+
+class PageRulesTests(unittest.TestCase):
+    def test_hero_row_points_at_the_build_and_names_its_register_changes(self):
+        s = flat(playbook("Hero"))
+        self.assertIn("hero-build.md", s)
+        self.assertIn("Register notes", s)
+        self.assertNotIn("stays understated", s)
+
+    def test_problem_section_carries_pas_and_the_old_way(self):
+        s = flat(playbook("Problem"))
+        self.assertIn("Problem, Agitate, Solve", s)
+        self.assertIn("the old way", s)
+
+    def test_the_repeated_action(self):
+        s = flat(playbook("Repeating the action"))
+        for part in ("never more than one section away from the button", "the same action", "not a second action",
+                     "every repeat goes to the same place", "every button leads to the form"):
+            self.assertIn(part, s)
+
+    def test_the_closer_is_a_mini_hero(self):
+        s = flat(playbook("Closer"))
+        for part in ("mini hero", "three to five bullets", "stacked proof", "real reasons", "Register translation"):
+            self.assertIn(part, s)
+
+    def test_header_compare_and_team_playbooks(self):
+        for part in ("logo", "the one button", "no menu", "standard navigation"):
+            self.assertIn(part, flat(playbook("Header")))
+        for part in ("competitors", "the status quo", "checkable"):
+            self.assertIn(part, flat(playbook("Compare")))
+        for part in ("real names", "photos", "founder"):
+            self.assertIn(part, flat(playbook("Team")))
+
+    def test_every_section_names_its_visual(self):
+        self.assertIn("names its visual", flat(playbook("A visual for every section")))
+
+    def test_proof_placement(self):
+        s = flat(proof_section("Where proof goes"))
+        for part in ("prooftop", "proof strip", "beside each button", "wall of testimonials", "full name"):
+            self.assertIn(part, s)
+
+    def test_long_form_order_table_lists_the_deck_names_and_their_playbooks(self):
+        order = architecture("The long-form order")
+        rows = order_rows(order)
+        self.assertEqual([r[0] for r in rows],
+                         ["header", "hero", "pain", "proof", "value", "compare", "how", "team", "guarantee", "faq",
+                          "closer"])
+        for name, does, plays in rows:
+            self.assertTrue(plays.strip(), name)
+            for title in re.findall(r"`([^`]+)`", plays):
+                self.assertTrue(playbook(title), (name, title))
+        self.assertIn("four to eight value blocks", flat(order))
+        self.assertIn("Objections", dict((r[0], r[2]) for r in rows)["faq"])
+
+    def test_skeleton_by_awareness(self):
+        s = flat(architecture("Skeleton by awareness"))
+        for part in ("form hero", "image or video hero", "pain comes before proof", "proof comes before pain"):
+            self.assertIn(part, s)
+
+    def test_four_skeletons_in_words(self):
+        s = flat(page_types("The four skeletons"))
+        for part in ("image or video hero", "form hero", "e-commerce homepage", "e-commerce product page",
+                     "not scored"):
+            self.assertIn(part, s)
+
+    def test_design_handoff_says_the_repeat_is_not_an_exit(self):
+        s = flat(s2c_section("10. CTA"))
+        self.assertIn("Repeating the page's one action after a section is not a second action", s)
+        self.assertIn("the same label and the same target", s)
+
+    def test_register_departures_from_one_action_go_in_register_notes(self):
+        rows = {}
+        for line in playbook("CTA").splitlines():
+            if line.startswith("|"):
+                cells = split_cells(line)
+                rows[cells[0]] = flat(line)
+        for register in ("Conservative B2B (DACH)", "Technical / industrial", "Mission / nonprofit"):
+            self.assertIn(register, rows)
+            self.assertIn("one action", rows[register], register)
+            self.assertIn("Register notes", rows[register], register)
+        self.assertIn("Register notes", flat(md_section(ARCHITECTURE, "### CTA")))
+        self.assertIn("Register notes", flat(page_types("What doesn't fit any of these five")))
+
+
 if __name__ == "__main__":
     unittest.main()

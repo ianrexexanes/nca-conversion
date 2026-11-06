@@ -92,7 +92,28 @@ A page that serves genuinely two audiences with materially different needs — t
 nonprofit` register's standing case, per `register-profiles.md` — usually isn't better described by
 inventing a sixth page type. It's the home-page pattern above (a segment loop routing to dedicated
 pages) or the mission register's own carried-together exception (several participation paths held on
-one page rather than split across several), and which of those two applies is a register decision,
-not a page-type one. Don't force a page that doesn't match one of these five shapes into the nearest
+one page rather than split across several), which is a departure from the one action and is written in
+the deck's `## Register notes`. Which of those two applies is a register decision, not a page-type
+one. Don't force a page that doesn't match one of these five shapes into the nearest
 one; name what's actually different about it and adjust the section set from first principles using
 `page-architecture.md`'s dependency logic rather than this file's five templates.
+
+## The four skeletons
+
+Four starting shapes, described in words and never linked to a live page. A lead-generation page has
+two of them, chosen by the visitor's awareness (see `page-architecture.md`, Skeleton by awareness).
+
+- **Lead-generation page, image or video hero.** For cold, problem-aware visitors. The hero carries an
+  image or video of the real product or outcome. The pain section follows it, then proof, and the page
+  runs the long-form order from there.
+- **Lead-generation page, form hero.** For warm, solution-aware visitors. The form sits in the hero
+  beside the promise. Proof comes before pain, and the page runs the long-form order, every repeat of
+  the button leading back to that form.
+- **The e-commerce homepage.** Described, not scored. It sends shoppers to the categories and the best
+  sellers they came for, carries the promise and the proof of delivery and returns, and routes each
+  shopper on to a product page.
+- **The e-commerce product page.** Described, not scored. It shows one product with its images, benefits,
+  price, reviews, delivery and returns, and asks for one action: add it to the basket.
+
+"Not scored" means no rule or check in this plugin scores a page against the two e-commerce
+descriptions. They are here so a build can start from a stated shape.

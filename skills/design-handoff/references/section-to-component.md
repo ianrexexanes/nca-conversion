@@ -148,6 +148,10 @@ A page that keeps fewer than eleven maps only the ones it keeps;
 - **Components** — heading, one primary button, optionally one line of risk-removal text beneath it.
 - **The over-add** — a secondary link, a navigation bar, or a footer that begins too close. Each is
   an exit placed at the point of decision.
+- **The repeat** — Repeating the page's one action after a section is not a second action, so the
+  over-add does not apply to it. The button comes back with the same label and the same target each
+  time, with the doubt reducers under it. A different label, a different target or a link to anything
+  else is still the exit the over-add names.
 - **Narrow viewport** — the button stays reachable without a stretch and the risk-removal line stays
   one or two lines. Once it wraps to a paragraph it stops removing risk and starts adding reading.
 

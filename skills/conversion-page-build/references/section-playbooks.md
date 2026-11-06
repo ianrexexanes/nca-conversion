@@ -2,7 +2,7 @@
 
 Per-section execution, keyed by register. `page-architecture.md` already made the case for the
 order and what each section depends on; this file starts from that decision and asks a narrower
-question eleven times: given this section's job, what does actually writing it look like in each of
+question once per section: given this section's job, what does actually writing it look like in each of
 the five registers in `../../audience-research/references/register-profiles.md`?
 
 Read the brief's Register line once, then for every section below read only that one row. The other
@@ -12,7 +12,29 @@ voiced differently, that's the point: the framework decided what the section pro
 register decided what artifact proves it, and those are two different decisions.
 
 Each section starts with **Must accomplish** and **Must not do** — the framework-level verdict,
-true regardless of register — and then the five-register table.
+true regardless of register — and then the five-register table. Two sections, Repeating the action
+and A visual for every section, are rules that run across the whole page rather than jobs inside one
+section, so they carry no register table. Where a register changes any rule below, the output says
+so in one line in the deck's `Register notes`, and the user decides per page.
+
+## Header
+
+**Must accomplish:** tell the visitor where they are and how to act, using as few slots as the page
+type allows. A landing page keeps the logo and the one button, plus a phone number where the business
+takes calls, with no menu that leads off the page. A homepage or service page keeps standard
+navigation, because its visitors are still finding their way. The slots a deck uses are the logo, the
+one button, the phone number and, on those two page types, the menu.
+
+**Must not do:** put links in a landing page's header that lead away from the offer, hide the button
+the hero and the closer repeat, or strip a homepage's navigation to make it look like a landing page.
+
+| Register | Execution |
+|---|---|
+| Conservative B2B (DACH) | The logo with the company name written in full, the one button worded as the next step, and a phone number where a person answers. Formal throughout; the button names what happens next rather than a generic ask. |
+| Technical / industrial | The logo and a button that names the document or the technical conversation it leads to, with a direct line to the desk that answers technical questions. On a homepage or service page the navigation keeps an entry for datasheets and downloads. |
+| Consumer / lifestyle | The logo and one plain action button, with the price or the free part visible where it fits. A simple booking or buying route matters more here than a phone number. |
+| Mission / nonprofit | The logo and one button for the audience this page serves. A homepage keeps standard navigation with a route per audience, never one donate button asked of every reader. |
+| Direct-response | The logo and the one commanded button, nothing else: no menu, no links off the page. |
 
 ## Hero
 
@@ -25,9 +47,13 @@ match whatever the traffic source already promised this specific visitor.
 down the page, or let a second, equally-weighted call to action compete with the primary one above
 the fold.
 
+**The build:** the headline, the subheadline, the two proof slots and the button are built in
+`../../hook-lab/references/hero-build.md`. This section sets what the hero must do; that file says
+how to write it.
+
 | Register | Execution |
 |---|---|
-| Conservative B2B (DACH) | The compressed promise stays understated — credentials-adjacent, not excited. Formal address from the first line; a single informal slip here costs more than the rest of the page reads well, per that register's Formality failure mode. |
+| Conservative B2B (DACH) | States the promise in credentials-adjacent terms: plain and specific, with a named consequence and the proof beside it. Formal address from the first line; a single informal slip here costs more than the rest of the page reads well, per that register's Formality failure mode. A rule this register softens, such as stacked benefit lines or urgency, is written in the deck's `Register notes`, one line each, never softened silently. |
 | Technical / industrial | Leads with a specification-shaped claim — a figure, a standard, a named use case — rather than an emotional beat. The practitioner is scanning for relevance to his job before he's scanning for how anything feels. |
 | Consumer / lifestyle | The vision beat is sensory and present-tense, placing the reader inside the moment. Rhythm is legitimately doing argumentative work here, not just decoration. |
 | Mission / nonprofit | Names the discomfort without describing the condition the organisation exists to relieve as a lever — no implied urgency, no rescue framing this early or anywhere else. |
@@ -53,6 +79,16 @@ abstract enough that Outcome has nothing concrete to contrast against.
 This is the section that moves least across registers: a real frustration in the audience's own
 words is close to register-neutral in *content*. What shifts is formality and polish, which is an
 editing-pass difference, not an argument one — see `page-architecture.md`'s Problem entry for why.
+
+**The pain section.** After a cold visitor's hero, this section is built in one of two ways. Problem,
+Agitate, Solve: name the problem in the visitor's words, agitate it by showing what it costs while it
+stays (the lost time, money or standing, as the brief records it), then solve it by pointing at the
+offer as the way out. Or the old way set against the new one: how the visitor does it today, with its
+costs, beside how the offer does it. Both end by handing over to Outcome. Warm visitors take proof
+before pain (see `page-architecture.md`, Skeleton by awareness), so for them this section runs
+shorter. Agitate only with costs the brief supports, never with a fear the page cannot back.
+Example: a pump maintenance service. The old way: waiting for a breakdown, then calling whoever
+answers. The new way: a fixed schedule and a named engineer.
 
 ## Outcome
 
@@ -128,6 +164,24 @@ This is one of the three sections — with Guarantee and CTA — where the regis
 different construction, not a different tone on one construction. See `page-architecture.md`'s Value
 stack entry for why a mismatch here is a wrong-argument failure rather than an editing one.
 
+## Compare
+
+**Must accomplish:** set the offer against the alternatives the buyer is really weighing: competitors,
+and the status quo (doing nothing, doing it by hand, staying with the current supplier). Every claim
+in the comparison is checkable by the reader, from public information or from proof on the page. Pick
+the rows the buyer cares about, in the buyer's terms.
+
+**Must not do:** name a competitor on a claim the page cannot prove, compare against a rival nobody
+would pick, or list rows the offer wins every time, which reads as a device rather than a comparison.
+
+| Register | Execution |
+|---|---|
+| Conservative B2B (DACH) | A plain table of criteria with a stated basis for each cell. The status quo row states what staying put costs. A rival is named only where the fact is public and dated. |
+| Technical / industrial | A matrix in the same units across the alternatives, with the operating condition stated. Competitor figures come only from their published datasheets, with the document named. |
+| Consumer / lifestyle | A short side-by-side of what the buyer gets here against the usual alternative or doing it alone, in plain benefits, with no rival named. |
+| Mission / nonprofit | Compares approaches, never organisations: what happens with the cause left unaddressed against what this programme does, with attribution named. No competitor appears. |
+| Direct-response | A head-to-head table of the offer against the named alternative and against doing it alone, every row backed by something the reader can check. |
+
 ## Proof
 
 **Must accomplish:** corroborate the Mechanism and Value stack claims with evidence from outside the
@@ -148,6 +202,22 @@ This section carries the most detailed register treatment in the whole plugin be
 `register-profiles.md` gives Proof its own fully worked dimension per archetype — read that
 dimension in full before writing this section; the table above is a pointer into it, not a
 replacement for it.
+
+## Team
+
+**Must accomplish:** put a person on the page: the founder's or the team's story, with real names and
+photos, saying who they are, why they do this work and what they have done that the buyer can check.
+
+**Must not do:** use stock faces, invented names or a vague "our experts" line. A missing name or photo
+is a `[NEEDED: <what>]` gap, reported, never filled.
+
+| Register | Execution |
+|---|---|
+| Conservative B2B (DACH) | Named people with titles and checkable credentials, a plain portrait each, formal address. The story is short and factual. |
+| Technical / industrial | The engineers who will do the work, with their discipline and qualifications, photographed on site or at the bench rather than in a studio. |
+| Consumer / lifestyle | The founder's story in the first person, with candid photos taken where the work happens. |
+| Mission / nonprofit | The people who deliver the work and the leadership, named. People the work serves appear only with their consent, never as a pity frame. |
+| Direct-response | The founder's story as the reason behind the offer, with a real photo and the results they can show. Short, and followed by the button. |
 
 ## Objections
 
@@ -195,10 +265,10 @@ the mechanics of the click ("Submit," "Click Here") in the slot where the outcom
 
 | Register | Execution |
 |---|---|
-| Conservative B2B (DACH) | One primary action, in the same words every time, with a lower-commitment second option beside it — most buyers here have to bring this to someone else first. |
-| Technical / industrial | Multiple entry points at different depths, each explicitly labeled which is which — datasheet, sample, or engineer call. Gate the application support, never the specification itself. |
+| Conservative B2B (DACH) | One action, in the same words every time. Most buyers here have to bring this to someone else first, so a lower-commitment second option beside the button is a departure from the one action: write it in the deck's `Register notes` (the rule, what changed, why), and the user decides per page. |
+| Technical / industrial | One action per page, with the button naming the document or conversation it leads to. Gate the application support, never the specification itself. Entry points at different depths, each labelled (datasheet, sample, engineer call), depart from the one action: write them in the deck's `Register notes`, and the user decides per page. |
 | Consumer / lifestyle | One obvious, low-friction action, with the price visible before the click. |
-| Mission / nonprofit | Several parallel, non-competing participation paths on one page — donate, volunteer, refer, request support — never one donate button asked of every reader regardless of why they came. |
+| Mission / nonprofit | One action per page, with the path chosen for the audience the page serves. Where one page must carry several parallel, non-competing paths (donate, volunteer, refer, request support), that is a departure from the one action: write it in the deck's `Register notes`, and the user decides per page. Never one donate button asked of every reader regardless of why they came. |
 | Direct-response | One commanded action, with its explicit risk reversal stated right beside it. |
 
 ## FAQ
@@ -220,3 +290,59 @@ question in a way that contradicts what the Objections section already resolved.
 Mark the section up as `FAQPage` schema where the platform supports it. That's a technical-SEO
 decision, not a register one — every archetype benefits from it equally, and `conversion-page-audit`
 checks for it independently of anything in this file.
+
+
+## Closer
+
+**Must accomplish:** build the closer as a mini hero: a benefit headline, three to five bullets of what
+the buyer gets, stacked proof, the doubt reducers and the form or button. It repeats the promise, the
+proof and the ask after the FAQ, and adds no new argument. Urgency comes only from real reasons: quick
+results, the cost of waiting, a real limit on capacity or dates. What urgency may become in each
+register is the "Time and urgency" column of the Register translation table in
+`../../hook-lab/references/hero-build.md`.
+
+**Must not do:** invent scarcity (a countdown, "only a few left", a deadline the business does not
+keep), or raise a claim or an objection the page has not already dealt with.
+
+| Register | Execution |
+|---|---|
+| Conservative B2B (DACH) | The headline states the outcome as a plain fact. The bullets are factual lines, each with its proof. A real capacity or date is named once, if there is one. The button carries the same words as every other. |
+| Technical / industrial | The headline is the specification-shaped result. The bullets are the deliverables in specification terms. Urgency is only a dated fact such as a lead time. The button names the document or the technical conversation. |
+| Consumer / lifestyle | A sensory headline and short bullets. A real season, booking window or remaining stock is said once, with the price visible beside the button. |
+| Mission / nonprofit | The headline names the change made. The bullets say what a gift or some time does, per audience. A real deadline comes with its reason. One path per audience, and no rescue framing. |
+| Direct-response | The outcome stated outright, with up to five bullets. A real deadline, cap or dated price step is kept, and the guarantee sits beside the button. |
+
+## Repeating the action
+
+The page asks for one action, and that same button follows nearly every major section. The hero and
+the closer always carry it, and no two sections in a row go without it (the header aside), so a visitor
+is never more than one section away from the button.
+
+- Each repeat is the same action with the same label. Inside a tested variant, every button carries
+  that variant's words.
+- Each button goes where the others go: every repeat goes to the same place, and on a page with a form,
+  every button leads to the form. A button that opens a pop-up, a calendar or another page the form does
+  not use is a second action.
+- The doubt reducers sit under every repeat (in a deck, `cta.fud`), each time naming the same
+  commitment point. The reader decides at the moment of the click, so the answer to the worry that
+  stops it has to be there.
+- Proof sits beside each repeat (see `proof-library.md`, Where proof goes).
+
+Repeating the one action is not a second action: the CTA playbook's one-action rule still holds, and a
+link to anything else is still an exit.
+
+## A visual for every section
+
+Every section names its visual: what it shows and why it is there. The visual is the real product, the
+real outcome or the real people, never stock, and it earns its place by carrying part of the section's
+argument (a result shown, a process drawn, a person met). In a copy deck every section other than the
+header and the FAQ carries a `visual` line. A section that is better as plain text writes `none` and
+the reason in that line, so the line is still there and the choice can be read. The header and the FAQ
+carry no visual line. A visual the brief or the client cannot supply is a `[NEEDED: <what>]` gap,
+reported.
+
+The reason is practical: a wireframe drawn from a text-only deck comes out text-only. Naming the visual
+at the copy stage means the page reaches design already showing something.
+
+Example: a payroll tool for restaurants. The pain section's visual: the real rota screen with the
+overtime mistake circled, because the buyer recognises their own Monday morning in it.

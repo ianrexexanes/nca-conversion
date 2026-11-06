@@ -49,3 +49,22 @@ a waiting period, or nothing beyond asking.
 5. **Check the register's own Proof-requirements dimension before finalizing the type**, not after —
    this table ranks proof types in general; `register-profiles.md` decides which of these general
    types actually counts as evidence for the specific reader this page is written to.
+
+## Where proof goes
+
+Where a piece of proof sits matters as much as which type it is. Every slot is filled from the brief.
+An empty slot holds `[NEEDED: <what>]` and is reported, never filled with proof that was not supplied.
+
+- **The hero's two slots.** `prooftop` and the proof strip, placed as "The two proof slots" in
+  `../../hook-lab/references/hero-build.md` sets them out. `prooftop` is the first slot; the proof strip
+  sits under the button and carries a second kind of proof.
+- **Proof beside each button.** Every time the one action repeats, proof sits beside it, together with the
+  doubt reducers, so the click is made with evidence in view.
+- **Stacked proof.** In the Proof section and again in the closer, several kinds together (a rating,
+  named clients, a case with its method) rather than one kind repeated.
+- **A wall of testimonials below the fold.** Many voices, placed after the argument, for the visitor
+  who scrolls down to see what other buyers said. It is the place for volume; the proof that matters
+  most is already beside the buttons.
+- **Verifiable, not decorative.** Proof a stranger can check outranks proof that only sits there: a
+  full name, role and photo, or a platform badge the reader can follow to the platform itself. A
+  testimonial missing those drops down the ranking above.

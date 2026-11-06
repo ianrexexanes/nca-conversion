@@ -51,6 +51,8 @@ Rendered checks run only through `render_check.py`. The common analytics and tag
 
 With a PageSpeed key, the speed check loads the page on Google's servers, where this plugin blocks nothing, and whether that visit shows in the client's analytics is not known. Without a key, local Lighthouse runs with the blocked hosts stopped.
 
+The block list errs toward blocking. A few rules match on the path alone, on any host, because a tag can be served from the site's own domain: an audited page whose own address looks like `/tr?id=5` or `/tr/?id=5` reads as blocked. The browser-level patterns cannot anchor a host, so an unusual host such as `myfacebook.com/tr/` is also stopped there, while the request-level check lets it through. The Meta rules are anchored in both layers, so `facebook.com/trending` stays open. The `/ccm/collect` rules are anchored only in the request-level check: the browser-level patterns cannot end at a path, so an address such as `/ccm/collections` still reads as blocked there. Hosts for which no vendor page was found are marked in `skills/cro/scripts/cro_runtime.py` as unverified.
+
 ### Script permissions last one turn
 
 The `cro` skill pre-approves its own scripts through `allowed-tools`, and that approval lasts only for the turn that invokes the skill (see "Pre-approve tools for a skill" at https://code.claude.com/docs/en/skills). When the audit has to ask for the mode, keyword or traffic first, its scripts run in the next turn, and Claude Code asks before each one. To avoid that, give those answers in the command, for example `/nca-conversion:cro audit https://example.com/ mode: Direct; traffic: ads; page role: landing page`.

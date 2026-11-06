@@ -10,37 +10,37 @@ KEY_ENV = "NCA_PAGESPEED_KEY"
 KEY_FILE = Path.home() / ".config" / "nca-conversion" / "pagespeed.key"
 
 BLOCKED_HOSTS: tuple[str, ...] = (
-    "google-analytics.com",
-    "analytics.google.com",
-    "googletagmanager.com",
-    "doubleclick.net",
-    "googleadservices.com",
-    "googlesyndication.com",
-    "clarity.ms",
-    "connect.facebook.net",
-    "px.ads.linkedin.com",
-    "snap.licdn.com",
-    "analytics.tiktok.com",
-    "bat.bing.com",
-    "hotjar.com",
-    "hotjar.io",
-    "plausible.io",
-    "cdn.segment.com",
-    "api.segment.io",
-    "mixpanel.com",
-    "heapanalytics.com",
-    "static.cloudflareinsights.com",
-    "stats.wp.com",
-    "pixel.wp.com",
-    "js.hs-scripts.com",
-    "js.hs-analytics.net",
-    "track.hubspot.com",
-    "static.ads-twitter.com",
-    "analytics.twitter.com",
-    "ct.pinterest.com",
-    "matomo.cloud",
-    "i.posthog.com",
-    "app.posthog.com",
+    "google-analytics.com",  # https://developers.google.com/tag-platform/gtagjs
+    "analytics.google.com",  # https://developers.google.com/tag-platform/gtagjs
+    "googletagmanager.com",  # https://developers.google.com/tag-platform/gtagjs
+    "doubleclick.net",  # https://developers.google.com/tag-platform/gtagjs
+    "googleadservices.com",  # https://developers.google.com/tag-platform/gtagjs
+    "googlesyndication.com",  # https://developers.google.com/tag-platform/gtagjs
+    "clarity.ms",  # https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-setup
+    "connect.facebook.net",  # https://developers.facebook.com/documentation/meta-pixel/get-started
+    "px.ads.linkedin.com",  # https://www.linkedin.com/help/lms/answer/a425696
+    "snap.licdn.com",  # https://www.linkedin.com/help/lms/answer/a425696
+    "analytics.tiktok.com",  # UNVERIFIED 2026-11-06: no vendor page found
+    "bat.bing.com",  # https://github.com/MicrosoftDocs/Advertising/blob/main/advertising/msa-help/hlp_BA_CONC_UETv2CSP.md
+    "hotjar.com",  # https://learning.hotjar.com/installing-the-hotjar-tracking-code
+    "hotjar.io",  # UNVERIFIED 2026-11-06: no vendor page found
+    "plausible.io",  # https://plausible.io/docs/events-api
+    "cdn.segment.com",  # https://www.twilio.com/docs/segment/connections/sources/catalog/libraries/website/javascript/custom-proxy
+    "api.segment.io",  # https://www.twilio.com/docs/segment/connections/sources/catalog/libraries/website/javascript/custom-proxy
+    "mixpanel.com",  # https://docs.mixpanel.com/docs/tracking-methods/sdks/javascript
+    "heapanalytics.com",  # https://developers.heap.io/docs/web
+    "static.cloudflareinsights.com",  # https://developers.cloudflare.com/web-analytics/data-metrics/data-origin-and-collection/
+    "stats.wp.com",  # https://github.com/Automattic/jetpack/blob/trunk/projects/packages/stats/README.md
+    "pixel.wp.com",  # https://github.com/Automattic/jetpack/blob/trunk/projects/packages/stats/README.md
+    "js.hs-scripts.com",  # https://knowledge.hubspot.com/reports/how-do-i-know-if-my-hubspot-tracking-code-is-working
+    "js.hs-analytics.net",  # https://knowledge.hubspot.com/reports/how-do-i-know-if-my-hubspot-tracking-code-is-working
+    "track.hubspot.com",  # https://knowledge.hubspot.com/account/how-does-hubspot-track-visitors
+    "static.ads-twitter.com",  # https://business.x.com/en/help/campaign-measurement-and-analytics/conversion-tracking-for-websites
+    "analytics.twitter.com",  # https://business.x.com/en/help/troubleshooting/faqs-about-pixels
+    "ct.pinterest.com",  # https://help.pinterest.com/en-gb/business/article/install-the-base-code
+    "matomo.cloud",  # https://matomo.org/faq/how-to-install/set-up-a-tracker-proxy-on-your-domain/
+    "i.posthog.com",  # https://posthog.com/docs/api
+    "app.posthog.com",  # UNVERIFIED 2026-11-06: no vendor page found
 )
 
 # Each regex is paired, by position, with its Lighthouse glob below.
@@ -54,10 +54,12 @@ BLOCKED_PATH_PATTERNS: tuple[str, ...] = (
     r"matomo\.js",
     r"piwik\.php",
     r"piwik\.js",
-    r"facebook\.com/tr",
+    r"(^|\.)facebook\.com/tr/",
+    r"(^|\.)facebook\.com/tr\?",
     r"/tr\?id=",
     r"/tr/\?id=",
-    r"/ccm/collect",
+    r"/ccm/collect\?.",  # UNVERIFIED 2026-11-06: no vendor page found
+    r"/ccm/collect\?$",  # UNVERIFIED 2026-11-06: no vendor page found
 )
 _PATH_GLOBS: tuple[str, ...] = (
     "*/gtm.js*",
@@ -69,10 +71,12 @@ _PATH_GLOBS: tuple[str, ...] = (
     "*matomo.js*",
     "*piwik.php*",
     "*piwik.js*",
-    "*facebook.com/tr*",
+    "*facebook.com/tr/*",
+    "*facebook.com/tr?*",
     "*/tr?id=*",
     "*/tr/?id=*",
-    "*/ccm/collect*",
+    "*/ccm/collect?*",
+    "*/ccm/collect",
 )
 
 

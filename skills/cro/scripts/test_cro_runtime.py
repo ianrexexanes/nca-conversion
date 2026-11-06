@@ -1,11 +1,27 @@
 import os
+import re
 import stat
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
+from urllib.parse import urlsplit
 
 import cro_runtime
+
+
+def chrome_pattern_blocks(pattern: str, url: str) -> bool:
+    # Measured on 2026-11-06 through a DevTools session with Network.setBlockedURLs, in Playwright 1.62.0's
+    # Chromium 151.0.7922.34 and in Chrome 157.0.8103.38, with identical results: "*" matches any text, every
+    # other character (a "?" included) is literal, and the pattern is not anchored. Chrome finds the parts
+    # between the "*" characters in the URL, in order, anywhere in it.
+    position = 0
+    for part in pattern.split("*"):
+        found = url.find(part, position)
+        if found < 0:
+            return False
+        position = found + len(part)
+    return True
 
 
 class IsBlockedTest(unittest.TestCase):
@@ -32,7 +48,68 @@ class IsBlockedTest(unittest.TestCase):
             self.assertIsNotNone(cro_runtime.is_blocked(url), url)
 
     def test_facebook_tr_rule_matches_on_the_host(self):
-        self.assertEqual(cro_runtime.is_blocked("https://www.facebook.com/tr/?ev=PageView"), "path:facebook\\.com/tr")
+        self.assertEqual(cro_runtime.is_blocked("https://www.facebook.com/tr/?ev=PageView"), "path:(^|\\.)facebook\\.com/tr/")
+
+    def test_meta_pixel_still_blocked_after_anchoring(self):
+        for url in ("https://www.facebook.com/tr/?id=123&ev=PageView", "https://www.facebook.com/tr?id=123&ev=Lead",
+                    "https://facebook.com/tr/?id=1&ev=PageView",
+                    # The image-tag form Meta documents: https://developers.facebook.com/documentation/meta-pixel/get-started
+                    "https://www.facebook.com/tr?id=12345&ev=PageView&noscript=1"):
+            self.assertIsNotNone(cro_runtime.is_blocked(url), url)
+
+    def test_ordinary_addresses_near_tracker_paths_stay_open(self):
+        for url in ("https://www.facebook.com/trending", "https://www.facebook.com/translate/x",
+                    "https://myfacebook.com/trade", "https://example.com/ccm/collections"):
+            self.assertIsNone(cro_runtime.is_blocked(url), url)
+
+    def test_ccm_collect_blocked_on_a_first_party_host_too(self):
+        # No Google page documents the /ccm/collect request or a gateway path for it, so the cases are the endpoint
+        # on Google's host and on a first-party host, with and without a query.
+        for url in ("https://www.google.com/ccm/collect?en=page_view", "https://tags.example.com/ccm/collect?en=page_view",
+                    "https://tags.example.com/ccm/collect"):
+            self.assertIsNotNone(cro_runtime.is_blocked(url), url)
+
+    def test_chrome_pattern_reading_matches_the_probe(self):
+        # The 17 results measured for the helper's comment: pattern, path, blocked.
+        probe = (
+            ("*/ccm/collect", "/ccm/collect", True), ("*/ccm/collect", "/ccm/collections", True),
+            ("*/ccm/collect", "/ccm/collect/", True), ("*/ccm/collect", "/ccm/collect;x", True),
+            ("*/ccm/collect", "/ccm/collect?en=1", True), ("*/ccm/collect?*", "/ccm/collect?en=1", True),
+            ("*/ccm/collect?*", "/ccm/collect?", True), ("*/ccm/collect?*", "/ccm/collections", False),
+            ("*/ccm/collect?*", "/ccm/collectX", False), ("*/xtr?*", "/xtr?id=1", True),
+            ("*/xtr?*", "/xtrending", False), ("*/xtr?*", "/xtrX", False), ("*/xtr/*", "/xtr/?id=1", True),
+            ("*/xtr/*", "/xtrending", False), ("*/a*b", "/a1b", True), ("*/a*b", "/a1b2", True), ("*/a*b", "/ab", True),
+        )
+        self.assertEqual(len(probe), 17)
+        for pattern, path, blocked in probe:
+            self.assertIs(chrome_pattern_blocks(pattern, "http://127.0.0.1:1" + path), blocked, (pattern, path))
+
+    def test_every_glob_blocks_its_own_regex_case(self):
+        cases = {
+            r"/gtm\.js": "https://example.com/gtm.js?id=GTM-X",
+            r"/gtag/js": "https://example.com/gtag/js?id=G-X",
+            r"/g/collect": "https://sgtm.example.com/g/collect?v=2",
+            r"/j/collect": "https://example.com/j/collect?t=dc",
+            r"/collect\?v=": "https://example.com/collect?v=1",
+            r"matomo\.php": "https://example.com/matomo.php",
+            r"matomo\.js": "https://example.com/matomo.js",
+            r"piwik\.php": "https://example.com/piwik.php",
+            r"piwik\.js": "https://example.com/piwik.js",
+            r"(^|\.)facebook\.com/tr/": "https://www.facebook.com/tr/?id=1&ev=PageView",
+            r"(^|\.)facebook\.com/tr\?": "https://www.facebook.com/tr?id=1&ev=PageView",
+            r"/tr\?id=": "https://example.com/tr?id=5",
+            r"/tr/\?id=": "https://example.com/tr/?id=5",
+            r"/ccm/collect\?.": "https://www.google.com/ccm/collect?en=page_view",
+            r"/ccm/collect\?$": "https://tags.example.com/ccm/collect",
+        }
+        patterns = cro_runtime.BLOCKED_PATH_PATTERNS
+        self.assertEqual(set(cases), set(patterns))
+        self.assertEqual(len(cro_runtime._PATH_GLOBS), len(patterns))
+        for regex, glob in zip(patterns, cro_runtime._PATH_GLOBS):
+            url = cases[regex]
+            parts = urlsplit(url)
+            self.assertTrue(re.search(regex, (parts.hostname or "") + parts.path + "?" + parts.query), url)
+            self.assertTrue(chrome_pattern_blocks(glob, url), "%s does not match %s" % (glob, url))
 
     def test_google_consent_collect_is_blocked(self):
         self.assertIsNotNone(cro_runtime.is_blocked("https://www.google.com/ccm/collect?en=page_view"))

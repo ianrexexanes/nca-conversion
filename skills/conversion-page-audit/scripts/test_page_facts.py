@@ -3,6 +3,7 @@ import threading
 import unittest
 import urllib.error
 import urllib.request
+from datetime import timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import page_facts
@@ -158,6 +159,30 @@ class FetchUserAgentTest(unittest.TestCase):
     def test_fetch_sends_chrome_ua(self):
         page_facts.fetch(self.url)
         self.assertEqual(_AgentHandler.seen[-1], page_facts.CHROME_UA)
+
+
+class FetchHelpersTest(unittest.TestCase):
+    def test_chrome_major_steps_every_14_days_from_the_anchor(self):
+        a = page_facts.ANCHOR_DATE
+        self.assertEqual(page_facts.chrome_major(a), page_facts.ANCHOR_MAJOR)
+        self.assertEqual(page_facts.chrome_major(a + timedelta(days=13)), page_facts.ANCHOR_MAJOR)
+        self.assertEqual(page_facts.chrome_major(a + timedelta(days=14)), page_facts.ANCHOR_MAJOR + 1)
+        self.assertEqual(page_facts.chrome_major(a + timedelta(days=56)), page_facts.ANCHOR_MAJOR + 4)
+        self.assertEqual(page_facts.chrome_major(a - timedelta(days=100)), page_facts.ANCHOR_MAJOR)
+
+    def test_header_charset_decodes_latin1(self):
+        self.assertEqual(page_facts.decode_body("Größe".encode("latin-1"), "iso-8859-1"), "Größe")
+
+    def test_meta_charset_decodes_when_the_header_has_none(self):
+        raw = '<meta charset="iso-8859-1"><p>Größe</p>'.encode("latin-1")
+        self.assertIn("Größe", page_facts.decode_body(raw, None))
+
+    def test_unknown_charset_falls_back_to_utf8(self):
+        self.assertEqual(page_facts.decode_body("Größe".encode("utf-8"), "x-unknown"), "Größe")
+
+    def test_meta_http_equiv_charset_decodes(self):
+        raw = '<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><p>Größe</p>'.encode("latin-1")
+        self.assertIn("Größe", page_facts.decode_body(raw, None))
 
 
 if __name__ == "__main__":

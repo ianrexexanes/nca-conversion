@@ -62,7 +62,11 @@ def main(argv=None) -> int:
 
     py = cro_runtime.venv_python(data_dir)
     if not py.exists():
-        data_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            data_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            print(f"setup: cannot create the data folder {data_dir}: {exc.strerror or exc}", file=sys.stderr)
+            return 1
         if not step(commands["venv"], "virtual environment"):
             return 1
     if installed_version(py) != cro_runtime.PLAYWRIGHT_VERSION:

@@ -1,6 +1,7 @@
 import contextlib
 import io
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -50,6 +51,18 @@ class SetupFailureTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("Chromium download", text)
         self.assertNotIn("Traceback", text)
+
+    def test_uncreatable_data_folder_is_one_line_and_exit_1(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            blocker = Path(tmp) / "a-file"
+            blocker.write_text("not a folder\n", encoding="utf-8")
+            done = subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "setup.py"),
+                                   "--data-dir", str(blocker)], capture_output=True, text=True)
+        self.assertEqual(done.returncode, 1)
+        lines = done.stderr.strip().splitlines()
+        self.assertEqual(len(lines), 1, done.stderr)
+        self.assertTrue(lines[0].startswith("setup: cannot create the data folder"), lines[0])
+        self.assertNotIn("Traceback", done.stdout + done.stderr)
 
 
 if __name__ == "__main__":

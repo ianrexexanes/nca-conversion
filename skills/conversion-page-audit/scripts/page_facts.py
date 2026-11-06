@@ -25,16 +25,58 @@ re-architecting the collector to track nested subtrees is out of scope here.
 Usage:
     python3 page_facts.py <file.html|url> [--url <original-url>]
 """
+import codecs
 import json
+import re
 import sys
 import urllib.request
+from datetime import date
 from html.parser import HTMLParser
 
 HEADING_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
 CTA_HINTS = ("sign up", "get started", "book", "buy", "register", "contact",
              "demo", "anmelden", "jetzt", "kontakt", "buchen")
 LCP_CANDIDATE_CAP = 3
-CHROME_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+# Chrome ships a stable release every two weeks since Chrome 153:
+# https://developer.chrome.com/blog/chrome-two-week-release (read 2026-11-06). The
+# year-end breaks can put the computed major one ahead of the real stable release.
+RELEASE_CYCLE_DAYS = 14
+# One stable release and its date from Chrome's schedule:
+# https://chromiumdash.appspot.com/schedule (read 2026-11-06).
+ANCHOR_MAJOR = 157
+ANCHOR_DATE = date(2026, 11, 3)
+
+
+def chrome_major(today: date | None = None) -> int:
+    """The Chrome stable major expected on `today`, counted from the anchor release."""
+    if today is None:
+        today = date.today()
+    return ANCHOR_MAJOR + max(0, (today - ANCHOR_DATE).days // RELEASE_CYCLE_DAYS)
+
+
+CHROME_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%d.0.0.0 Safari/537.36" % chrome_major()
+
+_META_CHARSET = re.compile(rb"<meta[^>]+charset\s*=\s*[\"']?\s*([A-Za-z0-9_.:-]+)", re.IGNORECASE)
+
+
+def _known(name: str | None) -> bool:
+    if not name:
+        return False
+    try:
+        codecs.lookup(name)
+    except LookupError:
+        return False
+    return True
+
+
+def decode_body(raw: bytes, header_charset: str | None) -> str:
+    """Decode with the header's charset, else the page's own meta charset, else UTF-8."""
+    charset = header_charset if _known(header_charset) else None
+    if charset is None:
+        found = _META_CHARSET.search(raw[:2048])
+        meta = found.group(1).decode("ascii") if found else None
+        charset = meta if _known(meta) else "utf-8"
+    return raw.decode(charset, errors="replace")
 
 
 def fetch(url: str, timeout: float = 30.0) -> str:
@@ -44,7 +86,7 @@ def fetch(url: str, timeout: float = 30.0) -> str:
         "Accept-Language": "en-US,en;q=0.9,de;q=0.8",
     })
     with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - operator-supplied URL
-        return response.read().decode("utf-8", errors="replace")
+        return decode_body(response.read(), response.headers.get_content_charset())
 
 
 class _Collector(HTMLParser):

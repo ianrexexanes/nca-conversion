@@ -868,5 +868,14 @@ class CarriedFrom021Tests(unittest.TestCase):
         self.assertIn("tiers", psychology)
 
 
+class SetupPermissionsTests(unittest.TestCase):
+    def test_setup_reference_names_the_permissions_step(self):
+        text = (ROOT / "skills" / "cro" / "references" / "setup.md").read_text(encoding="utf-8")
+        self.assertIn("merge", text.lower())  # the section's text, fixed by the controller, opens with "Merge"
+        for needle in ("--permissions", "settings.local.json", "claude plugin update",
+                       "python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/setup.py --permissions --data-dir ${CLAUDE_PLUGIN_DATA}"):
+            self.assertIn(needle, text)
+
+
 if __name__ == "__main__":
     unittest.main()

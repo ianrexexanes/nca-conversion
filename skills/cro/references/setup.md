@@ -33,6 +33,16 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/doctor.py --data-dir ${CLAUDE_P
 
 Exit 0 when the first four are `OK`, else 1.
 
+## Stop the permission prompts
+
+A skill's `allowed-tools` grant lasts for the turn that invokes it; it clears when you send your next message, so a later turn asks again before each script runs. `/cro setup --permissions` runs this line in place of the setup line above. It prints the rules for your install and changes nothing:
+
+```bash
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/setup.py --permissions --data-dir ${CLAUDE_PLUGIN_DATA}
+```
+
+Merge the printed rules into the `permissions.allow` list of `.claude/settings.local.json` in your project, keeping the rules already there. The rules name the version folder of the installed plugin, so after each `claude plugin update` run `/cro setup --permissions` again and replace the old rules with the new ones.
+
 ## The PageSpeed key
 
 Optional. The key is yours; you create and store it, and it never goes into the chat.

@@ -60,10 +60,8 @@ named as checked, so nobody re-flags it next audit.
   and heavily used. Watch for a
   detection gap here: `page_facts.py`'s CTA hint list has no entry for "Google," "Microsoft," or
   "continue with," so a social-auth button will not appear in the `ctas` array even when it's the
-  most prominent action on the page. The script parses every `<a>` and `<button>` internally but
-  only exposes the hint-matched subset in its JSON output — it does not expose the full list — so
-  confirm a genuine absence by reading the raw markup directly or by inspecting the rendered page,
-  never by `ctas` alone coming up short of anything social-auth-shaped.
+  most prominent action on the page. The script's `links` array lists every `<a>` and `<button>` unfiltered, so confirm a genuine absence from
+  `links` or from the rendered page, never by `ctas` alone coming up short of anything social-auth-shaped.
 - **Single-step versus multi-step.** A short form tends to work fine as a single step;
   once a B2B flow needs a longer form, splitting it into steps that each take only a few seconds
   to clear usually converts better, with anything sensitive or effortful pushed to the very end.

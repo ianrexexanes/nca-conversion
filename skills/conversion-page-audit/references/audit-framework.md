@@ -146,12 +146,11 @@ checks.
   screen with nothing to do next? Stopping there wastes traffic the page worked to earn, whatever
   the confirmation screen's copy says. This is a separate page from the one being audited — note it
   as a distinct finding rather than folding it into the CTA's own copy or placement.
-- `page_facts.py`'s `ctas` array is a hint-matched subset, filtered internally from a larger set of
-  links and buttons the script parses but does not expose in its JSON output — it is not a verified
-  inventory of every actionable element on the page. A button whose copy carries no keyword from
+- `page_facts.py`'s `ctas` array is the hint-matched part of its `links` array, which lists every link and
+  button in the static markup, in page order. A button whose copy carries no keyword from
   that hint list (a "Continue with Google" button, for instance) will not appear in `ctas` at all.
-  Confirm a genuine absence by reading the raw markup directly, or by inspecting the rendered page
-  if `render_check.py` ran — never from `ctas` alone coming up short.
+  Confirm a genuine absence from `links`, and from the rendered page if `render_check.py` ran, never from
+  `ctas` alone coming up short.
 
 ### FAQ
 

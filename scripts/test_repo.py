@@ -299,7 +299,7 @@ class AuditRulingsTest(unittest.TestCase):
         self.assertIn("Exit 2", step)
         sheet = json.loads(blocks[0])
         self.assertEqual(score.validate(sheet), [])
-        self.assertEqual(list(sheet), ["page", "mode", "page_role", "traffic", "register", "factors"])
+        self.assertEqual(list(sheet), ["page", "plugin_version", "mode", "page_role", "traffic", "register", "factors"])
         self.assertEqual([f["id"] for f in sheet["factors"]], list(range(1, 11)))
         self.assertTrue(any("not_checked" in f for f in sheet["factors"]))
 
@@ -643,11 +643,91 @@ def audit_step(number):
     return audit[start:end if end != -1 else len(audit)]
 
 
+def factor(number):
+    return RoundFixesTest.factor_section(read("skills", "cro", "references", "score-anchors.md"), number)
+
+
+def audit():
+    return read("skills", "cro", "references", "audit.md")
+
+
+def how_to_score():
+    text = read("skills", "cro", "references", "score-anchors.md")
+    start = text.index("\n## How to score")
+    end = text.find("\n## ", start + 1)
+    return text[start:end if end != -1 else len(text)]
+
+
+def cpa_skill():
+    return read("skills", "conversion-page-audit", "SKILL.md")
+
+
+def audit_framework():
+    return read("skills", "conversion-page-audit", "references", "audit-framework.md")
+
+
+def form_audit():
+    return read("skills", "conversion-page-audit", "references", "form-and-signup-audit.md")
+
+
 def factor_bands(number):
     """The 3, 6 and 9 bullet lines of factor `number`'s section in score-anchors.md, in that order."""
     section = RoundFixesTest.factor_section(read("skills", "cro", "references", "score-anchors.md"), number)
     lines = section.split("\n")
     return [next(line for line in lines if line.startswith("- **%d:**" % band)) for band in (3, 6, 9)]
+
+
+class AuditSlice2Tests(unittest.TestCase):
+    def test_audit_reads_the_brief_or_names_its_absence(self):
+        s = flat(audit_step(1))
+        self.assertIn("If a Conversion Brief exists for the page, read it first", s)
+        self.assertIn("If none exists, say so in the report's header as a limitation", s)
+
+    def test_static_and_rendered_differ_is_a_finding(self):
+        s = flat(audit_step(5))
+        self.assertIn("When page_facts.py and render.json disagree on copy, such as a button or a heading, use the rendered text", s)
+        self.assertIn("do not file it under Could not check", s)
+
+    def test_facts_step_counts_buttons_from_links_and_saves_the_facts(self):
+        s = flat(audit_step(3))
+        self.assertIn("Count buttons from `links`", s)
+        self.assertIn("--out <dir>/facts.json", s)
+
+    def test_audit_names_the_form_and_test_references(self):
+        self.assertIn("form-and-signup-audit.md", flat(audit_step(8)))
+        self.assertIn("test-design.md", flat(audit()))
+
+    def test_sheet_carries_plugin_version_and_the_folder_lists_facts(self):
+        self.assertIn('"plugin_version": "%s"' % VERSION, audit_step(11))
+        self.assertIn(".claude-plugin/plugin.json", flat(audit_step(11)))
+        self.assertIn("facts.json", flat(audit_step(14)))
+
+    def test_v1_files_say_links_holds_every_link(self):
+        af, fa, sk = flat(audit_framework()), flat(form_audit()), flat(cpa_skill())
+        self.assertIn("`page_facts.py`'s `ctas` array is the hint-matched part of its `links` array, which lists every link and "
+                      "button in the static markup, in page order.", af)
+        self.assertIn("Confirm a genuine absence from `links`, and from the rendered page if `render_check.py` ran, never from "
+                      "`ctas` alone coming up short.", af)
+        self.assertIn("The script's `links` array lists every `<a>` and `<button>` unfiltered, so confirm a genuine absence from "
+                      "`links` or from the rendered page, never by `ctas` alone coming up short of anything social-auth-shaped.", fa)
+        self.assertIn("It returns twelve keys parsed from static markup only: `url`, `title`, `meta_description`, `headings`, "
+                      "`links`, `has_footer`, `ctas`, `forms`, `schema_types`, `images`, `lcp_candidates`, `notes`.", sk)
+        for text in (af, fa):
+            self.assertNotIn("does not expose", text)
+
+    def test_anchors_read_the_slots_the_button_and_proof_beside_it(self):
+        f3 = factor(3)
+        self.assertIn("above the H1", f3)
+        self.assertIn("directly under the H1", f3)
+        self.assertIn("under the button", f3)
+        self.assertIn("after nearly every major section", factor(4))
+        self.assertIn("beside each button", factor(6))
+        self.assertIn("Changed in %s: factors 3, 4 and 6" % VERSION, how_to_score())
+
+    def test_step_9_says_what_a_null_measure_means(self):  # minor 111
+        s = flat(audit_step(9))
+        self.assertIn("A measure that `speed.json` holds as null (the performance score, LCP, TBT or CLS) was not measured", s)
+        self.assertIn("When every measure is null, factor 10 is not checked.", s)
 
 
 class FinalReviewFixesTest(unittest.TestCase):

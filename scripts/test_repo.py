@@ -1139,5 +1139,13 @@ class PageRulesTests(unittest.TestCase):
         self.assertIn("Register notes", flat(page_types("What doesn't fit any of these five")))
 
 
+class DeckSectionsTest(unittest.TestCase):
+    def test_deck_sections_match_page_architecture(self):
+        sys.path.insert(0, str(ROOT / "skills" / "cro" / "scripts"))
+        import deck_check
+        self.assertEqual(list(deck_check.SECTIONS), [r[0] for r in order_rows(architecture("The long-form order"))])
+
+
 if __name__ == "__main__":
     unittest.main()
+

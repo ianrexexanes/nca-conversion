@@ -40,8 +40,10 @@ def _audit(audits, name):
     return _number(audit.get("numericValue")) if isinstance(audit, dict) else None
 
 
-def _scaled(value, divisor, digits):
-    return None if value is None else round(value / divisor, digits)
+def _scaled(value, divisor):
+    # Not rounded: factor 10's bands give each edge to the better band, and a value
+    # just over a limit must not be rounded onto it (CLS 0.1004 is over 0.1).
+    return None if value is None else value / divisor
 
 
 def lab_values(categories, audits):
@@ -49,10 +51,9 @@ def lab_values(categories, audits):
     tbt = _audit(audits, "total-blocking-time")
     return {
         "performance": None if score is None else round(score * 100),
-        "lcp_s": _scaled(_audit(audits, "largest-contentful-paint"), 1000, 1),
-        "cls": None if _audit(audits, "cumulative-layout-shift") is None
-        else round(_audit(audits, "cumulative-layout-shift"), 2),
-        "tbt_ms": None if tbt is None else round(tbt),
+        "lcp_s": _scaled(_audit(audits, "largest-contentful-paint"), 1000),
+        "cls": _audit(audits, "cumulative-layout-shift"),
+        "tbt_ms": tbt,
     }
 
 
@@ -71,9 +72,9 @@ def field_values(experience):
     if all(percentile(name) is None for name in names):
         return None
     return {
-        "lcp_s": _scaled(percentile(names[0]), 1000, 1),
+        "lcp_s": _scaled(percentile(names[0]), 1000),
         "inp_ms": percentile(names[1]),
-        "cls": _scaled(percentile(names[2]), 100, 2),
+        "cls": _scaled(percentile(names[2]), 100),
     }
 
 

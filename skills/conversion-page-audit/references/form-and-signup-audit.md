@@ -42,9 +42,10 @@ named as checked, so nobody re-flags it next audit.
   distinguish a `<label>` element from a field's `placeholder` attribute, so this check needs a
   rendered look at the form, not the JSON output — route it to "Could not check" without one.
 - **Single-column versus multi-column layout, and multi-step thresholds.** Past a handful of
-  fields is the point where a single long form usually loses to a multi-step flow with a progress
-  indicator. Field count comes from `forms[].fields`; whether a progress indicator exists, or
-  whether the layout is actually single-column, is a rendered check.
+  fields, a multi-step flow with a progress indicator becomes the challenger to test against the
+  single long form, under "Test, don't guess"; the audit does not say which one wins. Field count
+  comes from `forms[].fields`; whether a progress indicator exists, or whether the layout is
+  actually single-column, is a rendered check.
 - **Confirmation fields.** A second field of the same type — two `email` fields, or an email field
   plus an explicit confirmation field — is friction with no real benefit; flag it directly from
   `forms[].fields` when you see the type repeated within one form.

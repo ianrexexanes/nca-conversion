@@ -825,7 +825,7 @@ class AuditStep7Tests(unittest.TestCase):
     def test_factor_10_names_lab_cls_in_every_band(self):
         bands = factor_bands(10)            # the 3, 6 and 9 bullets of section 10, in order
         self.assertEqual(len(bands), 3)
-        for band, value in zip(bands, ("over 0.25", "0.1 to 0.25", "0.1 or less")):
+        for band, value in zip(bands, ("over 0.25", "over 0.1 and up to 0.25", "0.1 or less")):
             self.assertIn("CLS", band); self.assertIn(value, band)
             self.assertIn("(Source: Google, Cumulative Layout Shift", band)
 
@@ -846,6 +846,26 @@ class PublicWordingTests(unittest.TestCase):
                 if owner.search(line) or private_skill in line:
                     hits.append(f"{name}:{number}")
         self.assertEqual(hits, [])
+
+
+class CarriedFrom021Tests(unittest.TestCase):
+    def test_factor_10_middle_band_starts_above_the_good_limit(self):
+        line = next(l for l in factor(10).split("\n") if l.startswith("- **6:**"))
+        for part in ("over 0.1", "over 2.5 s", "over 200 ms"):
+            self.assertIn(part, line)
+        for part in ("2.5 to 4 s", "200 to 600 ms", "0.1 to 0.25"):
+            self.assertNotIn(part, line)
+
+    def test_two_sentences_keep_the_instruction_without_the_claim(self):
+        forms = flat(read("skills", "conversion-page-audit", "references", "form-and-signup-audit.md"))
+        self.assertNotIn("usually loses to a multi-step flow", forms)
+        self.assertIn("multi-step", forms)
+        self.assertIn("progress indicator", forms)
+        psychology = flat(read("skills", "conversion-page-build", "references", "conversion-psychology.md"))
+        self.assertNotIn("outperforms a long one", psychology)
+        self.assertNotIn("clearly beats", psychology)
+        self.assertIn("**Value stack**", psychology)
+        self.assertIn("tiers", psychology)
 
 
 if __name__ == "__main__":

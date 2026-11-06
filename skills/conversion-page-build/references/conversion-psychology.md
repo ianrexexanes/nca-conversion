@@ -145,9 +145,9 @@ first, ahead of any named competitor: not "why us over them" but "why change at 
 
 More options slow a decision down and increase the odds of no decision at all, rather than a better
 one — the same mechanism sometimes cited under a different name for the time-to-decide version of the
-effect. Governs **CTA** (one primary action, not three competing ones) and **Value stack** (a short
-list of tiers outperforms a long one, and a page recommending one clearly beats a page presenting all of them as
-equally weighted).
+effect. Governs **CTA** (one primary action, not three competing ones) and **Value stack** (keep the
+list of tiers short, and recommend one of them rather than presenting all of them as equally
+weighted).
 
 ## Why the rest were cut
 

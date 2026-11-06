@@ -332,5 +332,46 @@ class RulingsTest(_NoKeyFile):
                     run.assert_not_called()
 
 
+
+def lab_audits(lcp_ms, cls, tbt_ms):
+    return {
+        "largest-contentful-paint": {"numericValue": lcp_ms},
+        "cumulative-layout-shift": {"numericValue": cls},
+        "total-blocking-time": {"numericValue": tbt_ms},
+    }
+
+
+def field_experience(lcp_ms, cls_percentile):
+    return {"metrics": {
+        "LARGEST_CONTENTFUL_PAINT_MS": {"percentile": lcp_ms},
+        "CUMULATIVE_LAYOUT_SHIFT_SCORE": {"percentile": cls_percentile},
+    }}
+
+
+class BandEdgeTest(unittest.TestCase):
+    """A value just over a limit must not be rounded onto it (Google gives each edge to the better band)."""
+
+    def test_lab_values_never_round_onto_a_band_edge(self):
+        categories = {"performance": {"score": 0.5}}
+        over_good = speed_check.lab_values(categories, lab_audits(2549, 0.1004, 200.4))
+        self.assertGreater(over_good["cls"], 0.1)
+        self.assertGreater(over_good["lcp_s"], 2.5)
+        self.assertGreater(over_good["tbt_ms"], 200)
+        over_middle = speed_check.lab_values(categories, lab_audits(4049, 0.2504, 600.4))
+        self.assertGreater(over_middle["cls"], 0.25)
+        self.assertGreater(over_middle["lcp_s"], 4.0)
+        self.assertGreater(over_middle["tbt_ms"], 600)
+        good_edge = speed_check.lab_values(categories, lab_audits(2500, 0.1, 200))
+        self.assertEqual((good_edge["cls"], good_edge["lcp_s"], good_edge["tbt_ms"]), (0.1, 2.5, 200))
+        middle_edge = speed_check.lab_values(categories, lab_audits(4000, 0.25, 600))
+        self.assertEqual((middle_edge["cls"], middle_edge["lcp_s"], middle_edge["tbt_ms"]), (0.25, 4.0, 600))
+
+    def test_field_lcp_never_rounds_onto_a_band_edge(self):
+        self.assertGreater(speed_check.field_values(field_experience(2549, 5))["lcp_s"], 2.5)
+        self.assertEqual(speed_check.field_values(field_experience(2500, 5))["lcp_s"], 2.5)
+        self.assertEqual(speed_check.field_values(field_experience(2500, 10))["cls"], 0.1)
+        self.assertEqual(speed_check.field_values(field_experience(2500, 11))["cls"], 0.11)
+
+
 if __name__ == "__main__":
     unittest.main()

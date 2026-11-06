@@ -295,5 +295,26 @@ class FetchHelpersTest(unittest.TestCase):
         self.assertIn("Chrome/%d.0.0.0 " % page_facts.chrome_major(), page_facts.CHROME_UA)
 
 
+class DecodeNotesTest(unittest.TestCase):
+    CAFE = "café"
+
+    def _page(self, head):
+        return (head + "<p>" + self.CAFE + "</p>").encode("cp1252")
+
+    def test_header_charset_with_a_nul_is_passed_over(self):
+        text = page_facts.decode_body(self._page('<meta charset="windows-1252">'), "utf-8\x00")
+        self.assertIn(self.CAFE, text)
+
+    def test_header_utf32_is_passed_over(self):
+        text = page_facts.decode_body(self._page('<meta charset="windows-1252">'), "utf-32")
+        self.assertIn(self.CAFE, text)
+        text = page_facts.decode_body(("<p>" + self.CAFE + "</p>").encode("utf-8"), "utf-32")
+        self.assertIn(self.CAFE, text)
+
+    def test_meta_utf32_passes_to_the_next_meta(self):
+        text = page_facts.decode_body(self._page('<meta charset="utf-32"><meta charset="windows-1252">'), None)
+        self.assertIn(self.CAFE, text)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -91,13 +91,20 @@ def _try_decode(raw: bytes, label: str | None, from_meta: bool) -> str | None:
     else:
         try:
             name = codecs.lookup(label).name
-        except LookupError:
+        except (LookupError, ValueError):  # an unknown name, or one holding a NUL
+            return None
+        # The Encoding Standard has no UTF-32 label, so "get an encoding" fails for one
+        # (https://encoding.spec.whatwg.org/#names-and-labels). The HTML Standard takes a
+        # transport-layer charset only "if the transport layer specifies a character encoding,
+        # and it is supported", and its prescan says "If charset is failure, then jump to the
+        # step below labeled next byte" (https://html.spec.whatwg.org/multipage/parsing.html).
+        # A UTF-32 label, from the header or a meta, is passed over like any unusable label.
+        if name.startswith("utf-32"):
             return None
         # The HTML prescan reads a meta-declared UTF-16 as UTF-8:
         # https://html.spec.whatwg.org/multipage/parsing.html#prescan-a-byte-stream-to-determine-its-encoding
-        # ("If charset is UTF-16BE/LE, then set charset to UTF-8."). The Encoding Standard
-        # has no UTF-32 label at all, so a meta UTF-32 reads the same way.
-        if from_meta and (name.startswith("utf-16") or name.startswith("utf-32")):
+        # ("If charset is UTF-16BE/LE, then set charset to UTF-8.").
+        if from_meta and name.startswith("utf-16"):
             name = "utf-8"
     try:
         return raw.decode(name, errors="replace")

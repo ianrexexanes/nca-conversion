@@ -121,5 +121,14 @@ class RulingsTest(unittest.TestCase):
                 self.assertEqual((done.returncode, done.stdout, done.stderr), (2, "", message))
 
 
+class HeadlessBrowserLineTest(unittest.TestCase):
+    def test_headless_browser_line_gives_one_fail_then_one_warn(self):
+        code, out = run("We checked it in a headless browser.\n")
+        self.assertEqual(code, 1)
+        self.assertEqual(out, "FAIL tool-name: line 1: We checked it in a headless browser.\n"
+                              "WARN tool-word: line 1: We checked it in a headless browser.\n"
+                              "client_check: 1 FAIL, 1 WARN\n")
+
+
 if __name__ == "__main__":
     unittest.main()

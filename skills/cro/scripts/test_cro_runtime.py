@@ -24,6 +24,65 @@ def chrome_pattern_blocks(pattern: str, url: str) -> bool:
     return True
 
 
+# Browser layer: Chrome reads each glob from lighthouse_block_patterns(); request layer: is_blocked().
+# Meta's advanced-page image form with custom data is documented at
+# https://developers.facebook.com/docs/meta-pixel/advanced/ (read 2026-11-07).
+DOCUMENTED_FORMS = (
+    "https://www.facebook.com/tr/?id=123&ev=PageView",
+    "https://www.facebook.com/tr?id=123&ev=Lead",
+    "https://facebook.com/tr/?id=1&ev=PageView",
+    "https://www.facebook.com/tr?id=12345&ev=PageView&noscript=1",
+    "https://example.com/tr/?id=123",
+    "https://www.google.com/ccm/collect?en=page_view",
+    "https://tags.example.com/ccm/collect?en=page_view",
+    "https://tags.example.com/ccm/collect",
+    "https://www.facebook.com/tr?id=12345&ev=ViewContent&cd[content_name]=Trail%20Shoe&cd[value]=0.50&cd[currency]=USD",
+)
+NEAR_MISSES = (
+    "https://www.facebook.com/trending",
+    "https://www.facebook.com/translate/x",
+    "https://myfacebook.com/trade",
+    "https://posthog.com/docs",
+    "https://www.hubspot.com/",
+    "https://www.pinterest.com/",
+    "https://twitter.com/x",
+    "https://example.com/products/shoes?id=7",
+    "https://example.com/assets/app.js",
+)
+# README.md line 54's limits: Chrome reads a glob unanchored (see chrome_pattern_blocks), so a glob
+# cannot anchor a host or end at a path; these are blocked in the browser layer and open to is_blocked().
+README_LIMITS = (
+    "https://example.com/ccm/collections",
+    "https://myfacebook.com/tr/",
+    "https://notgoogletagmanager.com/",
+    "https://googletagmanager.com.example.org/",
+)
+
+
+def browser_layer_blocks(url):
+    return any(chrome_pattern_blocks(pattern, url) for pattern in cro_runtime.lighthouse_block_patterns())
+
+
+class BrowserLayerTest(unittest.TestCase):
+    def test_browser_layer_blocks_the_documented_forms(self):
+        for url in DOCUMENTED_FORMS:
+            with self.subTest(url=url):
+                self.assertTrue(browser_layer_blocks(url), "browser layer should block " + url)
+                self.assertIsNotNone(cro_runtime.is_blocked(url), "request layer should block " + url)
+
+    def test_browser_layer_keeps_the_near_misses_open(self):
+        for url in NEAR_MISSES:
+            with self.subTest(url=url):
+                self.assertFalse(browser_layer_blocks(url), "browser layer should leave open " + url)
+                self.assertIsNone(cro_runtime.is_blocked(url), "request layer should leave open " + url)
+
+    def test_browser_layer_limits_are_the_readme_limits(self):
+        for url in README_LIMITS:
+            with self.subTest(url=url):
+                self.assertTrue(browser_layer_blocks(url), "browser layer blocks " + url)
+                self.assertIsNone(cro_runtime.is_blocked(url), "request layer leaves open " + url)
+
+
 class IsBlockedTest(unittest.TestCase):
     def test_is_blocked_matches_third_party_hosts(self):
         self.assertEqual(cro_runtime.is_blocked("https://www.googletagmanager.com/gtag/js?id=G-X"), "host:googletagmanager.com")

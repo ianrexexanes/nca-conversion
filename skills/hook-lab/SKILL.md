@@ -87,10 +87,12 @@ construction swap in `references/headline-formulas.md` rather than a new set.
 
 ## Where this stops
 
-- **Not the hero section.** A hero is a compressed argument in which a subhead, a proof strip and a
-  button each carry part of the load, and what that section has to accomplish is decided in
-  `../conversion-page-build/references/section-playbooks.md`. What comes out of here is the line
-  that section needs. A headline handed back on its own is not a hero handed back.
+- **A page hero is built with `references/hero-build.md`.** A hero is a compressed argument in which a
+  subhead, its proof slots and a button each carry part of the load. That file builds the headline,
+  subheadline, proof slots and button, and the eight types choose the angle inside it. What the
+  section has to accomplish on the page is still decided in
+  `../conversion-page-build/references/section-playbooks.md`. A headline handed back on its own is
+  not a hero handed back.
 - **Not the paragraph underneath.** Once the line is settled and the copy around it needs work, that
   is `../copy-sweeps/SKILL.md`.
 - **Not an offer repaired by phrasing.** A line that refuses to sound like anything usually has

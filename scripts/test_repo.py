@@ -877,5 +877,117 @@ class SetupPermissionsTests(unittest.TestCase):
             self.assertIn(needle, text)
 
 
+HERO_BUILD = ROOT / "skills" / "hook-lab" / "references" / "hero-build.md"
+HEADLINE_FORMULAS = ROOT / "skills" / "hook-lab" / "references" / "headline-formulas.md"
+HOOK_LAB = ROOT / "skills" / "hook-lab" / "SKILL.md"
+HERO_HEADS = ["## The headline build", "## The subheadline build", "## The two proof slots", "## The button",
+              "## By mode", "## By awareness", "## Register translation", "## Register notes"]
+
+
+def hero_build():
+    return HERO_BUILD.read_text(encoding="utf-8")
+
+
+def hero_section(n):
+    # the n-th "## " section (1 to 8, in HERO_HEADS order), from its heading to the next "## "
+    text = hero_build()
+    start = text.index(HERO_HEADS[n - 1])
+    end = text.find("\n## ", start + 1)
+    return text[start:] if end == -1 else text[start:end]
+
+
+def table_rows(text):
+    rows = [l for l in text.splitlines() if l.startswith("|")]
+    cells = [[c.strip() for c in l.strip().strip("|").split("|")] for l in rows]
+    return [c for c in cells if not all(re.fullmatch(r":?-{3,}:?", x) for x in c)][1:]
+
+
+def hook_lab_body():
+    return frontmatter_and_body(HOOK_LAB)[1]
+
+
+def headline_formulas():
+    return HEADLINE_FORMULAS.read_text(encoding="utf-8")
+
+
+def group_g(text):
+    start = text.index("## G. Imperatives, and what a button may say")
+    end = text.find("\n## ", start + 1)
+    return text[start:] if end == -1 else text[start:end]
+
+
+class HeroBuildTests(unittest.TestCase):
+    def test_hero_build_has_its_parts_in_order(self):
+        lines = hero_build().splitlines()
+        self.assertEqual([l for l in lines if l.startswith("## ")], HERO_HEADS)
+
+    def test_headline_build_names_its_parts_and_the_without_option(self):
+        for part in ("end result", "how long it takes", "how the buyer feels", "a figure the brief supports",
+                     "without", "the objection the brief records"):
+            self.assertIn(part, flat(hero_section(1)))
+
+    def test_subheadline_is_pain_to_solution(self):
+        for part in ("tired of", "the old way", "two or three ways"):
+            self.assertIn(part, flat(hero_section(2)))
+
+    def test_proof_slots_come_from_the_brief(self):
+        for part in ("prooftop", "proof strip", "under the button", "above the H1", "directly under the H1",
+                     "body face", "sentence case", "never a pill", "[NEEDED:", "never invent", "recorded departure"):
+            self.assertIn(part, flat(hero_section(3)))
+
+    def test_button_rule(self):
+        for part in ("what the reader gets", "the concrete next step", "the seller's own name for the offer",
+                     "so what", "two to five words", "six or seven", "first person", "what is free",
+                     "one label per variant", "the same click", "Submit", "Contact us", "Learn more",
+                     "doubt reducers", "the worry that stops the click"):
+            self.assertIn(part, flat(hero_section(4)))
+
+    def test_by_mode_gives_both_modes(self):
+        for part in ("keyword near the front", "one claim", "two lines on desktop", "one or two sentences",
+                     "no stacked benefits", "up to five", "continues the ad or message"):
+            self.assertIn(part, flat(hero_section(5)))
+
+    def test_by_awareness_gives_cold_and_warm(self):
+        for part in ("cold", "warm", "form hero", "image or video hero", "pain section"):
+            self.assertIn(part, flat(hero_section(6)))
+
+    def test_register_translation_covers_five_registers_without_blanks(self):
+        rows = table_rows(hero_section(7))  # header: Register | Time and urgency | How the buyer feels | Stacked benefits | Button voice
+        self.assertEqual([r[0] for r in rows], ["Conservative B2B (DACH)", "Technical / industrial",
+                                                "Consumer / lifestyle", "Mission / nonprofit", "Direct-response"])
+        self.assertTrue(all(cell.strip() for r in rows for cell in r))
+        self.assertEqual(len(rows[0]), 5)
+
+    def test_register_notes_gives_both_line_forms(self):
+        self.assertIn(", because ", hero_section(8))
+        self.assertIn("- None: the register changed no rule.", hero_section(8))
+
+    def test_hook_lab_builds_a_page_hero_with_the_build(self):
+        self.assertIn("references/hero-build.md", hook_lab_body())
+        self.assertNotIn("Not the hero section", hook_lab_body())
+        self.assertIn("hero-build.md", headline_formulas())
+
+    def test_group_g_says_the_same_button_rule(self):
+        g = flat(group_g(headline_formulas()))
+        for part in ("what the reader gets or the concrete next step", "never the seller's own name for the offer",
+                     "six or seven only when the outcome needs them"):
+            self.assertIn(part, g)
+        self.assertNotIn("A button names the transaction, never the feeling.", g)
+        self.assertNotIn("seven-word button", g)
+
+    def test_hero_line_row_follows_the_spec(self):
+        formulas = headline_formulas()
+        row = next(l for l in formulas.splitlines() if l.startswith("| **Hero line**"))
+        for part in ("Aim for two lines on desktop", "Three or four lines on a phone is fine", "hero-build.md"):
+            self.assertIn(part, row)
+        self.assertNotIn("Two lines at a phone width", formulas)
+
+    def test_email_subject_row_states_no_count(self):
+        formulas = headline_formulas()
+        self.assertNotIn("thirty-five characters", formulas)
+        row = next(l for l in formulas.splitlines() if l.startswith("| **Email subject**"))
+        self.assertTrue("Front-load" in row or "front-load" in row)
+
+
 if __name__ == "__main__":
     unittest.main()

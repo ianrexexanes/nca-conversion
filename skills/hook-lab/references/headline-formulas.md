@@ -30,14 +30,21 @@ The surface is a hard limit. It is decided first because no register makes a lin
 
 | Surface | The limit | What it rules out |
 | --- | --- | --- |
-| **Hero line** | Two lines at a phone width, read with the subhead and button visible | Nothing structurally — this is the only surface where a construction may be incomplete on its own, because the subhead finishes it |
-| **Email subject** | Design for roughly the first thirty-five characters; assume the rest is not seen | Any shape whose payoff sits after a colon, a dash or a comma. Front-load or lose it |
+| **Hero line** | Aim for two lines on desktop. Three or four lines on a phone is fine. Read with the subhead and button visible; `hero-build.md` builds the whole hero | Nothing structurally — this is the only surface where a construction may be incomplete on its own, because the subhead finishes it |
+| **Email subject** | Front-load the payoff; assume the end is cut | Any shape whose payoff sits after a colon, a dash or a comma. Front-load or lose it |
 | **Ad first line** | Must work with the sound off and against a thumb that has already decided | Shapes needing two terms held in mind at once, unless both are visible in one glance |
 | **Social opener** | Truncates at the platform's *see more* boundary | Shapes that give away the whole claim before the cut, and shapes that give away nothing |
 | **Button label** | Two to five words, imperative | Everything below except group G |
 
 A construction that survives the surface and then fails the register is a normal outcome; try
 another construction for the same type before changing the type.
+
+## A page hero is built, not picked
+
+A hero line on its own is one slot of a hero. For a page hero (headline, subheadline, the two proof slots
+and the button) follow `hero-build.md`, which sets the headline build, the subheadline build, the
+proof slots, the button rule, the differences by mode and by awareness, and how each register changes
+them. The constructions below are the sentences that build uses.
 
 ---
 
@@ -212,17 +219,19 @@ setting up.
 > *Book the 30-minute review.* — with the terms stated under the button, not inside it.
 **Fill rule:** the button carries the action; the line beneath carries what happens next, when, and
 at which point the reader is committed. Cramming the terms into the label is what produces a
-seven-word button nobody reads.
+long button nobody reads.
 **Suits** `Conservative B2B (DACH)` — the shape puts the terms outside the label, which is how this
-register's demand for a stated commitment point is met without a seven-word button.
+register's demand for a stated commitment point is met without a long label.
 **Never** as a social opener or an ad first line — the construction is two parts and only one of
 them is the button, so a surface that shows the label alone delivers the ask with its terms
 missing.
 
 Two rules govern the whole group, and they are the ones most often broken:
 
-- **A button names the transaction, never the feeling.** A label describing how the reader should
-  feel about clicking gets parsed as evasion, and in `Conservative B2B (DACH)` an ambiguous
+- **A button says what the reader gets or the concrete next step, never the seller's own name for
+  the offer.** A label the reader cannot answer "so what?" to fails. Two to five words is the
+  target, and six or seven only when the outcome needs them. A label describing how the reader
+  should feel about clicking gets parsed as evasion, and in `Conservative B2B (DACH)` an ambiguous
   commitment point is not asked about — the reader simply does not press it.
 - **The platform's default word is not a label.** *Submit* is what the form does, not what the
   reader gets.

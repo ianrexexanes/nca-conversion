@@ -624,20 +624,32 @@ class RoundFixesTest(unittest.TestCase):
         self.assertIn("over 600 ms (Source: Google, Total Blocking Time, 2019)", low[0])
 
 
+def read(*parts):
+    return ROOT.joinpath(*parts).read_text(encoding="utf-8")
+
+
+def flat(text):
+    return " ".join(text.split())
+
+
+def audit_step(number):
+    audit = flat(read("skills", "cro", "references", "audit.md"))
+    start = audit.index(" %d. " % number)
+    end = audit.find(" %d. " % (number + 1), start)
+    return audit[start:end if end != -1 else len(audit)]
+
+
+def factor_bands(number):
+    """The 3, 6 and 9 bullet lines of factor `number`'s section in score-anchors.md, in that order."""
+    section = RoundFixesTest.factor_section(read("skills", "cro", "references", "score-anchors.md"), number)
+    lines = section.split("\n")
+    return [next(line for line in lines if line.startswith("- **%d:**" % band)) for band in (3, 6, 9)]
+
+
 class FinalReviewFixesTest(unittest.TestCase):
-    @staticmethod
-    def read(*parts):
-        return ROOT.joinpath(*parts).read_text(encoding="utf-8")
-
-    @staticmethod
-    def flat(text):
-        return " ".join(text.split())
-
-    def audit_step(self, number):
-        audit = self.flat(self.read("skills", "cro", "references", "audit.md"))
-        start = audit.index(" %d. " % number)
-        end = audit.find(" %d. " % (number + 1), start)
-        return audit[start:end if end != -1 else len(audit)]
+    read = staticmethod(read)
+    flat = staticmethod(flat)
+    audit_step = staticmethod(audit_step)
 
     def test_step_5_reads_a_partial_render_by_viewport(self):
         step = self.audit_step(5)
@@ -717,6 +729,21 @@ class FinalReviewFixesTest(unittest.TestCase):
         for part in ("check each MISSING from the Search check against the page itself", "an abbreviation can end the first sentence early",
                      "`/index.html`"):
             self.assertIn(part, step.replace("Check each MISSING", "check each MISSING"))
+
+
+class AuditStep7Tests(unittest.TestCase):
+    def test_step_7_scores_the_rest_of_the_first_screen(self):
+        s = flat(audit_step(7))
+        self.assertIn("The factor is still scored on the rest of the first screen", s)
+        self.assertIn("goes to not_checked only when that element was its only evidence", s)
+        self.assertIn("An element broken in both views with a visible error", s)
+
+    def test_factor_10_names_lab_cls_in_every_band(self):
+        bands = factor_bands(10)            # the 3, 6 and 9 bullets of section 10, in order
+        self.assertEqual(len(bands), 3)
+        for band, value in zip(bands, ("over 0.25", "0.1 to 0.25", "0.1 or less")):
+            self.assertIn("CLS", band); self.assertIn(value, band)
+            self.assertIn("(Source: Google, Cumulative Layout Shift", band)
 
 
 if __name__ == "__main__":

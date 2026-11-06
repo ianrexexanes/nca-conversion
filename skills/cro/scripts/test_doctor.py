@@ -105,3 +105,11 @@ class CompanionsEnabledTest(unittest.TestCase):
         self.assertNotIn("missing: hallmark", detail)
         self.assertRegex(detail, r"missing[^;]*impeccable")
         self.assertNotRegex(detail, r"missing[^;]*hallmark")
+
+    def test_companions_name_humanizer_and_no_other_voice_skill(self):
+        empty = tempfile.TemporaryDirectory()
+        self.addCleanup(empty.cleanup)
+        self.addCleanup(os.chdir, os.getcwd())
+        os.chdir(empty.name)
+        detail = self._companions([{"id": name + "@x", "enabled": True} for name in doctor.PLUGINS])
+        self.assertEqual(detail, "missing: humanizer")

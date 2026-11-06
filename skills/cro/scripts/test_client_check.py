@@ -25,6 +25,16 @@ class ClientCheckTests(unittest.TestCase):
     def test_fails_on_tool_names(self):
         code, out = run("A Playwright run in a headless browser.\n")
         self.assertEqual(code, 1); self.assertIn("FAIL tool-name", out)
+    def test_headless_cms_warns_headless_browser_fails(self):
+        code, out = run("We recommend a headless CMS.\n")
+        self.assertEqual(code, 0); self.assertIn("WARN tool-word: line 1", out); self.assertIn("client_check: 0 FAIL, 1 WARN", out)
+        code, out = run("We checked it in a headless browser.\n")
+        self.assertEqual(code, 1); self.assertIn("FAIL tool-name: line 1", out)
+        code, out = run("We checked it in headless browsers.\n")
+        self.assertEqual(code, 1); self.assertIn("FAIL tool-name: line 1", out)
+    def test_sprachmodellen_fails_like_its_other_forms(self):
+        code, out = run("Mit Sprachmodellen geschrieben.\n")
+        self.assertEqual(code, 1); self.assertIn("FAIL ai-name: line 1", out)
     def test_fails_on_hormozi(self):
         code, out = run("This follows Hormozi's value equation.\n")
         self.assertEqual(code, 1); self.assertIn("FAIL person", out)

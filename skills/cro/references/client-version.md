@@ -60,11 +60,11 @@ The three leaks that cost the most, in the order I would fix them.
 
 ## Language
 
-Write in the page's language. Translate the labels, the summary heading and its lead sentence into it. German text goes to Ian for his own check before it is sent. `client_check.py`'s cue words are English and German, so in any other language the writer reads the text for citations, statistics and words for AI themselves.
+Write in the page's language. Translate the labels, the summary heading and its lead sentence into it. German text goes to the user for their own check before it is sent. `client_check.py`'s cue words are English and German, so in any other language the writer reads the text for citations, statistics and words for AI themselves.
 
 ## Voice
 
-Run the text through `humanizer` when it is installed, and through `ian-voice` for any covering message Ian sends himself. Without them, apply `${CLAUDE_PLUGIN_ROOT}/skills/copy-sweeps/references/banned-vocabulary.md`.
+Run the text through `humanizer` when it is installed, and any covering message through the voice skill you use for your own messages, if you have one. Without them, apply `${CLAUDE_PLUGIN_ROOT}/skills/copy-sweeps/references/banned-vocabulary.md`.
 
 ## The check
 

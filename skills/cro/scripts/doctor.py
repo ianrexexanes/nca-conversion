@@ -9,7 +9,7 @@ from pathlib import Path
 import cro_runtime
 
 PLUGINS = ("ui-ux-pro-max", "taste-skill", "impeccable", "emilkowalski-skills", "hallmark", "frontend-design", "claude-seo")
-SKILLS = ("humanizer", "ian-voice")
+SKILLS = ("humanizer",)
 BROWSER_SCRIPT = (
     "from playwright.sync_api import sync_playwright as s\n"
     "p = s().start()\n"

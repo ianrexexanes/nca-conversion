@@ -746,5 +746,23 @@ class AuditStep7Tests(unittest.TestCase):
             self.assertIn("(Source: Google, Cumulative Layout Shift", band)
 
 
+class PublicWordingTests(unittest.TestCase):
+    def test_public_text_names_no_owner_or_private_skill(self):
+        owner = re.compile(r"\b" + "I" + "an" + r"\b")
+        private_skill = "ian" + "-voice"
+        files = subprocess.run(["git", "-C", str(ROOT), "ls-files"], capture_output=True, text=True, check=True).stdout.split("\n")
+        hits = []
+        for name in files:
+            if not name or not (name == "README.md" or (name.startswith("skills/") and name.endswith((".md", ".py")))):
+                continue
+            path = ROOT / name
+            if not path.is_file():
+                continue
+            for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if owner.search(line) or private_skill in line:
+                    hits.append(f"{name}:{number}")
+        self.assertEqual(hits, [])
+
+
 if __name__ == "__main__":
     unittest.main()

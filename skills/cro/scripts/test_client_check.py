@@ -32,6 +32,16 @@ class ClientCheckTests(unittest.TestCase):
         self.assertEqual(code, 1); self.assertIn("FAIL tool-name: line 1", out)
         code, out = run("We checked it in headless browsers.\n")
         self.assertEqual(code, 1); self.assertIn("FAIL tool-name: line 1", out)
+    def test_hyphenated_german_and_other_engine_headless_forms_fail(self):
+        for line in ["Wir haben die Seite im Headless-Browser geprüft.", "Wir prüfen in Headless-Browsern.",
+                     "Im Headless-Modus geladen.", "Run it in headless Firefox.", "We used headless WebKit.",
+                     "Not in headless Safari.", "Not in headless Edge.", "headless-browser checks",
+                     "Headless-Tests liefen nachts."]:
+            with self.subTest(line=line):
+                code, out = run(line + "\n")
+                self.assertEqual(code, 1); self.assertIn("FAIL tool-name", out)
+        code, out = run("A headless CMS keeps content and layout apart.\n")
+        self.assertEqual(code, 0); self.assertNotIn("FAIL tool-name", out)
     def test_sprachmodellen_fails_like_its_other_forms(self):
         code, out = run("Mit Sprachmodellen geschrieben.\n")
         self.assertEqual(code, 1); self.assertIn("FAIL ai-name: line 1", out)

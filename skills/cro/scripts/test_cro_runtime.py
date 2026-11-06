@@ -28,6 +28,11 @@ class IsBlockedTest(unittest.TestCase):
     def test_is_blocked_matches_third_party_hosts(self):
         self.assertEqual(cro_runtime.is_blocked("https://www.googletagmanager.com/gtag/js?id=G-X"), "host:googletagmanager.com")
 
+    def test_uet_hosts_are_blocked(self):
+        self.assertEqual(cro_runtime.is_blocked("https://bat.bing.net/action/0?ti=123&evt=pageLoad"), "host:bat.bing.net")
+        self.assertEqual(cro_runtime.is_blocked("https://bat.bing.com/bat.js"), "host:bat.bing.com")
+        self.assertIn("*bat.bing.net*", cro_runtime.lighthouse_block_patterns())
+
     def test_is_blocked_ignores_lookalike_hosts(self):
         # A suffix matches only on a dot boundary.
         self.assertIsNone(cro_runtime.is_blocked("https://notgoogletagmanager.com/"))

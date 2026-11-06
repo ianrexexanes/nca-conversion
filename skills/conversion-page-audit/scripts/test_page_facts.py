@@ -184,6 +184,49 @@ class FetchHelpersTest(unittest.TestCase):
         raw = '<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><p>Größe</p>'.encode("latin-1")
         self.assertIn("Größe", page_facts.decode_body(raw, None))
 
+    def test_windows_1252_labels_decode_as_windows_1252(self):
+        text = "<h1>„Grüße“ – 5 €</h1>"
+        raw = text.encode("cp1252")
+        for label in ["iso-8859-1", "ISO-8859-1", " latin1 ", "us-ascii", "x-cp1252"]:
+            with self.subTest(label=label):
+                self.assertEqual(page_facts.decode_body(raw, label), text)
+        page = '<meta charset="iso-8859-1">' + text
+        self.assertEqual(page_facts.decode_body(page.encode("cp1252"), None), page)
+
+    def test_meta_declared_utf16_or_utf32_reads_as_utf8(self):
+        for label in ["utf-16", "utf-32"]:
+            with self.subTest(label=label):
+                page = '<meta charset="%s"><h1>Grüße</h1>' % label
+                self.assertEqual(page_facts.decode_body(page.encode("utf-8"), None), page)
+
+    def test_charset_names_that_cannot_decode_a_page_fall_back(self):
+        page = "<h1>Grüße</h1>"
+        for name in ["base64", "hex", "rot13", "zlib", "undefined", "idna", "punycode"]:
+            with self.subTest(name=name):
+                self.assertEqual(page_facts.decode_body(page.encode("utf-8"), name), page)
+                tagged = '<meta charset="%s">' % name + page
+                self.assertEqual(page_facts.decode_body(tagged.encode("utf-8"), None), tagged)
+
+    def test_unusable_header_charset_falls_through_to_the_meta(self):
+        page = '<meta charset="iso-8859-1"><h1>Grüße €</h1>'
+        self.assertEqual(page_facts.decode_body(page.encode("cp1252"), "base64"), page)
+
+    def test_file_argument_decodes_its_declared_charset(self):
+        import json
+        import subprocess
+        import sys
+        import tempfile
+        from pathlib import Path
+        html = ('<html><head><meta charset="iso-8859-1"><title>Seite</title></head>'
+                '<body><h1>„Grüße“ €</h1></body></html>').encode("cp1252")
+        with tempfile.TemporaryDirectory() as folder:
+            file = Path(folder) / "page.html"
+            file.write_bytes(html)
+            done = subprocess.run([sys.executable, page_facts.__file__, str(file)], capture_output=True, encoding="utf-8")
+        self.assertEqual(done.returncode, 0, done.stderr)
+        headings = json.loads(done.stdout)["headings"]
+        self.assertIn({"level": 1, "text": "„Grüße“ €"}, headings)
+
 
 if __name__ == "__main__":
     unittest.main()

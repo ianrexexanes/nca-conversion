@@ -39,7 +39,9 @@ CTA_HINTS = ("sign up", "get started", "book", "buy", "register", "contact",
 LCP_CANDIDATE_CAP = 3
 # Chrome ships a stable release every two weeks since Chrome 153:
 # https://developer.chrome.com/blog/chrome-two-week-release (read 2026-11-06). The
-# year-end breaks can put the computed major one ahead of the real stable release.
+# count does not skip the year-end breaks, so from December 2026 it runs up to two
+# majors ahead of the real stable release, and further each year: move the anchor
+# below at each release of this plugin.
 RELEASE_CYCLE_DAYS = 14
 # One stable release and its date from Chrome's schedule:
 # https://chromiumdash.appspot.com/schedule (read 2026-11-06).
@@ -59,24 +61,49 @@ CHROME_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML
 _META_CHARSET = re.compile(rb"<meta[^>]+charset\s*=\s*[\"']?\s*([A-Za-z0-9_.:-]+)", re.IGNORECASE)
 
 
-def _known(name: str | None) -> bool:
-    if not name:
-        return False
+# The 17 labels of the windows-1252 encoding in the Encoding Standard; browsers decode
+# them all as Windows-1252, not as Latin-1 or ASCII:
+# https://encoding.spec.whatwg.org/#names-and-labels (read 2026-11-06).
+_WINDOWS_1252_LABELS = frozenset({
+    "ansi_x3.4-1968", "ascii", "cp1252", "cp819", "csisolatin1", "ibm819", "iso-8859-1",
+    "iso-ir-100", "iso8859-1", "iso88591", "iso_8859-1", "iso_8859-1:1987", "l1", "latin1",
+    "us-ascii", "windows-1252", "x-cp1252",
+})
+
+
+def _try_decode(raw: bytes, label: str | None, from_meta: bool) -> str | None:
+    """Decode `raw` with the charset `label` names, or None when the label cannot be used."""
+    if not label:
+        return None
+    label = label.strip().lower()
+    if label in _WINDOWS_1252_LABELS:
+        name = "cp1252"
+    else:
+        try:
+            name = codecs.lookup(label).name
+        except LookupError:
+            return None
+        # The HTML prescan reads a meta-declared UTF-16 as UTF-8:
+        # https://html.spec.whatwg.org/multipage/parsing.html#prescan-a-byte-stream-to-determine-its-encoding
+        # ("If charset is UTF-16BE/LE, then set charset to UTF-8."). The Encoding Standard
+        # has no UTF-32 label at all, so a meta UTF-32 reads the same way.
+        if from_meta and (name.startswith("utf-16") or name.startswith("utf-32")):
+            name = "utf-8"
     try:
-        codecs.lookup(name)
-    except LookupError:
-        return False
-    return True
+        return raw.decode(name, errors="replace")
+    except (LookupError, UnicodeError):  # the binary transforms, undefined, idna, punycode
+        return None
 
 
 def decode_body(raw: bytes, header_charset: str | None) -> str:
     """Decode with the header's charset, else the page's own meta charset, else UTF-8."""
-    charset = header_charset if _known(header_charset) else None
-    if charset is None:
+    text = _try_decode(raw, header_charset, False)
+    if text is None:
         found = _META_CHARSET.search(raw[:2048])
-        meta = found.group(1).decode("ascii") if found else None
-        charset = meta if _known(meta) else "utf-8"
-    return raw.decode(charset, errors="replace")
+        text = _try_decode(raw, found.group(1).decode("ascii") if found else None, True)
+    if text is None:
+        text = raw.decode("utf-8", errors="replace")
+    return text
 
 
 def fetch(url: str, timeout: float = 30.0) -> str:
@@ -259,8 +286,8 @@ def main(argv):
         html = fetch(target)
         url = url or target
     else:
-        with open(target, encoding="utf-8") as handle:
-            html = handle.read()
+        with open(target, "rb") as handle:
+            html = decode_body(handle.read(), None)
     print(json.dumps(extract_facts(html, url), indent=2, ensure_ascii=False))
     return 0
 

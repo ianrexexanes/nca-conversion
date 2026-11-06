@@ -22,6 +22,7 @@ BLOCKED_HOSTS: tuple[str, ...] = (
     "snap.licdn.com",  # https://www.linkedin.com/help/lms/answer/a425696
     "analytics.tiktok.com",  # UNVERIFIED 2026-11-06: no vendor page found
     "bat.bing.com",  # https://github.com/MicrosoftDocs/Advertising/blob/main/advertising/msa-help/hlp_BA_CONC_UETv2CSP.md
+    "bat.bing.net",  # https://github.com/MicrosoftDocs/Advertising/blob/main/advertising/msa-help/hlp_BA_CONC_UETv2CSP.md
     "hotjar.com",  # https://learning.hotjar.com/installing-the-hotjar-tracking-code
     "hotjar.io",  # UNVERIFIED 2026-11-06: no vendor page found
     "plausible.io",  # https://plausible.io/docs/events-api

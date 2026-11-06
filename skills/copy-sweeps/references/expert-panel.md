@@ -30,8 +30,8 @@ Four rules follow, and they are the whole discipline:
    is the most common way an invented position enters, because it feels like evidence.
 3. **Never put an opinion about this specific business in a real person's mouth.** The panellist
    applies a framework to the copy. They have not seen it and have no view on it.
-4. **Five of these seven are alive and their positions move.** Ogilvy (d. 1999) and Schwartz
-   (d. 1995) are closed sets — what they held is what they published. For Dunford, Sutherland,
+4. **Most of these seven are alive and their positions move.** Ogilvy and Schwartz
+   are closed sets — what they held is what they published. For Dunford, Sutherland,
    Hormozi, Sharp and Godin, a book is a snapshot: where the question is time-sensitive — a
    platform, a channel, a current practice — check for something recent rather than reasoning from
    a book, and say when the position you are citing dates from.

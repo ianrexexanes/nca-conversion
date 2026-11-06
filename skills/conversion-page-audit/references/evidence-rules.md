@@ -1,6 +1,6 @@
 # Evidence rules
 
-Eleven rules about what an audit is allowed to conclude, and from what. Each one exists because a
+Eleven rules about what an audit is allowed to conclude, and from what (the cases below are worked examples, not benchmarks). Each one exists because a
 method that returns an answer returned a wrong one, confidently, in a way that looked exactly like
 a right one. That is the shape of every entry here: not "this check is hard" but "this check has a
 failure mode that is silent from the inside".

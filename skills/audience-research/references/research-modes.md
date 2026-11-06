@@ -41,7 +41,7 @@ the flattening that happens when someone answers a researcher's question. Differ
 sharper here too: a competitor's one-star reviews name the exact gap a differentiation claim needs
 to close.
 
-**What it costs.** No access required, but real time — reading fifty reviews to find the six that
+**What it costs.** No access required, but real time — reading many reviews to find the few that
 say something specific is normal, and forum threads run long before they run useful. It does not
 require the client's involvement, which makes it the right mode to run before the first client call
 so that call can verify rather than discover.

@@ -18,8 +18,8 @@ Build the stack as a table with five columns, not as a bulleted list of inclusio
 |---|---|---|---|---|
 
 The fourth column is the one that separates a real stack from a menu, and it is the one almost every
-stack skips. Run it honestly and a typical seven-item list resolves into two or three items the buyer
-would genuinely pay for on their own, and four that are the cost of being considered at all.
+stack skips. Run it honestly and a typical long list resolves into a few items the buyer
+would genuinely pay for on their own, and the rest are the cost of being considered at all.
 
 **A "no" in that column is not a reason to remove the item.** Catering, materials, a portal login and
 a welcome call all belong in the description of what the buyer receives. They just cannot carry

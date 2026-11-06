@@ -20,7 +20,7 @@ the sales rep has reframed it into the company's terminology. The moment right b
 **Reviews with real detail** (G2, Trustpilot, Capterra, App Store, Amazon, Google). Written for
 other buyers, which means the vocabulary is calibrated to persuade someone in the same position —
 exactly the calibration a landing page needs. Skim past the one-line five-stars; the review with
-three specific sentences is worth more than ten with none.
+specific sentences is worth more than any pile of one-liners.
 
 **Forums, communities and comment threads** where the ICP talks to itself with no vendor present at
 all — a subreddit, an industry Slack, comments under a competitor's LinkedIn post. This is the

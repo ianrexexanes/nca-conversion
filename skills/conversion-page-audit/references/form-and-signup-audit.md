@@ -41,7 +41,7 @@ named as checked, so nobody re-flags it next audit.
   screen to remind them what the field was even asking for. `page_facts.py` does not currently
   distinguish a `<label>` element from a field's `placeholder` attribute, so this check needs a
   rendered look at the form, not the JSON output — route it to "Could not check" without one.
-- **Single-column versus multi-column layout, and multi-step thresholds.** More than five or six
+- **Single-column versus multi-column layout, and multi-step thresholds.** Past a handful of
   fields is the point where a single long form usually loses to a multi-step flow with a progress
   indicator. Field count comes from `forms[].fields`; whether a progress indicator exists, or
   whether the layout is actually single-column, is a rendered check.

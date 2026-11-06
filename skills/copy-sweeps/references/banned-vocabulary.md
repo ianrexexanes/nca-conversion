@@ -54,7 +54,7 @@ The plain verb is not merely simpler — it is usually more specific about what 
 | Word | Why it fails |
 |---|---|
 | leverage | Conceals what was done with the thing being leveraged. |
-| utilise | Identical in meaning to *use* and three syllables longer. |
+| utilise | Identical in meaning to *use* and only longer. |
 | facilitate | Removes the agent — somebody either did it or did not. |
 | delve | Almost never written by a person who is not being paid by the word. |
 | unlock | Implies a barrier that the sentence never establishes. |
@@ -183,7 +183,7 @@ deleting the rest — and if the claim is genuinely unsupported, say so rather t
 qualifiers.
 
 **The summarising close.** A final paragraph that restates the section just read, adding nothing.
-Written prose gets to trust the reader's memory across three hundred words. Fix by cutting it; if
+Written prose gets to trust the reader's memory across a short section. Fix by cutting it; if
 something in it was new, it belonged earlier.
 
 **Symmetrical scaffolding.** Every section built to the same template — a bolded lead-in, a colon, a

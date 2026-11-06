@@ -1,7 +1,7 @@
 # Conversion psychology
 
 Sixteen principles, kept from a much longer catalogue of mental models circulating in marketing
-material — the fuller list runs past fifty once you count every named bias and technique separately.
+material — the fuller list runs far longer once you count every named bias and technique separately.
 Trimmed against one test: **does this principle change a specific decision in one of the eleven
 sections**, not "is this a real, interesting phenomenon." A principle that's true but only ever
 informs channel strategy, retention design, or a competing page-structure model doesn't earn a slot
@@ -145,13 +145,13 @@ first, ahead of any named competitor: not "why us over them" but "why change at 
 
 More options slow a decision down and increase the odds of no decision at all, rather than a better
 one — the same mechanism sometimes cited under a different name for the time-to-decide version of the
-effect. Governs **CTA** (one primary action, not three competing ones) and **Value stack** (three
-tiers outperform seven, and a page recommending one clearly beats a page presenting all of them as
+effect. Governs **CTA** (one primary action, not three competing ones) and **Value stack** (a short
+list of tiers outperforms a long one, and a page recommending one clearly beats a page presenting all of them as
 equally weighted).
 
 ## Why the rest were cut
 
-Roughly forty further models were left out, by category rather than one at a time:
+Many further models were left out, by category rather than one at a time:
 
 - **General business or growth strategy, not page copy.** First Principles, the Pareto Principle,
   Theory of Constraints, opportunity cost, diminishing returns, compounding, network effects, and

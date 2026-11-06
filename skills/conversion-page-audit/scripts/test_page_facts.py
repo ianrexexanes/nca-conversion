@@ -225,7 +225,74 @@ class FetchHelpersTest(unittest.TestCase):
             done = subprocess.run([sys.executable, page_facts.__file__, str(file)], capture_output=True, encoding="utf-8")
         self.assertEqual(done.returncode, 0, done.stderr)
         headings = json.loads(done.stdout)["headings"]
-        self.assertIn({"level": 1, "text": "„Grüße“ €"}, headings)
+        self.assertIn((1, "„Grüße“ €"), [(h["level"], h["text"]) for h in headings])
+
+
+    def test_links_list_every_anchor_and_button_unfiltered(self):
+        facts = page_facts.extract_facts('<a href="/d"><span>Request my diagnosis</span></a><button>Go on</button>')
+        self.assertEqual([(l["text"], l["kind"]) for l in facts["links"]], [("Request my diagnosis", "a"), ("Go on", "button")])
+        self.assertEqual(facts["ctas"], [])  # the hint list is unchanged
+
+    def test_headings_and_links_carry_in_footer(self):
+        html = '<h2>Top</h2><footer><h2>Company</h2><a href="/i">Imprint</a></footer><div role="contentinfo"><h3>Legal</h3></div>'
+        facts = page_facts.extract_facts(html)
+        self.assertEqual([h["in_footer"] for h in facts["headings"]], [False, True, True])
+        self.assertTrue(facts["links"][0]["in_footer"])
+        self.assertTrue(facts["has_footer"])
+        self.assertFalse(page_facts.extract_facts("<h2>Top</h2>")["has_footer"])
+
+    def test_unclosed_tag_inside_the_footer_closes_with_it(self):
+        html = '<footer><p>Imprint<h2>Company</h2></footer><h2>After</h2>'
+        self.assertEqual([h["in_footer"] for h in page_facts.extract_facts(html)["headings"]], [True, False])
+
+    def test_nested_divs_inside_contentinfo(self):
+        html = '<div role="contentinfo"><div><h3>Legal</h3></div><h3>More</h3></div><h3>Out</h3>'
+        self.assertEqual([h["in_footer"] for h in page_facts.extract_facts(html)["headings"]], [True, True, False])
+
+    def test_unclosed_tag_of_the_scopes_own_name_keeps_the_scope_open(self):
+        # A </div> closes the innermost open div, as a browser's parser does, so the contentinfo div stays open.
+        html = '<div role="contentinfo"><div><h3>Legal</h3></div><h3>Still inside</h3>'
+        self.assertEqual([h["in_footer"] for h in page_facts.extract_facts(html)["headings"]], [True, True])
+
+    def test_result_keys_come_in_the_documented_order(self):
+        self.assertEqual(list(page_facts.extract_facts("<h1>A</h1>")), [
+            "url", "title", "meta_description", "headings", "links", "has_footer", "ctas", "forms",
+            "schema_types", "images", "lcp_candidates", "notes"])
+
+    def test_out_writes_the_printed_json(self):
+        import json
+        import subprocess
+        import sys
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as folder:
+            page = Path(folder) / "page.html"
+            page.write_text("<h1>Grüße €</h1><footer><a href='/i'>Imprint</a></footer>", encoding="utf-8")
+            out = Path(folder) / "audit-data" / "new" / "facts.json"
+            done = subprocess.run([sys.executable, page_facts.__file__, str(page), "--out", str(out)],
+                                  capture_output=True, encoding="utf-8")
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual(json.loads(out.read_text(encoding="utf-8")), json.loads(done.stdout))
+            self.assertEqual(out.read_text(encoding="utf-8").strip(), done.stdout.strip())
+
+    def _decoded(self, head, encoding="cp1252"):
+        raw = ("<html><head>%s</head><body><p>Preis: €</p></body></html>" % head).encode(encoding)
+        return page_facts.decode_body(raw, None)
+
+    def test_meta_charset_inside_another_attribute_is_not_read(self):
+        self.assertIn("€", self._decoded('<meta name="description" content="Our charset=koi8-r guide"><meta charset="windows-1252">'))
+
+    def test_http_equiv_content_type_still_declares_the_charset(self):
+        self.assertIn("€", self._decoded('<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">'))
+
+    def test_unusable_meta_charset_passes_to_the_next_meta(self):
+        self.assertIn("€", self._decoded('<meta charset="no-such-label"><meta charset="windows-1252">'))
+
+    def test_meta_inside_a_comment_is_not_read(self):
+        self.assertIn("€", self._decoded('<!-- <meta charset="windows-1252"> -->', encoding="utf-8"))
+
+    def test_chrome_ua_carries_chrome_major(self):
+        self.assertIn("Chrome/%d.0.0.0 " % page_facts.chrome_major(), page_facts.CHROME_UA)
 
 
 if __name__ == "__main__":

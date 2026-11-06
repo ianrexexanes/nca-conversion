@@ -244,5 +244,34 @@ class RulingsTest(unittest.TestCase):
         self.assertEqual(check_html(german, keyword=None)["apparent_target"], "reparatur kinder")
 
 
+    def test_heading_counts_skip_footer_headings(self):
+        html = ('<title>Bike repair</title><h1>Bike repair today</h1><h2>Bike repair plans</h2><h2>How it works</h2>'
+                '<footer><h2>Bike repair company</h2></footer>')
+        result = check_html(html)
+        self.assertEqual(result["headings"]["h2"]["total"], 2)
+        self.assertEqual(result["headings"]["h2"]["exact"], 1)
+        self.assertEqual(result["headings_scope"], "above the footer")
+
+    def test_no_footer_element_counts_whole_page_and_says_so(self):
+        html = (FIXTURES / "search-divfooter.html").read_text(encoding="utf-8")
+        result = check_html(html)
+        self.assertEqual(result["headings_scope"], "whole page (no footer element found)")
+        self.assertEqual(result["headings"]["h2"]["total"], 3)
+
+    def test_footer_h2_never_satisfies_the_h2_placement(self):
+        html = ('<title>Payroll software</title><h1>Payroll software for restaurants</h1><h2>Plans</h2>'
+                '<footer><h2>Payroll software</h2></footer>')
+        self.assertEqual(check_html(html, keyword="payroll software")["placements"]["h2"]["status"], "missing")
+
+    def test_footer_h1_is_never_the_h1(self):
+        html = '<title>Payroll software</title><h2>Plans</h2><footer><h1>Payroll software</h1></footer>'
+        self.assertEqual(check_html(html, keyword="payroll software")["placements"]["h1"], {"status": "missing", "text": None})
+        self.assertIsNone(check_html(html, keyword=None)["apparent_target"])
+
+    def test_headings_scope_follows_headings_in_the_result(self):
+        keys = list(check_html("<h1>A</h1>"))
+        self.assertEqual(keys[keys.index("headings") + 1], "headings_scope")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -23,7 +23,7 @@ headings/links/buttons as siblings on one stack, not a parsing bug, and
 re-architecting the collector to track nested subtrees is out of scope here.
 
 Usage:
-    python3 page_facts.py <file.html|url> [--url <original-url>]
+    python3 page_facts.py <file.html|url> [--url <original-url>] [--out FILE]
 """
 import codecs
 import json
@@ -32,6 +32,7 @@ import sys
 import urllib.request
 from datetime import date
 from html.parser import HTMLParser
+from pathlib import Path
 
 HEADING_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
 CTA_HINTS = ("sign up", "get started", "book", "buy", "register", "contact",
@@ -58,7 +59,16 @@ def chrome_major(today: date | None = None) -> int:
 
 CHROME_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%d.0.0.0 Safari/537.36" % chrome_major()
 
-_META_CHARSET = re.compile(rb"<meta[^>]+charset\s*=\s*[\"']?\s*([A-Za-z0-9_.:-]+)", re.IGNORECASE)
+VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
+
+# The meta prescan of https://html.spec.whatwg.org/multipage/parsing.html#prescan-a-byte-stream-to-determine-its-encoding
+# (read 2026-11-06): comments are skipped, and each <meta> tag is read attribute by attribute.
+_COMMENT = re.compile(rb"<!--.*?(?:-->|\Z)", re.DOTALL)
+_META_TAG = re.compile(rb"<meta(?=[\s/])([^>]*)>?", re.IGNORECASE)
+_ATTRIBUTE = re.compile(rb"""([^\s/>=][^\s/>=]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]*)))?""")
+# https://html.spec.whatwg.org/multipage/urls-and-fetching.html#algorithm-for-extracting-a-character-encoding-from-a-meta-element
+# (read 2026-11-06)
+_CONTENT_CHARSET = re.compile(rb"""charset\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s;]*))""", re.IGNORECASE)
 
 
 # The 17 labels of the windows-1252 encoding in the Encoding Standard; browsers decode
@@ -95,12 +105,28 @@ def _try_decode(raw: bytes, label: str | None, from_meta: bool) -> str | None:
         return None
 
 
+def _meta_labels(window: bytes):
+    """The charset labels the page's <meta> tags declare, in document order."""
+    for tag in _META_TAG.finditer(_COMMENT.sub(b" ", window)):
+        attributes = {}
+        for name, double, single, bare in _ATTRIBUTE.findall(tag.group(1)):
+            attributes.setdefault(name.lower(), double or single or bare)
+        label = attributes.get(b"charset")
+        if label is None and attributes.get(b"http-equiv", b"").strip().lower() == b"content-type":
+            found = _CONTENT_CHARSET.search(attributes.get(b"content", b""))
+            label = (found.group(1) or found.group(2) or found.group(3)) if found else None
+        if label:
+            yield label.decode("ascii", errors="replace")
+
+
 def decode_body(raw: bytes, header_charset: str | None) -> str:
     """Decode with the header's charset, else the page's own meta charset, else UTF-8."""
     text = _try_decode(raw, header_charset, False)
     if text is None:
-        found = _META_CHARSET.search(raw[:2048])
-        text = _try_decode(raw, found.group(1).decode("ascii") if found else None, True)
+        for label in _meta_labels(raw[:2048]):
+            text = _try_decode(raw, label, True)
+            if text is not None:
+                break
     if text is None:
         text = raw.decode("utf-8", errors="replace")
     return text
@@ -130,16 +156,39 @@ class _Collector(HTMLParser):
         self._buf = []
         self._svg_depth = 0
         self._in_svg_title = False
+        self._open = {}          # open count per non-void tag name
+        self._footer = None      # (tag name, its open count at the start tag) while a footer scope is open
+        self.has_footer = False
+
+    def _track_start(self, tag, attrs):
+        """Footer bookkeeping: runs before any early return, so every start tag is counted."""
+        if tag in VOID:
+            return
+        self._open[tag] = self._open.get(tag, 0) + 1
+        role = (attrs.get("role") or "").strip().lower()
+        if self._footer is None and (tag == "footer" or role == "contentinfo"):
+            self._footer = (tag, self._open[tag])
+            self.has_footer = True
+
+    def _track_end(self, tag):
+        """An end tag takes one off its tag's count, never below zero; the scope closes with its tag."""
+        if tag in VOID or self._open.get(tag, 0) == 0:
+            return
+        self._open[tag] -= 1
+        if self._footer and tag == self._footer[0] and self._open[tag] < self._footer[1]:
+            self._footer = None
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
+        self._track_start(tag, attrs)
+        in_footer = self._footer is not None
         if tag == "svg":
             self._svg_depth += 1
         elif tag == "title" and self._svg_depth:
             self._in_svg_title = True  # an SVG's <title> labels the graphic: its text goes nowhere
             return
         if tag in HEADING_TAGS or tag in ("title", "a", "button"):
-            self._stack.append((tag, attrs))
+            self._stack.append((tag, attrs, in_footer))
             self._buf.append([])
         elif tag == "meta" and attrs.get("name", "").lower() == "description":
             self.meta_description = attrs.get("content")
@@ -161,7 +210,7 @@ class _Collector(HTMLParser):
                 "required": "required" in attrs,
             })
         elif tag == "script" and attrs.get("type") == "application/ld+json":
-            self._stack.append((tag, attrs))
+            self._stack.append((tag, attrs, in_footer))
             self._buf.append([])
 
     def handle_data(self, data):
@@ -171,6 +220,7 @@ class _Collector(HTMLParser):
             self._buf[-1].append(data)
 
     def handle_endtag(self, tag):
+        self._track_end(tag)
         if tag == "title" and self._in_svg_title:
             self._in_svg_title = False
             return
@@ -178,15 +228,15 @@ class _Collector(HTMLParser):
             self._svg_depth -= 1
         if not self._stack or self._stack[-1][0] != tag:
             return
-        _tag, attrs = self._stack.pop()
+        _tag, attrs, in_footer = self._stack.pop()
         text = "".join(self._buf.pop()).strip()
         if tag in HEADING_TAGS:
-            self.headings.append({"level": int(tag[1]), "text": text})
+            self.headings.append({"level": int(tag[1]), "text": text, "in_footer": in_footer})
         elif tag == "title":
             if not self.title:  # keep the first non-empty document title
                 self.title = text
         elif tag in ("a", "button"):
-            self.links.append({"text": text, "href": attrs.get("href"), "kind": tag})
+            self.links.append({"text": text, "href": attrs.get("href"), "kind": tag, "in_footer": in_footer})
         elif tag == "script":
             self.jsonld.append(text)
 
@@ -265,6 +315,8 @@ def extract_facts(html, url=""):
         "title": collector.title,
         "meta_description": collector.meta_description,
         "headings": collector.headings,
+        "links": collector.links,
+        "has_footer": collector.has_footer,
         "ctas": ctas,
         "forms": collector.forms,
         "schema_types": schema_types,
@@ -282,13 +334,20 @@ def main(argv):
     url = ""
     if "--url" in argv:
         url = argv[argv.index("--url") + 1]
+    out = argv[argv.index("--out") + 1] if "--out" in argv else None
     if target.startswith("http"):
         html = fetch(target)
         url = url or target
     else:
         with open(target, "rb") as handle:
             html = decode_body(handle.read(), None)
-    print(json.dumps(extract_facts(html, url), indent=2, ensure_ascii=False))
+    text = json.dumps(extract_facts(html, url), indent=2, ensure_ascii=False)
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    print(text)
+    if out:
+        Path(out).parent.mkdir(parents=True, exist_ok=True)
+        Path(out).write_text(text + "\n", encoding="utf-8")
     return 0
 
 

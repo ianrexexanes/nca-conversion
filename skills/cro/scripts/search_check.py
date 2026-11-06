@@ -129,7 +129,8 @@ def _count(pattern, text):
 
 def _apparent_target(facts):
     title = _line(facts.get("title"))
-    h1 = next((_line(h["text"]) for h in facts.get("headings", []) if h["level"] == 1), None)
+    h1 = next((_line(h["text"]) for h in facts.get("headings", [])
+               if h["level"] == 1 and not h["in_footer"]), None)
     if not title or not h1:
         return None
     h1_tokens = set(re.findall(r"\w+", normalise(h1)))
@@ -143,7 +144,7 @@ def _apparent_target(facts):
 def check(facts: dict, html: str, url: str, keyword, variants: list) -> dict:
     has_keyword = bool(keyword and normalise(keyword))
     terms = ([keyword] if has_keyword else []) + (list(variants) if has_keyword else [])
-    headings = facts.get("headings", [])
+    headings = [h for h in facts.get("headings", []) if not h["in_footer"]]
     notes = []
 
     def place(text, hit=None):
@@ -218,6 +219,7 @@ def check(facts: dict, html: str, url: str, keyword, variants: list) -> dict:
         "apparent_target": target,
         "placements": placements,
         "headings": counts,
+        "headings_scope": "above the footer" if facts.get("has_footer") else "whole page (no footer element found)",
         "body_uses": body,
         "misses": [name for name in PLACEMENTS if placements[name]["status"] == "missing"],
         "notes": notes,

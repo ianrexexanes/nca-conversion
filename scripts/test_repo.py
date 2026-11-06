@@ -363,8 +363,9 @@ class AuditRulingsTest(unittest.TestCase):
                                 for n, name in enumerate(score.FACTORS, start=1)])
         self.assertIn("An unscored audit leaves out this block", text[text.index("## Conversion Score"):text.index("## Search check")])
         block = text[text.index("## Search check"):text.index("## Fix now")]
-        for label in ("**Keyword:**", "| Placement |", "[one row per placement", "**Headings (whole page, footer included):**", "**Body:**"):
+        for label in ("**Keyword:**", "| Placement |", "[one row per placement", "**Headings (<headings_scope>):**", "**Body:**"):
             self.assertIn("\n\n" + label, block)
+        self.assertIn("**Headings (<headings_scope>):**", audit_step(12))
 
 
 CRO = ROOT / "skills/cro/SKILL.md"
@@ -593,9 +594,12 @@ class RoundFixesTest(unittest.TestCase):
         end = text.find("\n## ", start + 1)
         return text[start:end if end != -1 else len(text)]
 
-    def test_heading_counts_say_whole_page(self):
+    def test_heading_counts_say_their_scope(self):
         for parts in (("skills", "cro", "references", "modes.md"), ("skills", "cro", "references", "audit.md")):
-            self.assertIn("whole page, footer included", " ".join(self.read(*parts).split()), "/".join(parts))
+            text = " ".join(self.read(*parts).split())
+            self.assertIn("above the footer", text, "/".join(parts))
+            self.assertIn("no footer element found", text, "/".join(parts))
+            self.assertNotIn("whole page, footer " + "included", text, "/".join(parts))  # split so the plugin gate's grep for the old label stays clean
 
     def test_report_template_starts_with_its_own_frontmatter(self):
         text = self.read("skills", "conversion-page-audit", "references", "report-template.md")

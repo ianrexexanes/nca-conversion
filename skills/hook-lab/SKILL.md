@@ -3,7 +3,7 @@ name: hook-lab
 description: "Use when writing hooks, headlines, hero lines, subject lines, ad hooks or CTA copy, including quick one-off variant requests. Crosses eight hook types (outcome, time, effort, callout, contrarian, pain, mechanism, transformation) with register. Also use when the user says 'give me headlines', 'hook ideas', 'hero line', 'subject line', 'CTA copy', 'punchier headline', or asks for variants of a line."
 license: MIT
 metadata:
-  version: 0.2.1
+  version: 0.3.0
 ---
 
 # Hook lab

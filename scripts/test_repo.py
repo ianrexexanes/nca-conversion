@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import check_frontmatter  # noqa: E402
 
-VERSION = "0.2.1"
+VERSION = "0.3.0"
 
 
 def skill_version(path: Path) -> str:

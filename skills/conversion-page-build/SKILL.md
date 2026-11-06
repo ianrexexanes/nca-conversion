@@ -3,7 +3,7 @@ name: conversion-page-build
 description: "Use when writing or rewriting copy for a landing page, sales page, homepage, pricing page or opt-in page — after the audience is documented. Walks hero, problem, outcome, solution, mechanism, value stack, proof, objections, guarantee, CTA and FAQ, deciding what each section must accomplish before writing it. Also use when the user says 'write the landing page', 'rewrite this page', 'page copy', 'sales page', 'I need copy for', or hands over an offer and asks for a page. Requires a Conversion Brief — runs audience-research first if none exists."
 license: MIT
 metadata:
-  version: 0.2.1
+  version: 0.3.0
 ---
 
 # Conversion page build

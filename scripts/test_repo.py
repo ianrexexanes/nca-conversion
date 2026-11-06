@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import check_frontmatter  # noqa: E402
 
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 
 
 def skill_version(path: Path) -> str:
@@ -19,7 +19,7 @@ def skill_version(path: Path) -> str:
 
 
 class RepoStructureTest(unittest.TestCase):
-    def test_every_version_is_0_2_0(self):
+    def test_every_version_matches(self):
         plugin = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
         market = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
         self.assertEqual(plugin["version"], VERSION)
@@ -396,7 +396,7 @@ class CroSkillTests(unittest.TestCase):
     def test_cro_skill_frontmatter(self):
         text, fm, body, name, desc = cro_parts()
         self.assertEqual(check_frontmatter.check_frontmatter(text), [])
-        self.assertIn("name: cro", fm); self.assertIn("license: MIT", fm); self.assertIn("version: 0.2.0", fm)
+        self.assertIn("name: cro", fm); self.assertIn("license: MIT", fm); self.assertIn("version: " + VERSION, fm)
 
     def test_cro_description_rules(self):
         text, fm, body, name, desc = cro_parts()
@@ -481,7 +481,7 @@ class CroRulingsTest(unittest.TestCase):
             ROOT_RULE + "cro/scripts/speed_check.py *)", ROOT_RULE + "cro/scripts/score.py *)",
             ROOT_RULE + "cro/scripts/search_check.py *)", ROOT_RULE + "cro/scripts/client_check.py *)"]) + "\n"
         "metadata:\n"
-        "  version: 0.2.0\n")
+        "  version: " + VERSION + "\n")
     ROWS = [("(none)", "`references/kickoff.md`", "ready"), ("`audit <url>`", "`references/audit.md`", "ready"),
             ("`setup`", "`references/setup.md`", "ready"), ("`doctor`", "`references/setup.md`", "ready"),
             ("`offer`", "the `offer-architect` skill", "ready (v1 skill)"), ("`sweep`", "the `copy-sweeps` skill", "ready (v1 skill)"),
@@ -577,7 +577,7 @@ class CroRulingsTest(unittest.TestCase):
         self.assertTrue(entry.startswith("Eight skills for conversion-centred landing page work: "), entry[:40])
         self.assertTrue(entry.endswith(" Start with /nca-conversion:cro."), entry[-40:])
         self.assertEqual(market["metadata"]["description"], "The No-Code Alchemist's conversion and landing page toolkit")
-        self.assertEqual((plugin["version"], market["metadata"]["version"]), ("0.2.0", "0.2.0"))
+        self.assertEqual((plugin["version"], market["metadata"]["version"]), (VERSION, VERSION))
 
 
 class RoundFixesTest(unittest.TestCase):

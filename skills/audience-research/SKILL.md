@@ -3,7 +3,7 @@ name: audience-research
 description: "Use before writing landing/sales page or campaign copy when the audience isn't documented. Produces a Conversion Brief: ICP, personas, ranked problems, voice-of-customer, competitors, differentiation, objections, proof, register. Required before conversion-page-build; optional for conversion-page-audit."
 license: MIT
 metadata:
-  version: 0.2.0
+  version: 0.2.1
 ---
 
 # Audience research

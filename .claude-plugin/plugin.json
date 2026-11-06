@@ -1,7 +1,7 @@
 {
   "name": "nca-conversion",
   "description": "Conversion-centred landing page work: audience research, offer design, page copy, conversion audit, copy editing, hooks, and design handoff. Framework-driven, register-aware. Start with /nca-conversion:cro.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": {
     "name": "Ian Rex Exanes",
     "url": "https://github.com/ianrexexanes"

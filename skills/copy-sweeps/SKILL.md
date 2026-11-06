@@ -3,7 +3,7 @@ name: copy-sweeps
 description: "Use when editing or tightening any written marketing copy — page copy, an email, a proposal, an ad, a post. Runs seven passes: Clarity, Voice, So What, Prove It, Specificity, Heightened Emotion, Zero Risk. Also use when the user says 'edit this', 'tighten this copy', 'make this better', 'this reads flat', 'punch this up', or pastes copy and asks for a second look. Optional expert-panel mode."
 license: MIT
 metadata:
-  version: 0.2.0
+  version: 0.2.1
 ---
 
 # Copy sweeps

@@ -4,7 +4,7 @@ description: "Use when /cro audit runs it, or when an unscored audit is asked fo
 license: MIT
 allowed-tools: Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/conversion-page-audit/scripts/page_facts.py *) Bash(${CLAUDE_PLUGIN_DATA}/venv/bin/python ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/render_check.py *)
 metadata:
-  version: 0.2.0
+  version: 0.2.1
 ---
 
 # Conversion page audit

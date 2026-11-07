@@ -86,8 +86,8 @@ session.
 - **`conversion-page-audit`** — ranked findings across four evidence-bounded sections.
 - **`copy-sweeps`** — seven editing passes, plus an expert-panel mode.
 - **`hook-lab`** — eight hook types, each run through the active register.
-- **`design-handoff`** — maps copy to components, then turns it into a Relume brief and a Figma
-  spec.
+- **`design-handoff`** — maps copy to components and layout families, then turns it into a Relume
+  brief and a Paper spec. Older Figma files are read the same way.
 
 ## How the skills chain
 

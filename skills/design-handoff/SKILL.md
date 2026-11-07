@@ -1,6 +1,6 @@
 ---
 name: design-handoff
-description: "Use when approved page copy becomes a design spec — before opening a design tool. Covers section type, purpose, content hierarchy, components, responsive intent, visual hierarchy, emphasis, above-the-fold priority, scan path. Also use when the user says 'hand this to design', 'wireframe this', 'Relume brief', 'Figma spec', 'turn this copy into a layout', or has finished copy and asks what's next."
+description: "Use when approved page copy becomes a design spec — before opening a design tool. Covers section type, purpose, content hierarchy, components, responsive intent, visual hierarchy, emphasis, above-the-fold priority, scan path. Also use when the user says 'hand this to design', 'wireframe this', 'Relume brief', 'Paper spec', 'Figma spec', 'turn this copy into a layout', or has finished copy and asks what's next."
 license: MIT
 metadata:
   version: 0.4.0
@@ -37,15 +37,26 @@ Four steps. The first three always run. The fourth usually does not.
 
 1. **Map each section spec to components** — `references/section-to-component.md`. Turns the five
    keys into a component list per section, plus the one thing about that section that constrains a
-   layout.
+   layout, and names the layout families the section may use.
 2. **Write the wireframe brief** — `references/relume-brief.md`. Page-level framing, then one block
    per section: structure and content function, no appearance.
-3. **Write the refinement spec** — `references/figma-refinement-spec.md`. Visual hierarchy,
+3. **Write the refinement spec** — `references/paper-refinement-spec.md`. Visual hierarchy,
    emphasis, above-the-fold priority and scan path: the four things the wireframe does not settle.
 4. **Platform notes, conditionally** — see below.
 
 Steps 2 and 3 stay separate documents on purpose, and in that order. The reason is stated in
-`references/figma-refinement-spec.md`'s opening and is not repeated here.
+`references/paper-refinement-spec.md`'s opening and is not repeated here.
+
+## The design tool is Paper
+
+Paper is the design tool this skill hands off to. People still ask in either word, so a request for
+a "Paper spec" and a request for a "Figma spec" both reach this skill, and older files made in Figma are read the same way.
+Keep the name of the tool a file lives in out of the spec.
+
+When the work is a wireframe and not a spec, `/cro wireframe` runs `../cro/references/wireframe.md`:
+one frame per variant, built as checked HTML from the approved copy deck, then drawn in Paper. It
+reads the layout families in `references/section-to-component.md` and the design rules in
+`references/design-rules.md`, and it does not re-decide what those two files settle.
 
 ## The platform pass runs only when the platform was named
 
@@ -70,8 +81,10 @@ default, which is the specific mistake the conditional exists to prevent.
 ## The tool names are on the doors, not in the method
 
 Two reference files are named after tools — `references/relume-brief.md` and
-`references/figma-refinement-spec.md` — because those are the names people ask for. Nothing in either depends on the tool, and **neither makes a
-claim about what any tool does with what it is given.**
+`references/paper-refinement-spec.md` — because those are the names people ask for. The second is
+named for the tool now in use, Paper. Until 0.4.0 it carried the older tool's name, and a request in
+either word still reaches this skill. Nothing in either file depends on the tool, and **neither makes
+a claim about what any tool does with what it is given.**
 
 That restraint is deliberate. A skill that says "tool X accepts a description shaped like this" is
 making a claim about somebody else's product that goes stale silently, and the reader has no way to
@@ -87,7 +100,7 @@ belongs to `../audience-research/SKILL.md`. The five profiles themselves live in
 
 It touches one decision in this skill: **how much emphasis the page is allowed to spend.** Everything
 else here is structural and travels unchanged — the same section has to do the same thing to a
-reader whoever that reader is. `references/figma-refinement-spec.md` carries that one intersection,
+reader whoever that reader is. `references/paper-refinement-spec.md` carries that one intersection,
 and it is the only file in this skill that reads a register row.
 
 The design rules a wireframe and a design are checked against, and the order the design skills follow when they disagree, are in `references/design-rules.md`.
@@ -100,7 +113,7 @@ The design rules a wireframe and a design are checked against, and the order the
   stop.
 - **It does not choose a visual style.** No palette, no type scale, no spacing values, no breakpoint
   numbers. It sets rank and relationship; a design system supplies the values.
-  `references/figma-refinement-spec.md` states the refusal in full and what to do when there is no
+  `references/paper-refinement-spec.md` states the refusal in full and what to do when there is no
   design system to supply them.
 - **It never works from a page that has already shipped.** This skill runs forwards, from approved
   copy toward a layout nobody has built. Judging a layout that exists runs the other way and needs

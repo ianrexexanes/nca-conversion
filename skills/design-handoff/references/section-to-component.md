@@ -1,7 +1,7 @@
 # Section to component
 
 This file decides **what a section needs on the page**. `relume-brief.md` decides how that gets
-written down for whoever lays it out; `figma-refinement-spec.md` decides which of those elements the
+written down for whoever lays it out; `paper-refinement-spec.md` decides which of those elements the
 reader registers first. Three different questions, three files, and none of them repeats another's
 answer.
 
@@ -67,7 +67,8 @@ A page that keeps fewer than eleven maps only the ones it keeps;
   three-column grid is wrong.
 - **Components** — heading, body block, optionally a short list.
 - **The over-add** — icon cards. They turn one person's situation into a taxonomy, and a taxonomy is
-  a thing nobody recognises themselves in.
+  a thing nobody recognises themselves in. Icon cards are right when the section holds
+  three to six parallel items, and the visual field names them; the layout families below say where.
 - **Narrow viewport** — already linear; nothing structural to decide.
 
 ### 3. Outcome
@@ -165,6 +166,53 @@ A page that keeps fewer than eleven maps only the ones it keeps;
 - **Narrow viewport** — an accordion is already narrow-friendly. The thing to specify instead is
   whether the answer text has to be present in the served markup, which is a platform question and
   belongs to the platform notes.
+
+## Layout families by section
+
+The eleven above say what a section constrains. This table says what shape it may take on the page, for
+the sections of the copy deck, in the deck's order. `/cro wireframe` writes one family into each
+section's `data-layout`, and `wire_check.py` rejects a family outside the section's row. When UI/UX Pro
+Max is on, its layout pass proposes the family and this table limits what it may pick; when it is off,
+the first family in the row is the default. The last column is the section of the eleven above that
+the deck section replaces, read from the playbooks column of
+`../../conversion-page-build/references/page-architecture.md`, "The long-form order".
+
+| Section | Families it may use | v1 section it replaces |
+| --- | --- | --- |
+| `header` | stacked, cta-band | new in v2 |
+| `hero` | split-media, stacked, form-split | 1. Hero |
+| `pain` | stacked, split-media, cards | 2. Problem |
+| `proof` | testimonial-wall, logo-strip, cards | 7. Proof |
+| `value` | cards, split-media, stacked | 3. Outcome, 4. Solution and 6. Value stack |
+| `compare` | comparison, stacked | new in v2 |
+| `how` | steps, split-media | 5. Mechanism |
+| `team` | cards, split-media | new in v2 |
+| `guarantee` | stacked, split-media | 9. Guarantee |
+| `faq` | accordion, stacked | 11. FAQ, its questions from 8. Objections |
+| `closer` | cta-band, form-split | 10. CTA, repeated as a mini hero |
+
+The ten families:
+
+- **split-media** — copy beside one image or video.
+- **stacked** — one column of text and its visual, in reading order.
+- **cards** — parallel items in a grid, one card each.
+- **logo-strip** — one row of logos. It proves; it never makes the promise, so the hero cannot be one.
+- **testimonial-wall** — several quotes in view at once, each with its attribution.
+- **steps** — numbered, in sequence, the numbers drawn independently of any arrow.
+- **comparison** — two or more columns set side by side, row for row.
+- **accordion** — question rows that open in place.
+- **form-split** — copy beside the form it leads to.
+- **cta-band** — a full-width band with one heading and one button.
+
+**Cards and the over-add.** Icon cards stay the over-add wherever the section is one reader's
+situation told in prose, which is why Problem above refuses them. They are right when the section
+holds three to six parallel items, and the visual field names them: the value section's four blocks
+beside a visual that reads "a grid of four icons" is that case. The pain section may take `cards`
+only on the same test. If the visual field does not name the items, use `stacked`.
+
+**A visual per section.** Every section except `header` and `faq` carries a visual, taken from the
+deck's visual field: a real image when the brief has one, otherwise a box that states what the image
+shows. No family is a carousel. The design rules in `design-rules.md` say why.
 
 ## Two rules that decide the arguments
 

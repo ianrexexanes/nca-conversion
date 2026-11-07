@@ -5,7 +5,7 @@ takes a written brief. It carries structure and content function. It carries no 
 
 `section-to-component.md` decided which components each section needs; this file is how that gets
 written down. What the reader notices first, and how strongly, belongs to
-`figma-refinement-spec.md` and is deliberately absent here.
+`paper-refinement-spec.md` and is deliberately absent here.
 
 ## The one rule: function, never appearance
 
@@ -22,7 +22,7 @@ that is written in the refinement spec rather than here, so the wireframe comes 
 that can then be weighted rather than weighting that has to be unpicked.
 
 **Which is why the fold list is not in this brief either.** What has to be readable before any
-scroll is a prominence decision, and this document makes none. `figma-refinement-spec.md` sets it at
+scroll is a prominence decision, and this document makes none. `paper-refinement-spec.md` sets it at
 step 3, once a layout exists to set it against. Putting it here would mean deciding what the hero
 leads with before anyone has seen a hero — you hand the generator your answer and get it back as
 confirmation, which is the specific thing the two-document split exists to prevent. In the assembled

@@ -1502,6 +1502,97 @@ class DesignRulesTests(unittest.TestCase):
         self.assertIn("references/design-rules.md", read("skills", "design-handoff", "SKILL.md"))
 
 
+class WireframeTests(unittest.TestCase):
+    DH = ROOT / "skills" / "design-handoff"
+
+    def setUp(self):
+        sys.path.insert(0, str(ROOT / "skills" / "cro" / "scripts"))
+        self.addCleanup(sys.path.pop, 0)
+
+    def layout_table(self):
+        # the rows of the layout table under "## Layout families by section", by header name:
+        # one (section, families) pair per body row, in order
+        block = [split_cells(l) for l in md_section(SECTION_TO_COMPONENT, "## Layout families by section").splitlines()
+                 if l.lstrip().startswith("|")]
+        if not block:
+            return []
+        head = [c.lower() for c in block[0]]
+        section_at = head.index("section")
+        families_at = next(i for i, c in enumerate(head) if c.startswith("famil"))
+        return [(re.sub(r"[`*]", "", r[section_at]), [f.strip() for f in r[families_at].split(",")]) for r in block[2:]]
+
+    def test_layout_table_sections_are_the_deck_sections(self):
+        import deck_check
+        self.assertEqual([s for s, _ in self.layout_table()], list(deck_check.SECTIONS))
+
+    def test_layout_table_uses_only_the_known_families_and_every_one_of_them(self):
+        import wire_check
+        used = {f for _, families in self.layout_table() for f in families}
+        self.assertTrue(used <= set(wire_check.LAYOUT_FAMILIES), used - set(wire_check.LAYOUT_FAMILIES))
+        self.assertEqual(used, set(wire_check.LAYOUT_FAMILIES))
+
+    def test_the_checker_allows_what_the_table_allows(self):
+        import wire_check
+        self.assertEqual({s: tuple(f) for s, f in self.layout_table()}, dict(wire_check.LAYOUT_RULES))
+
+    def test_the_hero_may_not_be_a_logo_strip(self):
+        self.assertNotIn("logo-strip", dict(self.layout_table())["hero"])
+
+    def test_the_table_names_the_v1_section_each_row_replaces(self):
+        rows = [r for r in md_section(SECTION_TO_COMPONENT, "## Layout families by section").splitlines() if r.startswith("| `")]
+        text = flat(" ".join(rows))
+        for new in ("header", "compare", "team"):
+            self.assertIn("new in v2", flat(next(r for r in rows if r.startswith("| `%s`" % new))))
+        for part in ("1. Hero", "2. Problem", "7. Proof", "3. Outcome", "4. Solution", "6. Value stack", "5. Mechanism",
+                     "9. Guarantee", "11. FAQ", "8. Objections", "10. CTA"):
+            self.assertIn(part, text)
+
+    def test_icon_cards_are_right_for_three_to_six_parallel_items_the_visual_field_names(self):
+        problem = flat(s2c_section("2. Problem"))
+        self.assertIn("The over-add", problem)
+        self.assertIn("three to six parallel items, and the visual field names them", problem)
+        self.assertIn("three to six parallel items, and the visual field names them",
+                      flat(md_section(SECTION_TO_COMPONENT, "## Layout families by section")))
+
+    def test_design_handoff_names_paper_and_figma_only_as_older_files(self):
+        text = (self.DH / "SKILL.md").read_text(encoding="utf-8")
+        front, body = text.split("\n---", 2)[0], text.split("\n---", 2)[-1]
+        description = next(l for l in front.splitlines() if l.startswith("description:"))
+        self.assertIn("Paper spec", description)
+        self.assertIn("Figma spec", description)
+        self.assertIn("Paper", body)
+        for path in sorted(self.DH.rglob("*.md")):
+            for line in path.read_text(encoding="utf-8").splitlines():
+                if "Figma" in line and not line.startswith("description:"):
+                    self.assertIn("older", line.lower(), "%s: %s" % (path.name, line[:80]))
+
+    def test_the_readme_skill_list_names_paper_for_design_handoff(self):
+        lines = read("README.md").splitlines()
+        start = next(i for i, l in enumerate(lines) if l.startswith("- **`design-handoff`**"))
+        item = [lines[start]]
+        for line in lines[start + 1:]:
+            if not line.startswith("  ") or not line.strip():
+                break
+            item.append(line.strip())
+        self.assertIn("Paper", " ".join(item))
+
+    def test_the_refinement_spec_is_named_for_paper_and_nothing_links_the_old_name(self):
+        self.assertTrue((self.DH / "references" / "paper-refinement-spec.md").is_file())
+        self.assertFalse((self.DH / "references" / ("figma-refinement" + "-spec.md")).exists())
+        old = "figma-refinement" + "-spec"
+        found = [str(p.relative_to(ROOT)) for p in ROOT.rglob("*")
+                 if p.is_file() and ".git" not in p.relative_to(ROOT).parts and p.suffix in (".md", ".py", ".json", ".html", ".txt")
+                 and old in p.read_text(encoding="utf-8", errors="replace")]
+        self.assertEqual(found, [])
+        self.assertIn("paper-refinement-spec.md", read("ATTRIBUTION.md"))
+
+    def test_wireframe_reference_names_the_method(self):
+        text = flat(read("skills", "cro", "references", "wireframe.md"))
+        for part in ("wire_check.py", "--variant", "get_guide", "finish_working_on_nodes", "1440", "390", "a visual per section",
+                     "one frame per variant", "design-rules.md", "directional cue", "carousel", "deck_check.py", "--final"):
+            self.assertIn(part, text)
+
+
 if __name__ == "__main__":
     unittest.main()
 

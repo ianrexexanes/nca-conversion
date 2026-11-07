@@ -1400,6 +1400,11 @@ class FixWave1Tests(unittest.TestCase):
         self.assertIn("page-architecture.md", text)
         self.assertNotRegex(text, r"page-architecture\.md` is that order")
 
+    def test_hero_build_by_mode_holds_the_headline_ladder(self):
+        text = flat(md_section(ROOT / "skills" / "hook-lab" / "references" / "hero-build.md", "## By mode"))
+        for part in ("50 characters", "51 to 90", "over 90"):
+            self.assertIn(part, text)
+
 
 if __name__ == "__main__":
     unittest.main()

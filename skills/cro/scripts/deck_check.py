@@ -272,6 +272,7 @@ def check_namespace(deck, ns, part, final, add):
         h1 = deck.slot(ns, v, "h1")
         if h1 is not None:
             n = len(h1)
+            # the ladder (50, 51 to 90, over 90) is written in skills/hook-lab/references/hero-build.md, "By mode"
             if mode == "search":
                 if n >= 91:
                     add("FAIL", hero_key(ns, v, "h1"), "HEADLINE_LENGTH", "%d characters; rewrite" % n)

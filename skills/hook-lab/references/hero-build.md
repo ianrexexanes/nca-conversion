@@ -87,9 +87,13 @@ The mode is decided per page (Search or Direct) and changes how much of the buil
 - **Search page.** Put the keyword near the front of the one H1, together with the promise, and make it one
   claim. Aim for two lines on desktop; three or four lines on a phone is fine. The subheadline is one or two
   sentences, with no stacked benefits. The keyword and the promise are never cut to meet a design limit.
+  The H1 is up to 50 characters at display size; from 51 to 90 characters it is set smaller or split at
+  the natural break; over 90 characters it is rewritten, keeping the keyword and the promise, and
+  `deck_check.py` fails it.
 - **Direct page.** Use the full build. The hero can carry stacked benefit lines, up to five, and the headline
   continues the ad or message that earned the click: the ad's promise, the outreach or email line, or the
-  phrase searched for a paid search ad. No keyword placement.
+  phrase searched for a paid search ad. No keyword placement. On a Direct page over 90 characters is a
+  warning, not a failure.
 
 ## By awareness
 

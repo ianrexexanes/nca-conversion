@@ -1371,6 +1371,12 @@ class Slice2RoundFixesTests(unittest.TestCase):
         self.assertIn("audience call-out", step)
         self.assertIn("the strip still carries proof", step)
 
+    def test_hero_build_benefit_count_has_no_unsourced_reason(self):
+        text = flat(read("skills", "hook-lab", "references", "hero-build.md"))
+        self.assertIn("naming two or three ways it does.", text)
+        self.assertNotIn("reads as thin", text)
+        self.assertNotIn("stops being read", text)
+
 
 if __name__ == "__main__":
     unittest.main()

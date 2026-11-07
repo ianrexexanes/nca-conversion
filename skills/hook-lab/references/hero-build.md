@@ -30,7 +30,7 @@ the morning ride." Build two: "Shifting that feels new again in two days, withou
 
 Move from pain to solution. Open with what the visitor is tired of, or the old way they want to stop, in
 the words the brief records. Then say how the offer delivers the headline's promise, naming two or three
-ways it does. Two or three, because one reads as thin and a longer list stops being read.
+ways it does.
 
 The subheadline explains the headline. It does not repeat it and does not add a second promise.
 

@@ -1593,6 +1593,35 @@ class WireframeTests(unittest.TestCase):
             self.assertIn(part, text)
 
 
+class DesignTests(unittest.TestCase):
+    def setUp(self):
+        self.text = flat(read_or_empty("skills", "cro", "references", "design.md"))
+
+    def test_it_points_to_the_rules_and_restates_none(self):
+        self.assertIn("design-rules.md", self.text)
+        rules = flat(read("skills", "design-handoff", "references", "design-rules.md")).lower().split()
+        mine = self.text.lower().split()
+        shared = {" ".join(mine[i:i + 8]) for i in range(len(mine) - 7)} & {" ".join(rules[i:i + 8]) for i in range(len(rules) - 7)}
+        self.assertEqual(sorted(shared), [])
+
+    def test_it_names_the_checks_and_the_hand_offs(self):
+        for part in ("design_check.py", "--blur", "## Design rulings", "sloplint.mjs", "matched to a ruling line",
+                     "/hallmark:hallmark audit", "get_tokens", "Hallmark lint skipped", "most visible"):
+            self.assertIn(part, self.text)
+
+    def test_hallmarks_four_questions_are_answered_from_the_brief(self):
+        paragraph = next((p for p in re.split(r"\n\s*\n", read_or_empty("skills", "cro", "references", "design.md"))
+                          if "brief" in p.lower() and all(re.search(r"\b%s\b" % w, p, re.I) for w in ("material", "audience", "use", "tone"))), "")
+        self.assertTrue(paragraph)
+
+    def test_it_asks_which_token_is_which_colour(self):
+        self.assertRegex(self.text, r"which token is the text, background, action and action-text colour")
+
+    def test_it_does_not_name_emil(self):
+        self.assertTrue(self.text)
+        self.assertNotIn("Emil", self.text)
+
+
 if __name__ == "__main__":
     unittest.main()
 

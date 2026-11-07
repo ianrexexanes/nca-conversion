@@ -1,13 +1,14 @@
 """Render a page in Chrome with analytics and tags blocked, and report what it shows.
 
 Run by the plugin's venv python:
-    render_check.py URL --out DIR [--timeout 45]
+    render_check.py URL --out DIR [--timeout 45] [--blur]
 
 Nothing is clicked, typed or sent. Only GET, HEAD and OPTIONS leave the browser, and a
 blocked request is logged instead of sent. Frames stay in the page's process, the popup blocker
 is on and no worker runs, so the page's one URL block covers everything. The browser is closed last, with browser.close()
 alone: closing a context or page fires unload handlers whose requests are not intercepted.
-Exit 0 when the page rendered, 3 when it could not load, 2 on bad arguments.
+With --blur, a blurred first screen at each width is saved too, for the question "is the button the most
+visible thing here?". Exit 0 when the page rendered, 3 when it could not load, 2 on bad arguments.
 """
 import argparse
 import json
@@ -81,8 +82,21 @@ def first_line(error) -> str:
     return lines[0] if lines else error.__class__.__name__
 
 
+BLUR_RULE = "html { filter: blur(8px) }"
+# Added through the style sheet object model, so a page's content security policy cannot refuse it.
+ADD_BLUR = """
+(rule) => {
+  const sheet = new CSSStyleSheet();
+  sheet.replaceSync(rule);
+  document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+}
+"""
+
+
 def read_pass(recorder, browser, major, name, width, height, mobile, timeout_ms, out):
-    """One viewport pass in its own context. Contexts are never closed: browser.close() ends them."""
+    """One viewport pass in its own context. Contexts are never closed: browser.close() ends them.
+
+    With out["blur"] set, the blurred first screen is the last thing taken, after the regular shots."""
     context = cro_runtime.guarded_context(browser, recorder, major=major, width=width, height=height, mobile=mobile)
     page = cro_runtime.guarded_page(context, recorder)
     # domcontentloaded, not load: one file that never arrives must not cost the whole view.
@@ -115,6 +129,10 @@ def read_pass(recorder, browser, major, name, width, height, mobile, timeout_ms,
     facts.update({"width": width, "height": height, "screenshots": {"first_screen": first_name, "full": full_name},
                   "load_event": load_event})
     result["view"] = facts
+    if out.get("blur"):
+        page.evaluate(ADD_BLUR, BLUR_RULE)
+        result["blur_shot"] = "%s-blur.png" % name
+        page.screenshot(path=str(Path(out["dir"]) / result["blur_shot"]))
     return result
 
 
@@ -131,6 +149,7 @@ def main(argv=None):
     parser.add_argument("url")
     parser.add_argument("--out", required=True)
     parser.add_argument("--timeout", type=float, default=45)
+    parser.add_argument("--blur", action="store_true", help="also save the first screen blurred, at both widths")
     args = parser.parse_args(argv)
     out_dir = Path(args.out)
     try:
@@ -142,7 +161,8 @@ def main(argv=None):
     render = {"url": args.url, "final_url": None, "checked_at": datetime.now(timezone.utc).isoformat(),
               "user_agent": None, "status": None, "viewports": {}, "blocked": [], "errors": [],
               "could_not_check": [], "notes": [WORKERS_NOTE]}
-    out = {"url": args.url, "dir": str(out_dir)}
+    out = {"url": args.url, "dir": str(out_dir), "blur": args.blur}
+    blur_shots = {}
     playwright = sync_playwright().start()
     browser = None
     try:
@@ -158,8 +178,12 @@ def main(argv=None):
                     render["could_not_check"] = ["HTTP %d" % result["status"]]
                     break
                 render["viewports"][name] = result["view"]
+                if "blur_shot" in result:
+                    blur_shots[name] = result["blur_shot"]
         except PlaywrightError as error:
             render["could_not_check"] = [first_line(error)]
+        if blur_shots:
+            render["blur"] = blur_shots
         log = recorder.finish()
         render["blocked"] = [{"url": e["url"], "rule": e["rule"], "method": e["method"]}
                              for e in log if e["outcome"] == "blocked"]

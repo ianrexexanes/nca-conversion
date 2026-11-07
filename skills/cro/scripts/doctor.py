@@ -58,6 +58,12 @@ def check_companions():
     return row("companions", "WARN" if missing else "OK", detail)
 
 
+def check_hallmark_lint():
+    """The first sloplint.mjs in a Hallmark install under the home's plugin cache (its 2.0.0 layout)."""
+    found = sorted(Path.home().glob(".claude/plugins/cache/*/hallmark/*/hallmark/scripts/sloplint.mjs"))
+    return row("hallmark-lint", "OK" if found else "WARN", str(found[0]) if found else "not found")
+
+
 def run_checks(data_dir: Path):
     rows = []
     ok_python = sys.version_info >= (3, 10)
@@ -81,6 +87,7 @@ def run_checks(data_dir: Path):
     rows.append(row("lighthouse", "OK" if has_npx else "MISSING", "npx found" if has_npx else "npx not found"))
 
     rows.append(check_companions())
+    rows.append(check_hallmark_lint())
     return rows
 
 

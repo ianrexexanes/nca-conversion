@@ -1,0 +1,13 @@
+{
+  "colors": {
+    "text": "#000000",
+    "background": "#ffffff",
+    "action": "#0047b3",
+    "action_text": "#ffffff",
+    "surface": "#f4f6f8"
+  },
+  "type": {
+    "h1_px": 52,
+    "body_px": 16
+  }
+}

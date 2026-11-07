@@ -56,7 +56,7 @@ class DoctorTest(unittest.TestCase):
             code, out = run_doctor(["--data-dir", self.data, "--json"])
         rows = json.loads(out)
         self.assertEqual([r["check"] for r in rows],
-                         ["python", "venv", "playwright", "browser", "pagespeed-key", "lighthouse", "companions"])
+                         ["python", "venv", "playwright", "browser", "pagespeed-key", "lighthouse", "companions", "hallmark-lint"])
         for row in rows:
             self.assertEqual(sorted(row), ["check", "detail", "status"])
             self.assertIn(row["status"], ("OK", "WARN", "MISSING"))
@@ -72,6 +72,35 @@ class DoctorTest(unittest.TestCase):
             code2, out2 = run_doctor(["--data-dir", self.data])
         self.assertIn("WARN companions", out2)
         self.assertEqual(code2, code)
+
+
+class HallmarkLintTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        key_file = mock.patch.object(cro_runtime, "KEY_FILE", Path(self.tmp.name) / "none.key")
+        key_file.start()
+        self.addCleanup(key_file.stop)
+
+    def _line(self, home):
+        with mock.patch.object(doctor.Path, "home", return_value=Path(home)), \
+                mock.patch.object(doctor.subprocess, "run", side_effect=no_claude):
+            code, out = run_doctor(["--data-dir", self.tmp.name, "--json"])
+        rows = json.loads(out)
+        return code, next(r for r in rows if r["check"] == "hallmark-lint")
+
+    def test_hallmark_lint_line_names_the_script_or_not_found(self):
+        with tempfile.TemporaryDirectory() as home:
+            code_none, none = self._line(home)
+            script = Path(home, ".claude", "plugins", "cache", "stand-in", "hallmark", "9.9.9", "hallmark", "scripts", "sloplint.mjs")
+            script.parent.mkdir(parents=True)
+            script.write_text("// stand-in\n", encoding="utf-8")
+            code_one, found = self._line(home)
+        self.assertEqual(none["detail"], "not found")
+        self.assertEqual(found["detail"], str(script))
+        self.assertIn(none["status"], ("OK", "WARN"))
+        self.assertIn(found["status"], ("OK", "WARN"))
+        self.assertEqual(code_none, code_one)
 
 
 class SetupDryRunTest(unittest.TestCase):

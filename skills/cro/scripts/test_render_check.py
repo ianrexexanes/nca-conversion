@@ -225,6 +225,37 @@ class RenderFactsTest(_LocalPages):
 
 
 @SKIP
+class BlurTest(_LocalPages):
+    script = SCRIPT
+
+    @classmethod
+    def setUpClass(cls):
+        cls.start()
+
+    def test_blur_writes_two_more_shots_and_changes_nothing_else(self):
+        import hashlib
+        with tempfile.TemporaryDirectory() as tmp:
+            plain, blur = Path(tmp) / "plain", Path(tmp) / "blur"
+            for out, extra in ((plain, []), (blur, ["--blur"])):
+                done = subprocess.run([sys.executable, str(SCRIPT), self.base + "/facts", "--out", str(out), *extra],
+                                      capture_output=True, text=True, timeout=180)
+                self.assertEqual(done.returncode, 0, done.stderr)
+            names = sorted(p.name for p in plain.iterdir())
+            self.assertEqual(sorted(p.name for p in blur.iterdir()), sorted(names + ["desktop-blur.png", "phone-blur.png"]))
+            a, b = json.loads((plain / "render.json").read_text()), json.loads((blur / "render.json").read_text())
+            self.assertNotIn("blur", a)
+            self.assertEqual(b.pop("blur"), {"desktop": "desktop-blur.png", "phone": "phone-blur.png"})
+            self.assertEqual(sorted(b), sorted(a))
+            self.assertEqual(b["viewports"], a["viewports"])
+            for view in ("desktop", "phone"):
+                digest = lambda name: hashlib.sha256((blur / name).read_bytes()).hexdigest()  # noqa: E731
+                self.assertEqual(digest("%s-first-screen.png" % view),
+                                 hashlib.sha256((plain / ("%s-first-screen.png" % view)).read_bytes()).hexdigest(), view)
+                self.assertEqual((blur / ("%s-blur.png" % view)).read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
+                self.assertNotEqual(digest("%s-blur.png" % view), digest("%s-first-screen.png" % view), view)
+
+
+@SKIP
 class RenderCheckLeakPaths(GuardLeakPathsMixin, unittest.TestCase):
     @classmethod
     def run_route(cls, url, out):

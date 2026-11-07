@@ -49,7 +49,7 @@ NEAR_MISSES = (
     "https://example.com/products/shoes?id=7",
     "https://example.com/assets/app.js",
 )
-# README.md line 54's limits: Chrome reads a glob unanchored (see chrome_pattern_blocks), so a glob
+# The README's limits: Chrome reads a glob unanchored (see chrome_pattern_blocks), so a glob
 # cannot anchor a host or end at a path; these are blocked in the browser layer and open to is_blocked().
 README_LIMITS = (
     "https://example.com/ccm/collections",

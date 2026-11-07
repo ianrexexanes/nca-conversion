@@ -619,7 +619,7 @@ class RoundFixesTest(unittest.TestCase):
             text = " ".join(self.read(*parts).split())
             self.assertIn("above the footer", text, "/".join(parts))
             self.assertIn("no footer element found", text, "/".join(parts))
-            self.assertNotIn("whole page, footer " + "included", text, "/".join(parts))  # split so the plugin gate's grep for the old label stays clean
+            self.assertNotIn("whole page, footer " + "included", text, "/".join(parts))  # the old label is split on purpose, so this file never holds it as one string
 
     def test_report_template_starts_with_its_own_frontmatter(self):
         text = self.read("skills", "conversion-page-audit", "references", "report-template.md")
@@ -906,7 +906,7 @@ class CarriedFrom021Tests(unittest.TestCase):
 class SetupPermissionsTests(unittest.TestCase):
     def test_setup_reference_names_the_permissions_step(self):
         text = (ROOT / "skills" / "cro" / "references" / "setup.md").read_text(encoding="utf-8")
-        self.assertIn("merge", text.lower())  # the section's text, fixed by the controller, opens with "Merge"
+        self.assertIn("merge", text.lower())  # the permissions section opens with "Merge": the printed rules go into the existing allow list
         for needle in ("--permissions", "settings.local.json", "claude plugin update",
                        "python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/setup.py --permissions --data-dir ${CLAUDE_PLUGIN_DATA}"):
             self.assertIn(needle, text)
@@ -1404,6 +1404,17 @@ class FixWave1Tests(unittest.TestCase):
         text = flat(md_section(ROOT / "skills" / "hook-lab" / "references" / "hero-build.md", "## By mode"))
         for part in ("50 characters", "51 to 90", "over 90"):
             self.assertIn(part, text)
+
+    def test_test_comments_name_no_process_words(self):
+        bad = re.compile("the " + "controller|plugin " + r"gate|README\.md " + r"line \d")
+        hits = []
+        for path in sorted(ROOT.rglob("test_*.py")):
+            if ".git" in path.parts:
+                continue
+            for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if bad.search(line):
+                    hits.append("%s:%d" % (path.relative_to(ROOT), number))
+        self.assertEqual(hits, [])
 
 
 if __name__ == "__main__":

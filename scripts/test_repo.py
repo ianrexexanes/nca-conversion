@@ -712,6 +712,8 @@ class AuditSlice2Tests(unittest.TestCase):
         s = flat(audit_step(3))
         self.assertIn("Count buttons from `links`", s)
         self.assertIn("--out <dir>/facts.json", s)
+        self.assertIn("After the run, read `<dir>/facts.json`", s)
+        self.assertIn("prints one summary line", s)
 
     def test_audit_names_the_form_and_test_references(self):
         self.assertIn("form-and-signup-audit.md", flat(audit_step(8)))
@@ -1263,6 +1265,12 @@ def output_format(text):
 
 
 class ResearchTests(unittest.TestCase):
+    def test_research_step_3_reads_the_saved_facts(self):
+        s = flat(step_of(read("skills", "cro", "references", "research.md"), 3))
+        self.assertIn("--out <dir>/facts.json", s)
+        self.assertIn("After the run, read `<dir>/facts.json`", s)
+        self.assertIn("prints one summary line", s)
+
     def test_brief_template_has_the_new_parts_and_one_proof_section(self):
         for head in ("## Page modes and keywords", "## Traffic and awareness", "## Proof available", "## Visual inventory"):
             self.assertIn(head, template)

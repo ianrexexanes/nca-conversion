@@ -363,10 +363,14 @@ def main(argv):
     text = json.dumps(extract_facts(html, url), indent=2, ensure_ascii=False)
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
-    print(text)
     if out:
         Path(out).parent.mkdir(parents=True, exist_ok=True)
         Path(out).write_text(text + "\n", encoding="utf-8")
+        facts = json.loads(text)
+        print("page_facts: wrote %s: %d headings, %d links, %d forms, %d images"
+              % (out, len(facts["headings"]), len(facts["links"]), len(facts["forms"]), len(facts["images"])))
+    else:
+        print(text)
     return 0
 
 

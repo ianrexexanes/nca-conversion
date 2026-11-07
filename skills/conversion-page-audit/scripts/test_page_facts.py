@@ -291,7 +291,7 @@ class FetchHelpersTest(unittest.TestCase):
             "url", "title", "meta_description", "headings", "links", "has_footer", "ctas", "forms",
             "schema_types", "images", "lcp_candidates", "notes"])
 
-    def test_out_writes_the_printed_json(self):
+    def test_out_writes_the_json_and_prints_one_summary_line(self):
         import json
         import subprocess
         import sys
@@ -299,13 +299,21 @@ class FetchHelpersTest(unittest.TestCase):
         from pathlib import Path
         with tempfile.TemporaryDirectory() as folder:
             page = Path(folder) / "page.html"
-            page.write_text("<h1>Grüße €</h1><footer><a href='/i'>Imprint</a></footer>", encoding="utf-8")
+            page.write_text("<h1>Grüße €</h1><a href='/x'>Secret link text</a>"
+                            "<footer><a href='/i'>Imprint</a></footer>", encoding="utf-8")
             out = Path(folder) / "audit-data" / "new" / "facts.json"
             done = subprocess.run([sys.executable, page_facts.__file__, str(page), "--out", str(out)],
                                   capture_output=True, encoding="utf-8")
             self.assertEqual(done.returncode, 0, done.stderr)
-            self.assertEqual(json.loads(out.read_text(encoding="utf-8")), json.loads(done.stdout))
-            self.assertEqual(out.read_text(encoding="utf-8").strip(), done.stdout.strip())
+            facts = json.loads(out.read_text(encoding="utf-8"))
+            self.assertEqual(list(facts), [
+                "url", "title", "meta_description", "headings", "links", "has_footer", "ctas", "forms",
+                "schema_types", "images", "lcp_candidates", "notes"])
+            self.assertEqual(done.stdout.splitlines(), [
+                "page_facts: wrote %s: %d headings, %d links, %d forms, %d images"
+                % (out, len(facts["headings"]), len(facts["links"]), len(facts["forms"]), len(facts["images"]))])
+            self.assertNotIn("Secret link text", done.stdout)
+            self.assertNotIn("Imprint", done.stdout)
 
     def _decoded(self, head, encoding="cp1252"):
         raw = ("<html><head>%s</head><body><p>Preis: €</p></body></html>" % head).encode(encoding)

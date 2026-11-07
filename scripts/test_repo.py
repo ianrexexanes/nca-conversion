@@ -1393,6 +1393,14 @@ class Slice2RoundFixesTests(unittest.TestCase):
         self.assertNotIn("; anywhere else, wherever the project", text)
 
 
+class FixWave1Tests(unittest.TestCase):
+    def test_build_points_the_page_at_the_long_form_order(self):
+        text = flat(read("skills", "conversion-page-build", "SKILL.md"))
+        self.assertIn("The long-form order", text)
+        self.assertIn("page-architecture.md", text)
+        self.assertNotRegex(text, r"page-architecture\.md` is that order")
+
+
 if __name__ == "__main__":
     unittest.main()
 

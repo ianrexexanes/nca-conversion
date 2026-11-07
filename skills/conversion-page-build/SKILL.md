@@ -44,8 +44,10 @@ the result is a copy generator wearing this skill's name — the failure this sk
 ## The eleven sections
 
 Hero, Problem, Outcome, Solution, Mechanism, Value stack, Proof, Objections, Guarantee, CTA, FAQ —
-in that order, for a page that runs the full argument. `references/page-architecture.md` is that
-order and the case for why it's that order and not another. `references/section-playbooks.md` is
+in that order, for a page that runs the full argument. The eleven are the argument a page runs; the
+page itself is laid out in "The long-form order" of `references/page-architecture.md`, with the rules
+in `references/section-playbooks.md` for "Repeating the action", "A visual for every section" and
+"Closer". `references/section-playbooks.md` is
 what each section has to accomplish and how that changes across the five registers — read the
 brief's Register line once, then read only that column for every section, not all five.
 

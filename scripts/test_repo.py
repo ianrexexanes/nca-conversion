@@ -1416,6 +1416,10 @@ class FixWave1Tests(unittest.TestCase):
                     hits.append("%s:%d" % (path.relative_to(ROOT), number))
         self.assertEqual(hits, [])
 
+    def test_deck_form_says_to_leave_the_variants_key_out_when_empty(self):
+        for name in ("hero.md", "page.md"):
+            self.assertIn("leave the key out when there are none", flat(read("skills", "cro", "references", name)), name)
+
 
 if __name__ == "__main__":
     unittest.main()

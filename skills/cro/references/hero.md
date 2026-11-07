@@ -22,7 +22,7 @@ This is the procedure `/cro hero` follows. It writes the plugin's folder as `${C
    <ns>.page.register: <register name>
    <ns>.page.language: <language code>
    <ns>.page.keyword: <the keyword, Search pages only>
-   <ns>.page.variants: <spelling variants separated by semicolons, Search pages only>
+   <ns>.page.variants: <spelling variants separated by semicolons, Search pages only; leave the key out when there are none>
    <ns>.meta.title: <title>
    <ns>.meta.description: <description>
    <ns>.meta.slug: <slug>

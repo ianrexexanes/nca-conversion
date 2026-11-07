@@ -1359,6 +1359,14 @@ class VslTests(unittest.TestCase):
         self.assertIn("German copy is flagged for the user's own check", flat(vsl))
 
 
+class Slice2RoundFixesTests(unittest.TestCase):
+    def test_direct_response_service_page_keeps_its_menu(self):
+        rows = [l for l in playbook("Header").splitlines() if l.startswith("| Direct-response |")]
+        self.assertEqual(len(rows), 1)
+        self.assertIn("homepage or service page", rows[0])
+        self.assertIn("standard navigation", rows[0])
+
+
 if __name__ == "__main__":
     unittest.main()
 

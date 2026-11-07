@@ -34,7 +34,7 @@ the hero and the closer repeat, or strip a homepage's navigation to make it look
 | Technical / industrial | The logo and a button that names the document or the technical conversation it leads to, with a direct line to the desk that answers technical questions. On a homepage or service page the navigation keeps an entry for datasheets and downloads. |
 | Consumer / lifestyle | The logo and one plain action button, with the price or the free part visible where it fits. A simple booking or buying route matters more here than a phone number. |
 | Mission / nonprofit | The logo and one button for the audience this page serves. A homepage keeps standard navigation with a route per audience, never one donate button asked of every reader. |
-| Direct-response | The logo and the one commanded button, nothing else: no menu, no links off the page. |
+| Direct-response | The logo and the one commanded button, nothing else: no menu, no links off the page. A homepage or service page keeps its standard navigation, as the rule above says. |
 
 ## Hero
 

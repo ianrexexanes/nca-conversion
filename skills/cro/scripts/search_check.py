@@ -22,12 +22,11 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "conversion-page-audit" / "scripts"))
-from page_facts import extract_facts, fetch  # noqa: E402
+from page_facts import VOID, extract_facts, fetch  # noqa: E402
 
 PLACEMENTS = ("title", "meta_description", "url_slug", "h1", "first_sentence", "h2")
 SKIP = {"script", "style", "noscript", "template", "svg", "title"}
 VISIBLE_SKIP = SKIP | {"nav", "footer"}
-VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
 HEADINGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
 STOP_WORDS = {
     "the", "a", "an", "and", "or", "of", "in", "on", "at", "to", "for", "with", "by", "from", "is", "are",

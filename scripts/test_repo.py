@@ -1178,6 +1178,26 @@ template = read_or_empty("skills", "audience-research", "assets", "conversion-br
 audience_skill = read_or_empty("skills", "audience-research", "SKILL.md")
 research_modes = read_or_empty("skills", "audience-research", "references", "research-modes.md")
 research = read_or_empty("skills", "cro", "references", "research.md")
+hero = read_or_empty("skills", "cro", "references", "hero.md")
+
+
+def step_of(text, n):
+    # the flattened text of top-level step n: from the line that starts `n. ` at column 0 to the line before the
+    # next line that starts with digits and `. ` at column 0, or to the end; "" when the text is empty or step n is absent
+    lines = text.splitlines()
+    start = None
+    for i, line in enumerate(lines):
+        if line.startswith("%d. " % n):
+            start = i
+            break
+    if start is None:
+        return ""
+    end = len(lines)
+    for i in range(start + 1, len(lines)):
+        if re.match(r"\d+\. ", lines[i]):
+            end = i
+            break
+    return flat("\n".join(lines[start:end]))
 
 
 class ResearchTests(unittest.TestCase):
@@ -1208,6 +1228,38 @@ class ResearchTests(unittest.TestCase):
 
     def test_research_opens_with_the_paths_note(self):
         self.assertIn("full paths", research.split("1. ")[0])
+
+
+class HeroCommandTests(unittest.TestCase):
+    def test_hero_asks_the_page_questions_first(self):
+        for part in ("mode", "page role", "traffic", "awareness", "register", "language", "the one action"):
+            self.assertIn(part, step_of(hero, 1))
+
+    def test_hero_builds_three_variants_with_transformation_first(self):
+        for part in ("hero-build.md", "three variants", "transformation", "a, b and c"):
+            self.assertIn(part, hero)
+
+    def test_hero_writes_a_label_per_variant(self):
+        for part in ("cta.hook", "completes its own headline", "the same click", "cta.fud", "commitment point", "so what"):
+            self.assertIn(part, flat(hero))
+
+    def test_hero_says_never_invent_proof(self):
+        self.assertIn("[NEEDED:", hero)
+        self.assertIn("never invent", hero)
+        self.assertIn("prooftop", hero)
+
+    def test_hero_visual_is_the_real_product(self):
+        self.assertIn("the real product or outcome", hero)
+        self.assertIn("never stock", hero)
+
+    def test_hero_writes_register_notes_and_checks_the_deck(self):
+        self.assertIn("## Register notes", hero)
+        self.assertIn('python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/deck_check.py "<deck>" --part hero', hero)
+
+    def test_hero_routes_the_text_through_a_voice_skill(self):
+        self.assertIn("humanizer", hero)
+        self.assertIn("banned-vocabulary.md", hero)
+        self.assertIn("German copy is flagged for the user's own check", flat(hero))
 
 
 if __name__ == "__main__":

@@ -867,7 +867,6 @@ class PublicWordingTests(unittest.TestCase):
                     hits.append(f"{name}:{number}")
         self.assertEqual(hits, [])
 
-
     def test_public_text_names_no_vault_and_no_c_file(self):
         needles = ("va" + "ult", "03 Pro" + "jects", "_Rese" + "arch", "[" + "C]")
         files = subprocess.run(["git", "-C", str(ROOT), "ls-files"], capture_output=True, text=True, check=True).stdout.split("\n")
@@ -1386,6 +1385,12 @@ class Slice2RoundFixesTests(unittest.TestCase):
         text = flat(read("skills", "conversion-page-build", "references", "section-playbooks.md"))
         self.assertIn("Warm visitors take proof before pain", text)
         self.assertNotIn("runs shorter", text)
+
+    def test_design_handoff_names_its_file_cleanly(self):
+        text = flat(read("skills", "design-handoff", "SKILL.md"))
+        self.assertIn("A single handoff document: `Design Handoff — <Page>.md`, in the page's folder in your project, "
+                      "or wherever the project keeps specs.", text)
+        self.assertNotIn("; anywhere else, wherever the project", text)
 
 
 if __name__ == "__main__":

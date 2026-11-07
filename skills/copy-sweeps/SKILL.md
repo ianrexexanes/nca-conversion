@@ -20,9 +20,9 @@ with a question mark on it. Editing is where work arrives unannounced, and a gat
 the pass never runs.
 
 If a brief does exist — `Conversion Brief — *.md` in your project's research folder, or wherever
-else your project keeps research — read three of its sections first,
-because they change what the passes are permitted to do rather than merely informing them: the
-**Register** it names, its ranked **Objections**, and what it lists under **Proof available**.
+else your project keeps research — read three of its sections first, because they change what the
+passes are permitted to do rather than merely informing them: the **Register** it names, its ranked
+**Objections**, and what it lists under **Proof available**.
 
 Without one, run anyway, and carry two habits:
 
@@ -118,5 +118,5 @@ unchanged.
 ## Output
 
 Edited copy plus a short change log — what changed, which pass caught it, and any item handed back
-as a question rather than resolved. By convention the edited version sits beside the original
-rather than replacing it, so the two can be compared; anywhere else, keep the original recoverable.
+as a question rather than resolved. By convention the edited version sits beside the original rather
+than replacing it, so the two can be compared; anywhere else, keep the original recoverable.

@@ -14,9 +14,10 @@ produces the thing.
 
 ## Read the brief first, if one exists
 
-Look for `Conversion Brief — *.md` in your project's research folder. Three of its sections are inputs here rather
-than things to re-decide: **Register**, the ranked **Objections**, and **Proof available**. Register
-in particular is set once per client and inherited — see `../audience-research/SKILL.md`.
+Look for `Conversion Brief — *.md` in your project's research folder. Three of its sections are
+inputs here rather than things to re-decide: **Register**, the ranked **Objections**, and **Proof
+available**. Register in particular is set once per client and inherited — see
+`../audience-research/SKILL.md`.
 
 Without a brief you can still run, but say so in the output and mark every audience claim
 `NOT ESTABLISHED — <what would close it>`. An offer designed against an assumed buyer is an offer
@@ -92,10 +93,10 @@ have somewhere specific to aim.
 ## What this produces
 
 One document, `Offer — <Name>.md`, in your project's research folder, or wherever your project keeps
-research. It carries: the four-variable diagnosis and which variable
-binds, the obstacle-to-solution map, the stack with each line's value provenance, the delivery model
-and why, the pricing analysis with its recommendation flagged as one, the risk-reversal
-recommendation and the alternatives set aside, the name and angle, and the three pitch lengths.
+research. It carries: the four-variable diagnosis and which variable binds, the obstacle-to-solution
+map, the stack with each line's value provenance, the delivery model and why, the pricing analysis
+with its recommendation flagged as one, the risk-reversal recommendation and the alternatives set
+aside, the name and angle, and the three pitch lengths.
 
 The stack and risk-reversal sections are what `conversion-page-build` needs in front of it when it
 writes a page's Value stack and Guarantee sections. Anything left vague here gets invented there, so

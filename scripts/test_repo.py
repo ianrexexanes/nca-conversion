@@ -314,7 +314,7 @@ class AuditRulingsTest(unittest.TestCase):
 
     def test_step_5_renders_through_render_check_only(self):
         step = self.steps()[5]
-        for part in (self.RENDER, "Rendered evidence comes only from `render_check.py`, the one route that blocks analytics.",
+        for part in (self.RENDER, "Rendered evidence comes only from the plugin's guarded routes, which share the analytics guard in `cro_runtime.py`.",
                      "No form is sent and nothing is clicked.", "run `/cro setup`", "layout evidence only",
                      "render.json", "first-screen"):
             self.assertIn(part, step)
@@ -349,7 +349,7 @@ class AuditRulingsTest(unittest.TestCase):
         self.assertIn("`" + self.RENDER + "`", text)
         step = " ".join(text[text.index("\n3. "):text.index("\n4. ")].split())
         for part in ("**Get a rendered capture with `" + self.RENDER + "`.**",
-                     "Rendered evidence comes only from `render_check.py`, the one route that blocks analytics.",
+                     "Rendered evidence comes only from the plugin's guarded routes, which share the analytics guard in `cro_runtime.py`.",
                      '**if the venv is missing, every rendered-only check goes to Could not check, with the reason and "run `/cro setup`", never to Not a problem.**',
                      "exits 3", "Static markup cannot see layout, scroll-gated content, consent-gated tags, or anything CSS hides."):
             self.assertIn(part, step)
@@ -525,7 +525,7 @@ class CroRulingsTest(unittest.TestCase):
         fm, body = frontmatter_and_body(CRO)
         self.assertIn(self.TABLE, body)
         self.assertEqual(len([line for line in body.splitlines() if line.startswith("|")]), 19)
-        for part in ("`$0`", "`$ARGUMENTS`", self.PATHS, "Rendered evidence comes only from `render_check.py`",
+        for part in ("`$0`", "`$ARGUMENTS`", self.PATHS, "Rendered evidence comes only from the plugin's guarded routes",
                      "`python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/setup.py --data-dir ${CLAUDE_PLUGIN_DATA}`",
                      "`python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/doctor.py --data-dir ${CLAUDE_PLUGIN_DATA}`",
                      "`references/client-version.md`"):
@@ -1670,7 +1670,7 @@ class CheckTests(unittest.TestCase):
 
     def test_the_gates_it_names_exist(self):
         for name in ("site_check.py", "asset_text_check.py", "redirect_check.py", "deck_check.py", "client_check.py", "search_check.py",
-                     "speed_check.py"):
+                     "speed_check.py", "launch_render.py"):
             self.assertTrue((ROOT / "skills" / "cro" / "scripts" / name).is_file(), name)
 
 

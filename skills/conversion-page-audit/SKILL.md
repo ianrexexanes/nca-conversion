@@ -30,8 +30,8 @@ before you start finding things.
    to claim.
 3. **Get a rendered capture with
    `${CLAUDE_PLUGIN_DATA}/venv/bin/python ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/render_check.py <url> --out <dir>`.**
-   Rendered evidence comes only from `render_check.py`, the one route that blocks analytics. This
-   is the single most important instruction in this skill: **if the venv is missing, every
+   Rendered evidence comes only from the plugin's guarded routes, which share the analytics guard
+   in `cro_runtime.py`. This is the single most important instruction in this skill: **if the venv is missing, every
    rendered-only check goes to Could not check, with the reason and "run `/cro setup`", never to
    Not a problem.** The same holds when the script exits 3 because the page did not load; its
    reason is under `could_not_check` in `render.json`. Static markup cannot see layout,

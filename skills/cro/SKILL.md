@@ -49,5 +49,5 @@ Reference files write this plugin's folder as CLAUDE_PLUGIN_ROOT and its data fo
 ## Rules
 
 - Start no subagents. This skill only routes.
-- Rendered evidence comes only from `render_check.py`, the one route that blocks analytics.
+- Rendered evidence comes only from the plugin's guarded routes, which share the analytics guard in `cro_runtime.py`.
 - Client-facing text follows `references/client-version.md`.

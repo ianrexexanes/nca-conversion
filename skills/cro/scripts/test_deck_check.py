@@ -338,6 +338,22 @@ class DeckCheckTest(unittest.TestCase):
         finally:
             bad.unlink()
 
+    def test_deck_with_no_section_fails(self):
+        text = "# A deck\n\nSome prose.\n\n## Register notes\n\n- None: the register changed no rule.\n"
+        finding = ("FAIL", "-", "DECK_SYNTAX", "no '## ns: Title' section")
+        self.assertEqual(deck_check.check(deck_check.parse_deck(text)), [finding])
+        self.assertEqual(deck_check.check(deck_check.parse_deck(text), part="hero"), [finding])
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "deck.md"
+            path.write_text(text, encoding="utf-8")
+            code, out, err = run(str(path))
+        self.assertEqual(code, 1, err)
+        self.assertEqual(out.strip().splitlines()[-1], "deck_check: 1 FAIL, 0 WARN")
+        empty = deck_check.check(deck_check.parse_deck(""))
+        self.assertIn(finding, empty)
+        self.assertIn(("FAIL", "-", "REGISTER_NOTES", "no '## Register notes' section"), empty)
+
     def test_cli_json_prints_only_the_object(self):
         code, out, err = run(str(FIXTURES / "deck-planted.md"), "--json")
         data = json.loads(out)

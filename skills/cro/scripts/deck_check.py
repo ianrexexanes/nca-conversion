@@ -161,6 +161,8 @@ def check(deck, part="page", final=False):
 
     for key, rule, detail in deck.errors:
         add("FAIL", key, rule, detail)
+    if not deck.namespaces:
+        add("FAIL", "-", "DECK_SYNTAX", "no '## ns: Title' section")
     for ns in deck.namespaces:
         check_namespace(deck, ns, part, final, add)
     if deck.register_lines is None:

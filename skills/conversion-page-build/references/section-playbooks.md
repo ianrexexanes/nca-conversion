@@ -85,8 +85,7 @@ Agitate, Solve: name the problem in the visitor's words, agitate it by showing w
 stays (the lost time, money or standing, as the brief records it), then solve it by pointing at the
 offer as the way out. Or the old way set against the new one: how the visitor does it today, with its
 costs, beside how the offer does it. Both end by handing over to Outcome. Warm visitors take proof
-before pain (see `page-architecture.md`, Skeleton by awareness), so for them this section runs
-shorter. Agitate only with costs the brief supports, never with a fear the page cannot back.
+before pain (see `page-architecture.md`, Skeleton by awareness). Agitate only with costs the brief supports, never with a fear the page cannot back.
 Example: a pump maintenance service. The old way: waiting for a breakdown, then calling whoever
 answers. The new way: a fixed schedule and a named engineer.
 

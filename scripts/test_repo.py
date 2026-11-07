@@ -1382,6 +1382,11 @@ class Slice2RoundFixesTests(unittest.TestCase):
         self.assertNotIn("slice", text.casefold())
         self.assertIn("the design step writes it down as a ruling line with its reason", flat(text))
 
+    def test_problem_playbook_has_no_length_claim(self):
+        text = flat(read("skills", "conversion-page-build", "references", "section-playbooks.md"))
+        self.assertIn("Warm visitors take proof before pain", text)
+        self.assertNotIn("runs shorter", text)
+
 
 if __name__ == "__main__":
     unittest.main()

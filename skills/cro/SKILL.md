@@ -1,8 +1,8 @@
 ---
 name: cro
-description: "Use when the user types /nca-conversion:cro, asks to audit or score a landing page or homepage, says 'audit this page', 'CRO audit' or 'conversion audit', or starts a landing page or site project and wants the conversion process."
+description: "Use when the user types /nca-conversion:cro, asks to audit or score a landing page or homepage, says 'audit this page', 'review my landing page', 'CRO audit', 'conversion audit' or 'why isn't this converting', or starts a landing page or site project and wants the conversion process: research, page copy, a hero or a hero video script."
 license: MIT
-allowed-tools: Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/setup.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/doctor.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/conversion-page-audit/scripts/page_facts.py *) Bash(${CLAUDE_PLUGIN_DATA}/venv/bin/python ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/render_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/speed_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/score.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/search_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/client_check.py *)
+allowed-tools: Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/setup.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/doctor.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/conversion-page-audit/scripts/page_facts.py *) Bash(${CLAUDE_PLUGIN_DATA}/venv/bin/python ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/render_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/speed_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/score.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/search_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/client_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/deck_check.py *)
 metadata:
   version: 0.3.0
 ---
@@ -14,9 +14,8 @@ The command word is `$0`. It is empty when nothing follows `/nca-conversion:cro`
 ## Route
 
 - No argument: read `references/kickoff.md` and follow it.
-- A word in the table: go where its row says. A reference file is read and followed. A skill row invokes that skill of this plugin with the remaining arguments.
+- A word in the table: go where its row says. A reference file is read and followed. A skill row invokes that skill of this plugin with the remaining arguments. A row that names a reference file and a skill: read and follow the reference file; its steps say when to use the skill.
 - A "not built yet" row: say so and name its slice.
-- A "Later list" row: say it is on the Later list.
 - Any other word: show the table.
 
 | Command | Goes to | Status |
@@ -27,17 +26,17 @@ The command word is `$0`. It is empty when nothing follows `/nca-conversion:cro`
 | `doctor` | `references/setup.md` | ready |
 | `offer` | the `offer-architect` skill | ready (v1 skill) |
 | `sweep` | the `copy-sweeps` skill | ready (v1 skill) |
-| `research` | the `audience-research` skill | v1 engine until slice 2 |
-| `page <brief>` | the `conversion-page-build` skill | v1 engine until slice 2 |
-| `hero` | the `hook-lab` skill | v1 engine until slice 2 |
+| `research` | `references/research.md`, with the `audience-research` skill | ready |
+| `page <brief>` | `references/page.md`, with the `conversion-page-build` skill | ready |
+| `hero` | `references/hero.md`, with the `hook-lab` skill | ready |
 | `wireframe` | the `design-handoff` skill | v1 engine until slice 3 |
-| `vsl` | nothing yet | not built yet, slice 2 |
+| `vsl` | `references/vsl.md` | ready |
 | `design` | nothing yet | not built yet, slice 3 |
 | `check` | nothing yet | not built yet, slice 3 |
-| `form` | nothing yet | on the Later list |
-| `data` | nothing yet | on the Later list |
-| `compare` | nothing yet | on the Later list |
-| `diagnose` | nothing yet | on the Later list |
+| `form` | nothing yet | not built yet, slice 3 |
+| `data` | nothing yet | not built yet, slice 3 |
+| `compare` | nothing yet | not built yet, slice 3 |
+| `diagnose` | nothing yet | not built yet, slice 3 |
 
 Run setup and the health check with these two commands:
 

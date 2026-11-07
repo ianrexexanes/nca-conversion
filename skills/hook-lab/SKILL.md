@@ -23,8 +23,8 @@ request it exists for. `../copy-sweeps/SKILL.md` refuses the same gate for a rel
 habits that replace the brief are different there, because improving a claim someone else made and
 inventing one from nothing are different acts.
 
-**Read the brief when there is one.** Under this vault's filing that is
-`03 Projects/<Project>/_Research/[C] Conversion Brief — *.md`; elsewhere, whichever folder holds the
+**Read the brief when there is one.** That is
+`Conversion Brief — *.md` in your project's research folder; elsewhere, whichever folder holds the
 research. Three lines of it matter here: the **Register**, the ranked **Problems**, and the
 **voice-of-customer** phrases. The last is the one people skip and the one that shows: a hook built
 from customer wording outperforms a hook built from company wording for the mundane reason that the

@@ -330,7 +330,7 @@ class AuditRulingsTest(unittest.TestCase):
     def test_header_line_and_output_paths(self):
         steps = self.steps()
         self.assertIn(self.HEADER, steps[12])
-        for part in ("<project folder>/[C] Conversion Audit — <Page> — <YYYY-MM-DD>.md", "— client.md",
+        for part in ("<project folder>/Conversion Audit — <Page> — <YYYY-MM-DD>.md", "— client.md",
                      "<project folder>/_audit-data/<page-slug>-<YYYY-MM-DD>/", "score.json", "speed.json", "render/",
                      "search.json", "wherever your project keeps audit output", "outputs/"):
             self.assertIn(part, steps[14])
@@ -408,12 +408,15 @@ class CroSkillTests(unittest.TestCase):
         text, fm, body, name, desc = cro_parts()
         self.assertLess(len(body.split()), 500)
 
-    def test_cro_command_table_matches_slice_1(self):
+    def test_cro_command_table_matches_slice_2(self):
         text, fm, body, name, desc = cro_parts()
         words = table_words(body)
         self.assertEqual(words, ["(none)", "audit", "setup", "doctor", "offer", "sweep", "research",
                                  "page", "hero", "wireframe", "vsl", "design", "check", "form",
                                  "data", "compare", "diagnose"])
+        statuses = [line.split("|")[3].strip() for line in body.splitlines()
+                    if line.startswith("| ") and not line.startswith(("| Command", "| ---"))]
+        self.assertEqual(statuses, [row[2] for row in CroRulingsTest.ROWS])
 
     def test_every_routed_file_and_skill_exists(self):
         text, fm, body, name, desc = cro_parts()
@@ -435,9 +438,9 @@ class CroSkillTests(unittest.TestCase):
         # the path after ${CLAUDE_PLUGIN_ROOT}/ exists
         for rule in rules:
             self.assertTrue((ROOT / rule.split("${CLAUDE_PLUGIN_ROOT}/", 1)[1]).is_file(), rule)
-        # the scripts named are exactly setup, doctor, page_facts, render_check, speed_check, score, search_check, client_check
+        # the scripts named are exactly setup, doctor, page_facts, render_check, speed_check, score, search_check, client_check, deck_check
         self.assertEqual(sorted(Path(rule).stem for rule in rules),
-                         sorted(["setup", "doctor", "page_facts", "render_check", "speed_check", "score", "search_check", "client_check"]))
+                         sorted(["setup", "doctor", "page_facts", "render_check", "speed_check", "score", "search_check", "client_check", "deck_check"]))
 
     def test_listing_estimate_within_ceiling(self):
         # sum of len(name)+len(description) over every skills/*/SKILL.md, times 1140/3047, is <= 1350:
@@ -472,35 +475,37 @@ class CroRulingsTest(unittest.TestCase):
     FRONTMATTER = (
         "name: cro\n"
         "description: \"Use when the user types /nca-conversion:cro, asks to audit or score a landing page or homepage, "
-        "says 'audit this page', 'CRO audit' or 'conversion audit', or starts a landing page or site project and wants "
-        "the conversion process.\"\n"
+        "says 'audit this page', 'review my landing page', 'CRO audit', 'conversion audit' or 'why isn't this converting', "
+        "or starts a landing page or site project and wants the conversion process: research, page copy, a hero or a "
+        "hero video script.\"\n"
         "license: MIT\n"
         "allowed-tools: " + " ".join([
             ROOT_RULE + "cro/scripts/setup.py *)", ROOT_RULE + "cro/scripts/doctor.py *)",
             ROOT_RULE + "conversion-page-audit/scripts/page_facts.py *)",
             "Bash(${CLAUDE_PLUGIN_DATA}/venv/bin/python ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/render_check.py *)",
             ROOT_RULE + "cro/scripts/speed_check.py *)", ROOT_RULE + "cro/scripts/score.py *)",
-            ROOT_RULE + "cro/scripts/search_check.py *)", ROOT_RULE + "cro/scripts/client_check.py *)"]) + "\n"
+            ROOT_RULE + "cro/scripts/search_check.py *)", ROOT_RULE + "cro/scripts/client_check.py *)",
+            ROOT_RULE + "cro/scripts/deck_check.py *)"]) + "\n"
         "metadata:\n"
         "  version: " + VERSION + "\n")
     ROWS = [("(none)", "`references/kickoff.md`", "ready"), ("`audit <url>`", "`references/audit.md`", "ready"),
             ("`setup`", "`references/setup.md`", "ready"), ("`doctor`", "`references/setup.md`", "ready"),
             ("`offer`", "the `offer-architect` skill", "ready (v1 skill)"), ("`sweep`", "the `copy-sweeps` skill", "ready (v1 skill)"),
-            ("`research`", "the `audience-research` skill", "v1 engine until slice 2"),
-            ("`page <brief>`", "the `conversion-page-build` skill", "v1 engine until slice 2"),
-            ("`hero`", "the `hook-lab` skill", "v1 engine until slice 2"),
+            ("`research`", "`references/research.md`, with the `audience-research` skill", "ready"),
+            ("`page <brief>`", "`references/page.md`, with the `conversion-page-build` skill", "ready"),
+            ("`hero`", "`references/hero.md`, with the `hook-lab` skill", "ready"),
             ("`wireframe`", "the `design-handoff` skill", "v1 engine until slice 3"),
-            ("`vsl`", "nothing yet", "not built yet, slice 2"), ("`design`", "nothing yet", "not built yet, slice 3"),
-            ("`check`", "nothing yet", "not built yet, slice 3"), ("`form`", "nothing yet", "on the Later list"),
-            ("`data`", "nothing yet", "on the Later list"), ("`compare`", "nothing yet", "on the Later list"),
-            ("`diagnose`", "nothing yet", "on the Later list")]
+            ("`vsl`", "`references/vsl.md`", "ready"), ("`design`", "nothing yet", "not built yet, slice 3"),
+            ("`check`", "nothing yet", "not built yet, slice 3"), ("`form`", "nothing yet", "not built yet, slice 3"),
+            ("`data`", "nothing yet", "not built yet, slice 3"), ("`compare`", "nothing yet", "not built yet, slice 3"),
+            ("`diagnose`", "nothing yet", "not built yet, slice 3")]
     TABLE = "\n".join(["| Command | Goes to | Status |", "| --- | --- | --- |"] + [f"| {a} | {b} | {c} |" for a, b, c in ROWS]) + "\n"
     PHASES = "\n".join([
-        "| Phase | Command | Slice 1 status |", "| --- | --- | --- |",
+        "| Phase | Command | Slice 2 status |", "| --- | --- | --- |",
         "| 0. Decide | `/cro` with no command (this kickoff) | ready |",
-        "| 1. Research | `/cro research` | v1 engine until slice 2; a Search project opens it with keyword research |",
+        "| 1. Research | `/cro research` | ready; a Search project opens it with keyword research |",
         "| 2. Brief and offer | `/cro offer` | ready (v1 skill) |",
-        "| 3. Copy | `/cro page`, `/cro hero` | v1 engines until slice 2 |",
+        "| 3. Copy | `/cro page`, `/cro hero`, `/cro vsl` | ready |",
         "| 4. Wireframe | `/cro wireframe` | v1 engine until slice 3 |",
         "| 5. Style guide | `/cro design` | not built yet, slice 3 |",
         "| 6. Design | `/cro design` | not built yet, slice 3 |",
@@ -529,6 +534,9 @@ class CroRulingsTest(unittest.TestCase):
         self.assertRegex(body, r"(?i)show (the|this) table")
         self.assertEqual(re.findall(r"\$[1-9]", body), [])
         self.assertNotIn(chr(0x2014), body); self.assertNotIn(chr(0x2013), body)
+        self.assertNotIn("Later list", body)
+        self.assertIn("A row that names a reference file and a skill: read and follow the reference file; "
+                      "its steps say when to use the skill.", " ".join(body.split()))
 
     def test_kickoff_parts(self):
         text = KICKOFF.read_text(encoding="utf-8")
@@ -561,6 +569,18 @@ class CroRulingsTest(unittest.TestCase):
             self.assertIn(part, flat)
         self.assertRegex(flat, r"(?i)no form")
         self.assertNotIn(chr(0x2014), section); self.assertNotIn(chr(0x2013), section)
+
+    def test_readme_lists_four_commands_ready_and_the_permissions_command(self):
+        text = README.read_text(encoding="utf-8")
+        start = text.index("\n## Version 2: the front door\n")
+        section = text[start:text.index("\n## ", start + 1)]
+        for word in ("`research`", "`page <brief>`", "`hero`", "`vsl`"):
+            row = next(line for line in section.splitlines() if line.startswith("| " + word + " |"))
+            self.assertTrue(row.endswith("| ready |"), row)
+        sub = section[section.index("### Script permissions last one turn"):]
+        sub = " ".join(sub[:sub.index("\n### ", 5)].split())
+        for part in ("/cro setup --permissions", ".claude/settings.local.json"):
+            self.assertIn(part, sub)
 
     def test_readme_listing_sentence(self):
         flat = " ".join(README.read_text(encoding="utf-8").split())
@@ -844,6 +864,22 @@ class PublicWordingTests(unittest.TestCase):
                 continue
             for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
                 if owner.search(line) or private_skill in line:
+                    hits.append(f"{name}:{number}")
+        self.assertEqual(hits, [])
+
+
+    def test_public_text_names_no_vault_and_no_c_file(self):
+        needles = ("va" + "ult", "03 Pro" + "jects", "_Rese" + "arch", "[" + "C]")
+        files = subprocess.run(["git", "-C", str(ROOT), "ls-files"], capture_output=True, text=True, check=True).stdout.split("\n")
+        hits = []
+        for name in files:
+            if not name or not (name == "README.md" or (name.startswith("skills/") and name.endswith((".md", ".py")))):
+                continue
+            path = ROOT / name
+            if not path.is_file():
+                continue
+            for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if any(n in (line.lower() if n == needles[0] else line) for n in needles):
                     hits.append(f"{name}:{number}")
         self.assertEqual(hits, [])
 

@@ -9,8 +9,8 @@ metadata:
 # Conversion page build
 
 **Nothing gets written before a Conversion Brief exists.** Look for
-`03 Projects/<Project>/_Research/[C] Conversion Brief — *.md` — or your project's research folder if
-you're not running this inside that setup. If none exists, **stop and invoke `audience-research`**
+`Conversion Brief — *.md` in your project's research folder, or wherever your project keeps research.
+If none exists, **stop and invoke `audience-research`**
 rather than guessing the ICP, the ranked objections, or the register. A page built on a guessed
 audience isn't a cheaper version of this skill — it's a different, unreliable skill wearing this
 one's structure, and the brief's own Register section is the one input nothing downstream can
@@ -87,15 +87,14 @@ spec written first tends to lock in a layout the copy then gets bent to fit rath
 ## Before you ship it
 
 If a `humanizer` skill is available in this environment, route the finished copy through it before
-calling the page done. If it isn't installed — a fresh install of this plugin has no vault and no
+calling the page done. If it isn't installed — a fresh install of this plugin has no
 `humanizer` — apply `../copy-sweeps/references/banned-vocabulary.md` to the draft directly instead.
 One of the two always runs; which one depends on what's installed, not on whether either step
 matters.
 
 ## Where the page goes
 
-By convention in this vault, finished page copy lands alongside the brief it was built from —
-`03 Projects/<Project>/_Research/[C] Page Copy — <Page> — <date>.md` — or wherever your project
-keeps drafted copy if you're not running this inside that setup. This skill produces two things:
+Finished page copy is `Page Copy — <Page> — <date>.md`, beside the brief it was built from, or
+wherever your project keeps drafted copy. This skill produces two things:
 the copy itself, and the section spec per section that `design-handoff` consumes. Say where you
 filed the copy; a page nobody can find is not a shipped page.

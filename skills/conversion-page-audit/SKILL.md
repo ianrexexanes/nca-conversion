@@ -37,8 +37,7 @@ before you start finding things.
    reason is under `could_not_check` in `render.json`. Static markup cannot see layout,
    scroll-gated content, consent-gated tags, or anything CSS hides. `references/evidence-rules.md`
    is the full account of what that blindness costs when it gets ignored instead of named.
-4. **Check for a Conversion Brief** at `03 Projects/<Project>/_Research/` — or your project's
-   research folder if you're not running this inside that setup. Use it if present, to check the
+4. **Check for a Conversion Brief** in your project's research folder. Use it if present, to check the
    page's argument and register against real audience research. If it's absent, note that as a
    stated limitation and keep going — a missing brief narrows what you can claim, it never blocks
    the audit.
@@ -62,11 +61,10 @@ before you start finding things.
 
 ## Where the report goes
 
-By convention in this vault, the report lands at
-`03 Projects/<Project>/[C] Conversion Audit — <Page> — <date>.md` — or wherever your project keeps
-audit output if you're not running this inside that setup.
+The report is `Conversion Audit — <Page> — <date>.md`, in your project's folder, or wherever your
+project keeps audit output.
 
 If the `humanizer` skill is available, run the finished report through it before sending it
-anywhere a client will read it. If it isn't installed — a fresh install of this plugin has no vault
-and no `humanizer` — apply `../copy-sweeps/references/banned-vocabulary.md` to the report directly
+anywhere a client will read it. If it isn't installed — a fresh install of this plugin has no
+`humanizer` — apply `../copy-sweeps/references/banned-vocabulary.md` to the report directly
 instead. That step is optional — the audit is complete without it.

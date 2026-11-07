@@ -39,9 +39,8 @@ reasoning doesn't fit in the template margin:
 
 ## Where the brief goes
 
-By convention in this vault, the file lands at
-`03 Projects/<Project>/_Research/[C] Conversion Brief — <Client>.md` — or your project's research
-folder if you're not running this inside that setup.
+The file is `Conversion Brief — <Client>.md`, in your project's research folder, or wherever your
+project keeps research.
 
 ## NOT ESTABLISHED
 

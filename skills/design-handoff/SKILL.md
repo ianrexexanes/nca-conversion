@@ -116,8 +116,7 @@ a proof element the copy promises that does not exist.
 
 ## What this produces
 
-A single handoff document. Under this vault's filing it lands at
-`03 Projects/<Project>/<Page>/[C] Design Handoff — <Page>.md`; anywhere else, wherever the project
+A single handoff document. It is `Design Handoff — <Page>.md`, in the page's folder in your project; anywhere else, wherever the project
 keeps specs. It carries, in this order: the per-section component map, the wireframe brief, the
 refinement spec, and — only where a platform was named — the platform notes that apply to it.
 

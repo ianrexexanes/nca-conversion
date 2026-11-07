@@ -25,17 +25,17 @@ Version 2 adds an eighth skill, `cro`, in front of the seven. Type `/nca-convers
 | `doctor` | `references/setup.md` | ready |
 | `offer` | the `offer-architect` skill | ready (v1 skill) |
 | `sweep` | the `copy-sweeps` skill | ready (v1 skill) |
-| `research` | the `audience-research` skill | v1 engine until slice 2 |
-| `page <brief>` | the `conversion-page-build` skill | v1 engine until slice 2 |
-| `hero` | the `hook-lab` skill | v1 engine until slice 2 |
+| `research` | `references/research.md`, with the `audience-research` skill | ready |
+| `page <brief>` | `references/page.md`, with the `conversion-page-build` skill | ready |
+| `hero` | `references/hero.md`, with the `hook-lab` skill | ready |
 | `wireframe` | the `design-handoff` skill | v1 engine until slice 3 |
-| `vsl` | nothing yet | not built yet, slice 2 |
+| `vsl` | `references/vsl.md` | ready |
 | `design` | nothing yet | not built yet, slice 3 |
 | `check` | nothing yet | not built yet, slice 3 |
-| `form` | nothing yet | on the Later list |
-| `data` | nothing yet | on the Later list |
-| `compare` | nothing yet | on the Later list |
-| `diagnose` | nothing yet | on the Later list |
+| `form` | nothing yet | not built yet, slice 3 |
+| `data` | nothing yet | not built yet, slice 3 |
+| `compare` | nothing yet | not built yet, slice 3 |
+| `diagnose` | nothing yet | not built yet, slice 3 |
 
 ### Setup and the PageSpeed key
 
@@ -55,7 +55,7 @@ The block list errs toward blocking. A few rules match on the path alone, on any
 
 ### Script permissions last one turn
 
-The `cro` skill pre-approves its own scripts through `allowed-tools`, and that approval lasts only for the turn that invokes the skill (see "Pre-approve tools for a skill" at https://code.claude.com/docs/en/skills). When the audit has to ask for the mode, keyword or traffic first, its scripts run in the next turn, and Claude Code asks before each one. To avoid that, give those answers in the command, for example `/nca-conversion:cro audit https://example.com/ mode: Direct; traffic: ads; page role: landing page`.
+The `cro` skill pre-approves its own scripts through `allowed-tools`, and that approval lasts only for the turn that invokes the skill (see "Pre-approve tools for a skill" at https://code.claude.com/docs/en/skills). When the audit has to ask for the mode, keyword or traffic first, its scripts run in the next turn, and Claude Code asks before each one. To avoid that, give those answers in the command, for example `/nca-conversion:cro audit https://example.com/ mode: Direct; traffic: ads; page role: landing page`. To stop those questions, run `/cro setup --permissions`: it prints allow rules for the plugin's scripts, which you merge into the `permissions.allow` list of `.claude/settings.local.json` in your project. The rules name the installed version's folder, so run it again after each `claude plugin update`.
 
 ### Two modes
 
@@ -95,9 +95,7 @@ feeds the handoff. `conversion-page-audit` also works standalone, against a page
 exists, with no Conversion Brief required. `copy-sweeps` and `hook-lab` cross-cut — either can run
 on copy from any stage that needs editing or headline variants, not just at the end.
 
-Several skills mention `03 Projects/<Project>/...` paths. That's the author's own Obsidian vault
-convention, not a requirement of this plugin — every one of those skills also names a fallback
-("or your project's research folder"), so any project folder works.
+Skills that save a file name it after what it holds, such as `Conversion Brief — <Client>.md`, and save it in your project's folder, or wherever your project keeps that kind of file.
 
 `conversion-page-build` and `conversion-page-audit` both mention an optional `humanizer` skill for
 a final pass over reader-facing copy. It isn't part of this plugin; if it isn't installed, both

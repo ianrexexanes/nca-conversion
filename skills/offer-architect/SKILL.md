@@ -14,8 +14,7 @@ produces the thing.
 
 ## Read the brief first, if one exists
 
-Look for `03 Projects/<Project>/_Research/[C] Conversion Brief — *.md`, or your project's research
-folder if you're not running this inside that setup. Three of its sections are inputs here rather
+Look for `Conversion Brief — *.md` in your project's research folder. Three of its sections are inputs here rather
 than things to re-decide: **Register**, the ranked **Objections**, and **Proof available**. Register
 in particular is set once per client and inherited — see `../audience-research/SKILL.md`.
 
@@ -92,8 +91,8 @@ have somewhere specific to aim.
 
 ## What this produces
 
-One document, at `03 Projects/<Project>/_Research/[C] Offer — <Name>.md` by vault convention, or
-your project's research folder otherwise. It carries: the four-variable diagnosis and which variable
+One document, `Offer — <Name>.md`, in your project's research folder, or wherever your project keeps
+research. It carries: the four-variable diagnosis and which variable
 binds, the obstacle-to-solution map, the stack with each line's value provenance, the delivery model
 and why, the pricing analysis with its recommendation flagged as one, the risk-reversal
 recommendation and the alternatives set aside, the name and angle, and the three pitch lengths.

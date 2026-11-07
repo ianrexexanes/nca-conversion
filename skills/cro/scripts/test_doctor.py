@@ -111,5 +111,23 @@ class CompanionsEnabledTest(unittest.TestCase):
         self.addCleanup(empty.cleanup)
         self.addCleanup(os.chdir, os.getcwd())
         os.chdir(empty.name)
-        detail = self._companions([{"id": name + "@x", "enabled": True} for name in doctor.PLUGINS])
+        detail = self._companions([{"id": name + "@x", "enabled": True} for name in doctor.PLUGINS + getattr(doctor, "OPTIONAL", ())])
         self.assertEqual(detail, "missing: humanizer")
+
+    def test_emilkowalski_skills_is_optional(self):
+        self.assertIn("emilkowalski-skills", getattr(doctor, "OPTIONAL", ()))
+        self.assertNotIn("emilkowalski-skills", doctor.PLUGINS)
+        empty = tempfile.TemporaryDirectory()
+        self.addCleanup(empty.cleanup)
+        self.addCleanup(os.chdir, os.getcwd())
+        os.chdir(empty.name)
+        skill = Path(".claude", "skills", "humanizer", "SKILL.md")
+        skill.parent.mkdir(parents=True)
+        skill.write_text("---\nname: humanizer\n---\n", encoding="utf-8")
+        entries = [{"id": name + "@x", "enabled": True} for name in doctor.PLUGINS if name != "emilkowalski-skills"]
+        listing = subprocess.CompletedProcess([], 0, stdout=json.dumps(entries), stderr="")
+        with mock.patch.object(doctor.subprocess, "run", return_value=listing):
+            _, out = run_doctor(["--data-dir", self.tmp.name, "--json"])
+        got = next(r for r in json.loads(out) if r["check"] == "companions")
+        self.assertEqual(got, {"check": "companions", "status": "OK",
+                               "detail": "all present; optional, not on: emilkowalski-skills"})

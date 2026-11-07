@@ -8,7 +8,8 @@ from pathlib import Path
 
 import cro_runtime
 
-PLUGINS = ("ui-ux-pro-max", "taste-skill", "impeccable", "emilkowalski-skills", "hallmark", "frontend-design", "claude-seo")
+PLUGINS = ("ui-ux-pro-max", "taste-skill", "impeccable", "hallmark", "frontend-design", "claude-seo")
+OPTIONAL = ("emilkowalski-skills",)
 SKILLS = ("humanizer",)
 BROWSER_SCRIPT = (
     "from playwright.sync_api import sync_playwright as s\n"
@@ -50,7 +51,10 @@ def check_companions():
     for name in SKILLS:
         if not Path(".claude", "skills", name, "SKILL.md").is_file():
             missing.append(name)
+    optional = [name for name in OPTIONAL if name not in enabled]
     detail = ("missing: " + ", ".join(missing)) if missing else "all present"
+    if optional:
+        detail += "; optional, not on: " + ", ".join(optional)
     return row("companions", "WARN" if missing else "OK", detail)
 
 

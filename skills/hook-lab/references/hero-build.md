@@ -44,8 +44,8 @@ The hero holds two proof slots, both filled from the brief.
 - **`prooftop`.** The first slot. On a Direct page it is a line above the H1: an audience call-out, or the
   strongest proof the brief holds. Set it in the body face, sentence case and untracked, never a pill and
   never tracked capitals. A short line above a heading departs from the common design rule against a small
-  label over a heading, so on a Direct page it is a recorded departure: slice 3's design pass writes it
-  as a ruling line with its reason. On a Search page `prooftop` sits directly under the H1 block (the H1 and
+  label over a heading, so on a Direct page it is a recorded departure: the design step writes it
+  down as a ruling line with its reason. On a Search page `prooftop` sits directly under the H1 block (the H1 and
   its answer-first sentence), so that rule holds and no departure is recorded.
 - **The proof strip.** The second slot, under the button. It carries a second kind of proof, not a repeat of
   `prooftop`: if the first is a rating, the strip can be named clients or a badge, and the other way round.

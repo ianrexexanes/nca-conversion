@@ -1377,6 +1377,11 @@ class Slice2RoundFixesTests(unittest.TestCase):
         self.assertNotIn("reads as thin", text)
         self.assertNotIn("stops being read", text)
 
+    def test_hero_build_names_no_plan_stage(self):
+        text = read("skills", "hook-lab", "references", "hero-build.md")
+        self.assertNotIn("slice", text.casefold())
+        self.assertIn("the design step writes it down as a ruling line with its reason", flat(text))
+
 
 if __name__ == "__main__":
     unittest.main()

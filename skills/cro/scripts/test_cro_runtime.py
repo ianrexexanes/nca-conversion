@@ -1,3 +1,4 @@
+import ast
 import os
 import re
 import stat
@@ -293,6 +294,31 @@ class BlankValuesAndHostlessUrlsTest(unittest.TestCase):
         self.assertIsNotNone(cro_runtime.is_blocked("data:text/javascript,/gtag/js"))
 
 
+BYPASS_CALLS = ("launch", "launch_persistent_context", "connect", "connect_over_cdp", "new_context", "new_page",
+                "new_cdp_session", "route_web_socket", "add_init_script")
+GUARDED = ("guarded_launch", "guarded_context", "guarded_page")
+
+
+def guard_bypasses(source: str, name: str) -> list[str]:
+    """One string per way the script's calls skip the guard. Reads the syntax tree, so spacing and comments do not count."""
+    problems = []
+    called = set()
+    for node in ast.walk(ast.parse(source)):
+        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
+            continue
+        attr, receiver = node.func.attr, ast.unparse(node.func.value)
+        if receiver == "cro_runtime" and attr in GUARDED:
+            called.add(attr)
+        elif attr in BYPASS_CALLS:
+            problems.append("%s: %s.%s() builds its own browser, context or page layer" % (name, receiver, attr))
+        elif attr == "route" and not (name == "form_check.py" and receiver.endswith("page")):
+            problems.append("%s: %s.route() adds a route outside the guard" % (name, receiver))
+    for missing in GUARDED:
+        if missing not in called:
+            problems.append("%s: no call to cro_runtime.%s" % (name, missing))
+    return problems
+
+
 class FakeRoute:
     """A Playwright route that records whether it was continued or aborted."""
 
@@ -331,6 +357,32 @@ class GuardStackTest(unittest.TestCase):
                 self.assertNotIn(banned, text, name)
             self.assertIn("cro_runtime.guarded_launch", text, name)
             self.assertIn("cro_runtime.guarded_context", text, name)
+            self.assertEqual(guard_bypasses(text, name), [], name)
+
+    def test_bypass_check_catches_every_way_around_the_guard(self):
+        clean_calls = ("browser = cro_runtime.guarded_launch(p)\n"
+                       "context = cro_runtime.guarded_context(browser, rec, major=1, width=1, height=1)\n"
+                       "page = cro_runtime.guarded_page(context, rec)\n")
+        planted = {
+            "browser.new_page()": "browser.new_page()",
+            "p.firefox.launch()": "p.firefox.launch()",
+            "launch_persistent_context": "p.chromium.launch_persistent_context(d)",
+            "connect_over_cdp": "p.chromium.connect_over_cdp(u)",
+            "spaced new_context": "browser.new_context ()",
+            "add_init_script": "ctx.add_init_script(s)",
+            "context.route": 'context.route("**/*", h)',
+            "page.route outside form_check": 'page.route("**/*", h)',
+        }
+        for label, line in planted.items():
+            self.assertTrue(guard_bypasses(clean_calls + line + "\n", "render_check.py"), label)
+        comment_only = "# cro_runtime.guarded_page(context, rec)\ncro_runtime.guarded_launch(p)\ncro_runtime.guarded_context(b, r)\n"
+        self.assertTrue(guard_bypasses(comment_only, "render_check.py"), "guarded_page only in a comment")
+        docstring_only = '"""cro_runtime.guarded_page(context, rec)"""\n' + comment_only
+        self.assertTrue(guard_bypasses(docstring_only, "render_check.py"), "guarded_page only in a docstring")
+        clean = clean_calls + "page.route(action, h)\nbrowser.close()\n"
+        self.assertEqual(guard_bypasses(clean, "form_check.py"), [])
+        self.assertEqual(guard_bypasses(clean_calls + "browser.close()\n", "render_check.py"), [])
+        self.assertTrue(guard_bypasses(clean, "render_check.py"))
 
     def test_host_rules_wraps_the_rule_list(self):
         self.assertEqual(cro_runtime.host_rules(), "--host-resolver-rules=" + cro_runtime.host_rule_list())

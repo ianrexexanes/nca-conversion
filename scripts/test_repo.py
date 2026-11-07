@@ -1423,6 +1423,9 @@ class FixWave1Tests(unittest.TestCase):
     def test_page_reads_the_brief_the_command_names(self):
         self.assertIn("the brief the command names", step_of(page, 1))
 
+    def test_kickoff_offers_the_five_traffic_values(self):
+        self.assertIn("6. **Traffic source.** Cold outreach, ads, search, email or mixed?", read("skills", "cro", "references", "kickoff.md"))
+
 
 if __name__ == "__main__":
     unittest.main()

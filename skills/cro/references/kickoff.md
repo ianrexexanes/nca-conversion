@@ -15,7 +15,7 @@ Ask all of these in one message. Skip any the user has already answered.
    Take the mode per page. A group of pages, such as all the service pages, may share one answer.
 4. **Keyword research.** For a Search page: the keyword, its variants, its monthly volume, its difficulty, the tool used and the date it was checked, once per language.
 5. **Offer state.** Is there an offer already, or does it still have to be built?
-6. **Traffic source.** Cold outreach, ads or search?
+6. **Traffic source.** Cold outreach, ads, search, email or mixed?
 7. **Language.** Which languages does the page need? Each is written natively, never translated.
 8. **Deadline.** When does the page have to be live?
 9. **Material on hand.** Existing copy, proof, testimonials, brand files, analytics.

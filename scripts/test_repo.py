@@ -1179,6 +1179,7 @@ audience_skill = read_or_empty("skills", "audience-research", "SKILL.md")
 research_modes = read_or_empty("skills", "audience-research", "references", "research-modes.md")
 research = read_or_empty("skills", "cro", "references", "research.md")
 hero = read_or_empty("skills", "cro", "references", "hero.md")
+page = read_or_empty("skills", "cro", "references", "page.md")
 
 
 def step_of(text, n):
@@ -1260,6 +1261,26 @@ class HeroCommandTests(unittest.TestCase):
         self.assertIn("humanizer", hero)
         self.assertIn("banned-vocabulary.md", hero)
         self.assertIn("German copy is flagged for the user's own check", flat(hero))
+
+
+class PageCommandTests(unittest.TestCase):
+    def test_page_asks_mode_traffic_and_awareness_first(self):
+        for part in ("mode", "traffic", "awareness"):
+            self.assertIn(part, step_of(page, 1))
+        self.assertIn("separate from the mode", page)
+
+    def test_page_picks_the_skeleton_and_order(self):
+        for part in ("Skeleton by awareness", "The long-form order", "pain comes before proof", "proof comes before pain"):
+            self.assertIn(part, page)
+
+    def test_page_writes_the_hero_through_hero_md(self):
+        self.assertIn("references/hero.md", page)
+
+    def test_page_rules(self):
+        for part in ("never more than one section away from the button", "every button leads to the same place",
+                     "names its visual", "mini hero", "no menu", "FAQPage schema", "faq.q1", "answer-first sentence",
+                     "deck_check.py", "/nca-conversion:cro sweep", "German copy is flagged for the user's own check"):
+            self.assertIn(part, flat(page))
 
 
 if __name__ == "__main__":

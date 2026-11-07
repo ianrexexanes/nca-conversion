@@ -1322,6 +1322,10 @@ class PageCommandTests(unittest.TestCase):
     def test_page_asks_mode_traffic_and_awareness_first(self):
         for part in ("mode", "traffic", "awareness"):
             self.assertIn(part, step_of(page, 1))
+        step = step_of(page, 1)
+        asked = step[step.index("Ask once"):]
+        self.assertLess(asked.index("the mode"), asked.index("the traffic"))
+        self.assertLess(asked.index("the traffic"), asked.index("the awareness"))
         self.assertIn("separate from the mode", page)
 
     def test_page_picks_the_skeleton_and_order(self):

@@ -1,4 +1,5 @@
-"""Shared constants and helpers for the /cro scripts. Standard library only."""
+"""Shared constants, helpers and the browser guard for the /cro scripts. Standard library only at import:
+Playwright is imported inside guarded_launch, so the system-Python scripts can import this module."""
 import os
 import re
 import stat
@@ -8,6 +9,25 @@ from urllib.parse import urlsplit
 PLAYWRIGHT_VERSION = "1.62.0"
 KEY_ENV = "NCA_PAGESPEED_KEY"
 KEY_FILE = Path.home() / ".config" / "nca-conversion" / "pagespeed.key"
+ALLOWED_METHODS = ("GET", "HEAD", "OPTIONS")
+OWN_ABORTS = ("net::ERR_FAILED", "net::ERR_BLOCKED_BY_CLIENT")
+
+# Registers first, in the capture phase, so teardown handlers never run; no worker runs.
+INIT_SCRIPT = """
+(() => {
+  for (const type of ['beforeunload', 'pagehide', 'unload', 'visibilitychange', 'freeze', 'pageswap']) {
+    window.addEventListener(type, (event) => event.stopImmediatePropagation(), true);
+  }
+  delete window.SharedWorker;
+  window.Worker = class {
+    postMessage() {}
+    terminate() {}
+    addEventListener() {}
+    removeEventListener() {}
+    dispatchEvent() { return false; }
+  };
+})();
+"""
 
 BLOCKED_HOSTS: tuple[str, ...] = (
     "google-analytics.com",  # https://developers.google.com/tag-platform/gtagjs
@@ -113,6 +133,146 @@ def is_blocked(url: str) -> str | None:
 
 def lighthouse_block_patterns() -> list[str]:
     return ["*" + suffix + "*" for suffix in BLOCKED_HOSTS] + list(_PATH_GLOBS)
+
+
+def host_rule_list() -> str:
+    """The Chromium host-resolver rules alone, as speed_check.py quotes them inside its own flag."""
+    mapped = []
+    for suffix in BLOCKED_HOSTS:
+        mapped.append("MAP %s ~NOTFOUND" % suffix)
+        mapped.append("MAP *.%s ~NOTFOUND" % suffix)
+    return ", ".join(mapped)
+
+
+def host_rules() -> str:
+    return "--host-resolver-rules=" + host_rule_list()
+
+
+class Recorder:
+    """Every request of the run, keyed by request object so nothing is logged twice.
+
+    With allow_post_host, the first non-GET request to that host continues and is logged "consented";
+    any later one to it is aborted with rule "consent:used". Every other non-GET request is aborted.
+    """
+
+    def __init__(self, allow_post_host: str | None = None):
+        self.entries = []
+        self.by_request = {}
+        self.errors = []
+        self.allow_post_host = allow_post_host.lower() if allow_post_host else None
+        self.consent_used = False
+
+    def entry(self, request):
+        found = self.by_request.get(request)
+        if found is None:
+            found = {"url": request.url, "method": request.method, "resource_type": request.resource_type,
+                     "outcome": None, "rule": None, "status": None}
+            self.by_request[request] = found
+            self.entries.append(found)
+        return found
+
+    def on_request(self, request):
+        self.entry(request)
+
+    def on_response(self, response):
+        self.entry(response.request)["status"] = response.status
+
+    def on_finished(self, request):
+        found = self.entry(request)
+        if found["outcome"] is None:
+            found["outcome"] = "completed"
+
+    def on_failed(self, request):
+        found = self.entry(request)
+        if found["outcome"] is not None:
+            return
+        rule = is_blocked(request.url)
+        found["outcome"], found["rule"] = ("blocked", rule) if rule else ("failed", None)
+
+    def on_route(self, route):
+        request = route.request
+        rule = is_blocked(request.url)
+        if rule is None and request.method not in ALLOWED_METHODS:
+            if self.allow_post_host and (urlsplit(request.url).hostname or "").lower() == self.allow_post_host:
+                if not self.consent_used:
+                    self.consent_used = True
+                    self.entry(request)["outcome"] = "consented"
+                    route.continue_()
+                    return
+                rule = "consent:used"
+            else:
+                rule = "method:" + request.method
+        if rule is None:
+            route.continue_()
+            return
+        found = self.entry(request)
+        found["outcome"], found["rule"] = "blocked", rule
+        route.abort()
+
+    def on_socket(self, socket):
+        self.entries.append({"url": socket.url, "method": "GET", "resource_type": "websocket",
+                             "outcome": "blocked", "rule": "websocket", "status": None})
+
+    def on_console(self, message):
+        if message.type == "error" and not any(own in message.text for own in OWN_ABORTS):
+            self.add_error(message.text)
+
+    def add_error(self, text):
+        if text not in self.errors:
+            self.errors.append(text)
+
+    def finish(self):
+        for found in self.entries:
+            if found["outcome"] is None:
+                found["outcome"] = "failed"
+        return self.entries
+
+
+def guarded_launch(playwright):
+    """Headless Chrome, else the bundled Chromium, with the DNS host rules on. Close it last, with browser.close()."""
+    options = {
+        "headless": True,
+        "args": [host_rules(), "--disable-site-isolation-trials"],
+        "ignore_default_args": ["--disable-popup-blocking"],
+    }
+    from playwright.sync_api import Error as PlaywrightError
+    try:
+        return playwright.chromium.launch(channel="chrome", **options)
+    except PlaywrightError:
+        return playwright.chromium.launch(**options)
+
+
+def guarded_context(browser, recorder, *, major, width, height, mobile=False, reduced_motion=None):
+    """One context with the teardown init script, the URL and WebSocket routes and the request events.
+    Contexts are never closed: browser.close() ends them."""
+    context = browser.new_context(
+        viewport={"width": width, "height": height},
+        user_agent=chrome_ua(major, mobile=mobile),
+        is_mobile=mobile,
+        has_touch=mobile,
+        device_scale_factor=3 if mobile else 1,
+        reduced_motion=reduced_motion,
+        service_workers="block",
+    )
+    context.add_init_script(INIT_SCRIPT)
+    context.route("**/*", recorder.on_route)
+    context.route_web_socket(re.compile(".*"), recorder.on_socket)
+    context.on("request", recorder.on_request)
+    context.on("response", recorder.on_response)
+    context.on("requestfinished", recorder.on_finished)
+    context.on("requestfailed", recorder.on_failed)
+    return context
+
+
+def guarded_page(context, recorder):
+    """A page with the console and page-error hooks and the CDP URL block, the layer Lighthouse's patterns share."""
+    page = context.new_page()
+    page.on("console", recorder.on_console)
+    page.on("pageerror", lambda error: recorder.add_error(str(error)))
+    session = context.new_cdp_session(page)
+    session.send("Network.enable")
+    session.send("Network.setBlockedURLs", {"urls": lighthouse_block_patterns()})
+    return page
 
 
 def pagespeed_key() -> tuple[str | None, str]:

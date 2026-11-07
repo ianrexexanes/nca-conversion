@@ -100,14 +100,10 @@ def pagespeed(url, strategy, key):
     return values
 
 
-def host_rules():
-    return ", ".join("MAP %s ~NOTFOUND, MAP *.%s ~NOTFOUND" % (s, s) for s in cro_runtime.BLOCKED_HOSTS)
-
-
 def lighthouse_command(url, strategy):
     args = ["npx", "--yes", "lighthouse@" + LIGHTHOUSE_VERSION, url, "--output=json", "--output-path=stdout",
             "--quiet", "--only-categories=performance",
-            '--chrome-flags=--headless=new --host-resolver-rules="%s"' % host_rules(),
+            '--chrome-flags=--headless=new --host-resolver-rules="%s"' % cro_runtime.host_rule_list(),
             "--skip-audits=bf-cache"]
     if strategy == "desktop":
         args.append("--preset=desktop")

@@ -1,6 +1,8 @@
 import os
 import re
 import stat
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,6 +10,8 @@ from unittest import mock
 from urllib.parse import urlsplit
 
 import cro_runtime
+
+HERE = Path(__file__).resolve().parent
 
 
 def chrome_pattern_blocks(pattern: str, url: str) -> bool:
@@ -287,3 +291,46 @@ class BlankValuesAndHostlessUrlsTest(unittest.TestCase):
         self.assertIsNone(cro_runtime.is_blocked("data:text/plain,hello"))
         self.assertIsNone(cro_runtime.is_blocked("about:blank"))
         self.assertIsNotNone(cro_runtime.is_blocked("data:text/javascript,/gtag/js"))
+
+
+class FakeRoute:
+    """A Playwright route that records whether it was continued or aborted."""
+
+    def __init__(self, method, url, resource_type="fetch"):
+        self.request = type("Request", (), {"url": url, "method": method, "resource_type": resource_type})()
+        self.action = None
+
+    def continue_(self):
+        self.action = "continue"
+
+    def abort(self):
+        self.action = "abort"
+
+
+class GuardStackTest(unittest.TestCase):
+    def test_cro_runtime_imports_without_playwright(self):
+        code = "import sys; sys.modules['playwright'] = None; sys.path.insert(0, %r); import cro_runtime" % str(HERE)
+        self.assertEqual(subprocess.run([sys.executable, "-I", "-c", code]).returncode, 0)
+
+    def test_recorder_allows_one_consented_post_to_its_host_only(self):
+        rec = cro_runtime.Recorder(allow_post_host="forms.example.test")
+        first, second, other = (FakeRoute("POST", "https://forms.example.test/f"), FakeRoute("POST", "https://forms.example.test/f"),
+                                FakeRoute("POST", "https://other.example.test/f"))
+        for r in (first, second, other):
+            rec.on_route(r)
+        self.assertEqual((first.action, second.action, other.action), ("continue", "abort", "abort"))
+        self.assertEqual([e["outcome"] for e in rec.entries if e["method"] == "POST"], ["consented", "blocked", "blocked"])
+
+    def test_no_rendered_script_builds_its_own_browser_or_context(self):
+        for name in ("render_check.py", "launch_render.py", "form_check.py", "form_consent.py"):
+            path = HERE / name
+            if not path.exists():
+                continue
+            text = path.read_text(encoding="utf-8")
+            for banned in ("chromium.launch", "new_context(", "route_web_socket(", "new_cdp_session(", "context.route("):
+                self.assertNotIn(banned, text, name)
+            self.assertIn("cro_runtime.guarded_launch", text, name)
+            self.assertIn("cro_runtime.guarded_context", text, name)
+
+    def test_host_rules_wraps_the_rule_list(self):
+        self.assertEqual(cro_runtime.host_rules(), "--host-resolver-rules=" + cro_runtime.host_rule_list())

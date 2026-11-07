@@ -11,7 +11,6 @@ Exit 0 when the page rendered, 3 when it could not load, 2 on bad arguments.
 """
 import argparse
 import json
-import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -28,26 +27,6 @@ VIEWPORTS = (
     ("desktop", 1440, 900, False),
     ("phone", 390, 844, True),
 )
-ALLOWED_METHODS = ("GET", "HEAD", "OPTIONS")
-OWN_ABORTS = ("net::ERR_FAILED", "net::ERR_BLOCKED_BY_CLIENT")
-
-# Registers first, in the capture phase, so teardown handlers never run; no worker runs.
-INIT_SCRIPT = """
-(() => {
-  for (const type of ['beforeunload', 'pagehide', 'unload', 'visibilitychange', 'freeze', 'pageswap']) {
-    window.addEventListener(type, (event) => event.stopImmediatePropagation(), true);
-  }
-  delete window.SharedWorker;
-  window.Worker = class {
-    postMessage() {}
-    terminate() {}
-    addEventListener() {}
-    removeEventListener() {}
-    dispatchEvent() { return false; }
-  };
-})();
-"""
-
 READ_PAGE = """
 (fold) => {
   const doc = document.documentElement;
@@ -97,108 +76,15 @@ READ_PAGE = """
 """
 
 
-def host_rules() -> str:
-    mapped = []
-    for suffix in cro_runtime.BLOCKED_HOSTS:
-        mapped.append("MAP %s ~NOTFOUND" % suffix)
-        mapped.append("MAP *.%s ~NOTFOUND" % suffix)
-    return "--host-resolver-rules=" + ", ".join(mapped)
-
-
 def first_line(error) -> str:
     lines = str(error).strip().splitlines()
     return lines[0] if lines else error.__class__.__name__
 
 
-class Recorder:
-    """Every request of the run, keyed by request object so nothing is logged twice."""
-
-    def __init__(self):
-        self.entries = []
-        self.by_request = {}
-        self.errors = []
-
-    def entry(self, request):
-        found = self.by_request.get(request)
-        if found is None:
-            found = {"url": request.url, "method": request.method, "resource_type": request.resource_type,
-                     "outcome": None, "rule": None, "status": None}
-            self.by_request[request] = found
-            self.entries.append(found)
-        return found
-
-    def on_request(self, request):
-        self.entry(request)
-
-    def on_response(self, response):
-        self.entry(response.request)["status"] = response.status
-
-    def on_finished(self, request):
-        found = self.entry(request)
-        if found["outcome"] is None:
-            found["outcome"] = "completed"
-
-    def on_failed(self, request):
-        found = self.entry(request)
-        if found["outcome"] is not None:
-            return
-        rule = cro_runtime.is_blocked(request.url)
-        found["outcome"], found["rule"] = ("blocked", rule) if rule else ("failed", None)
-
-    def on_route(self, route):
-        request = route.request
-        rule = cro_runtime.is_blocked(request.url)
-        if rule is None and request.method not in ALLOWED_METHODS:
-            rule = "method:" + request.method
-        if rule is None:
-            route.continue_()
-            return
-        found = self.entry(request)
-        found["outcome"], found["rule"] = "blocked", rule
-        route.abort()
-
-    def on_socket(self, socket):
-        self.entries.append({"url": socket.url, "method": "GET", "resource_type": "websocket",
-                             "outcome": "blocked", "rule": "websocket", "status": None})
-
-    def on_console(self, message):
-        if message.type == "error" and not any(own in message.text for own in OWN_ABORTS):
-            self.add_error(message.text)
-
-    def add_error(self, text):
-        if text not in self.errors:
-            self.errors.append(text)
-
-    def finish(self):
-        for found in self.entries:
-            if found["outcome"] is None:
-                found["outcome"] = "failed"
-        return self.entries
-
-
 def read_pass(recorder, browser, major, name, width, height, mobile, timeout_ms, out):
     """One viewport pass in its own context. Contexts are never closed: browser.close() ends them."""
-    context = browser.new_context(
-        viewport={"width": width, "height": height},
-        user_agent=cro_runtime.chrome_ua(major, mobile=mobile),
-        is_mobile=mobile,
-        has_touch=mobile,
-        device_scale_factor=3 if mobile else 1,
-        service_workers="block",
-    )
-    context.add_init_script(INIT_SCRIPT)
-    context.route("**/*", recorder.on_route)
-    context.route_web_socket(re.compile(".*"), recorder.on_socket)
-    context.on("request", recorder.on_request)
-    context.on("response", recorder.on_response)
-    context.on("requestfinished", recorder.on_finished)
-    context.on("requestfailed", recorder.on_failed)
-    page = context.new_page()
-    page.on("console", recorder.on_console)
-    page.on("pageerror", lambda error: recorder.add_error(str(error)))
-    session = context.new_cdp_session(page)
-    session.send("Network.enable")
-    session.send("Network.setBlockedURLs", {"urls": cro_runtime.lighthouse_block_patterns()})
+    context = cro_runtime.guarded_context(browser, recorder, major=major, width=width, height=height, mobile=mobile)
+    page = cro_runtime.guarded_page(context, recorder)
     # domcontentloaded, not load: one file that never arrives must not cost the whole view.
     # Then the load event gets a third of the timeout, 15 s at most, and the pass carries on without it.
     response = page.goto(out["url"], wait_until="domcontentloaded", timeout=timeout_ms)
@@ -232,18 +118,6 @@ def read_pass(recorder, browser, major, name, width, height, mobile, timeout_ms,
     return result
 
 
-def launch(playwright):
-    options = {
-        "headless": True,
-        "args": [host_rules(), "--disable-site-isolation-trials"],
-        "ignore_default_args": ["--disable-popup-blocking"],
-    }
-    try:
-        return playwright.chromium.launch(channel="chrome", **options)
-    except PlaywrightError:
-        return playwright.chromium.launch(**options)
-
-
 WORKERS_NOTE = ("Web workers are off in this capture, so a map, video or 3D viewer can look blank here "
                 "while it shows for a visitor.")
 
@@ -264,7 +138,7 @@ def main(argv=None):
     except OSError as error:
         parser.error("cannot create --out: %s" % error)
 
-    recorder = Recorder()
+    recorder = cro_runtime.Recorder()
     render = {"url": args.url, "final_url": None, "checked_at": datetime.now(timezone.utc).isoformat(),
               "user_agent": None, "status": None, "viewports": {}, "blocked": [], "errors": [],
               "could_not_check": [], "notes": [WORKERS_NOTE]}
@@ -273,7 +147,7 @@ def main(argv=None):
     browser = None
     try:
         try:
-            browser = launch(playwright)
+            browser = cro_runtime.guarded_launch(playwright)
             major = int(browser.version.split(".")[0])
             render["user_agent"] = cro_runtime.chrome_ua(major)
             for name, width, height, mobile in VIEWPORTS:

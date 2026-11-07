@@ -122,6 +122,8 @@ GENERIC_LABELS = frozenset({
     "iscriviti", "acquista", "compra", "maggiori informazioni", "contattateci",
 })
 GAP = re.compile(r"\[NEEDED:[^\]]*\]|\[[A-Z][A-Z0-9 _-]*(?::[^\]]*)?\]|NOT ESTABLISHED")
+# What stops a final deck: a named gap. A bracketed capital word with no colon (`[PDF]`, `[EU]`) is real copy: a WARN.
+NAMED_GAP = re.compile(r"\[NEEDED:|NOT ESTABLISHED|\[[A-Z][A-Z0-9 _-]*:")
 STOCK = re.compile(r"\bstock\b", re.I)
 NOTE_LINE = re.compile(r"^- [^:]+: .+, because .+\.$")
 NOTE_NONE = "- None: the register changed no rule."
@@ -364,9 +366,10 @@ def check_namespace(deck, ns, part, final, add):
                 add("FAIL", ns, "SEARCH_PLACEMENT", "no H2 carries the keyword or a named variant")
     # PLACEHOLDER
     for k in keys:
-        m = GAP.search(values[k])
-        if m:
-            add("FAIL" if final else "WARN", k, "PLACEHOLDER", "gap left open: %s" % m.group(0))
+        found = [m.group(0) for m in GAP.finditer(values[k])]
+        if found:
+            named = next((g for g in found if NAMED_GAP.match(g)), None)
+            add("FAIL" if final and named else "WARN", k, "PLACEHOLDER", "gap left open: %s" % (named or found[0]))
 
 
 def main(argv=None):

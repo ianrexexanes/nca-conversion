@@ -302,9 +302,25 @@ class DeckCheckTest(unittest.TestCase):
         deck = with_line(read("deck-clean-direct.md"), "p.hero.strip", "[OWNER: reply time]")
         self.assertEqual(level_of("PLACEHOLDER", deck), "WARN")
         self.assertEqual(level_of("PLACEHOLDER", deck, final=True), "FAIL")
-        self.assertEqual(level_of("PLACEHOLDER", with_line(read("deck-clean-direct.md"), "p.hero.strip", "[OWNER]"), final=True), "FAIL")
         self.assertIsNone(level_of("PLACEHOLDER", with_line(read("deck-clean-direct.md"), "p.hero.strip", "See [below] for terms")))
         self.assertEqual([f[1] for f in findings(deck) if f[2] == "PLACEHOLDER"], ["p.hero.strip"])
+
+    def test_a_bracketed_capital_word_without_a_colon_only_warns(self):
+        for label in ("[PDF]", "[EU]", "[B]", "[OWNER]"):
+            deck = with_line(read("deck-clean-direct.md"), "p.hero.strip", "Download the checklist " + label)
+            self.assertEqual(level_of("PLACEHOLDER", deck), "WARN", label)
+            self.assertEqual(level_of("PLACEHOLDER", deck, final=True), "WARN", label)
+            self.assertNotIn("PLACEHOLDER", fails(deck, final=True), label)
+
+    def test_a_named_gap_still_fails_with_final(self):
+        for gap in ("[NEEDED: a logo]", "[OWNER: reply time]", "NOT ESTABLISHED"):
+            deck = with_line(read("deck-clean-direct.md"), "p.hero.strip", "Trusted by " + gap)
+            self.assertEqual(level_of("PLACEHOLDER", deck), "WARN", gap)
+            self.assertEqual(level_of("PLACEHOLDER", deck, final=True), "FAIL", gap)
+
+    def test_a_named_gap_after_a_soft_one_still_fails_with_final(self):
+        deck = with_line(read("deck-clean-direct.md"), "p.hero.strip", "The [PDF] from [NEEDED: a source]")
+        self.assertEqual(level_of("PLACEHOLDER", deck, final=True), "FAIL")
 
     def test_not_established_counts_as_a_gap(self):
         deck = with_line(read("deck-clean-direct.md"), "p.hero.h1", "NOT ESTABLISHED: a figure from the brief")

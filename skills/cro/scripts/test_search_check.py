@@ -258,6 +258,13 @@ class RulingsTest(unittest.TestCase):
         self.assertEqual(result["headings_scope"], "whole page (no footer element found)")
         self.assertEqual(result["headings"]["h2"]["total"], 3)
 
+    def test_article_footer_page_counts_whole_page_and_says_so(self):
+        html = ('<title>Payroll</title><article><h1>Payroll</h1><footer>by me</footer></article><h2>Plans</h2>'
+                '<div class="footer"><h2>Contact</h2></div>')
+        result = check_html(html)
+        self.assertEqual(result["headings_scope"], "whole page (no footer element found)")
+        self.assertEqual(result["headings"]["h2"]["total"], 2)
+
     def test_footer_h2_never_satisfies_the_h2_placement(self):
         html = ('<title>Payroll software</title><h1>Payroll software for restaurants</h1><h2>Plans</h2>'
                 '<footer><h2>Payroll software</h2></footer>')

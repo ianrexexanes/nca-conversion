@@ -241,6 +241,38 @@ class FetchHelpersTest(unittest.TestCase):
         self.assertTrue(facts["has_footer"])
         self.assertFalse(page_facts.extract_facts("<h2>Top</h2>")["has_footer"])
 
+    def test_a_footer_inside_an_article_is_not_the_page_footer(self):
+        html = '<article><h1>T</h1><footer>by me</footer></article><h2>body</h2><div class="footer"><h2>realfooter</h2></div>'
+        facts = page_facts.extract_facts(html)
+        self.assertFalse(facts["has_footer"])
+        self.assertEqual([h["in_footer"] for h in facts["headings"]], [False, False, False])
+
+    def test_a_footer_after_main_is_the_page_footer(self):
+        html = '<main><h1>T</h1><h2>a</h2></main><footer><h2>f</h2></footer>'
+        facts = page_facts.extract_facts(html)
+        self.assertTrue(facts["has_footer"])
+        self.assertEqual([(h["text"], h["in_footer"]) for h in facts["headings"]], [("T", False), ("a", False), ("f", True)])
+
+    def test_a_footer_inside_main_or_sectioning_content_is_not_the_page_footer(self):
+        for wrap in ('<div role="region">', '<div role="main">', '<section>', '<aside>', '<nav>', '<main>',
+                     '<div role="article">', '<div role="complementary">', '<div role="navigation">'):
+            end = "</" + wrap[1:wrap.index(" ") if " " in wrap else -1] + ">"
+            facts = page_facts.extract_facts(wrap + "<footer><h2>f</h2></footer>" + end)
+            self.assertFalse(facts["has_footer"], wrap)
+            self.assertEqual([h["in_footer"] for h in facts["headings"]], [False], wrap)
+
+    def test_contentinfo_role_opens_the_footer_wherever_it_is(self):
+        facts = page_facts.extract_facts('<section><div role="contentinfo"><h2>c</h2></div></section>')
+        self.assertTrue(facts["has_footer"])
+        self.assertEqual([h["in_footer"] for h in facts["headings"]], [True])
+
+    def test_a_footer_in_a_blockquote_is_still_a_footer(self):
+        self.assertTrue(page_facts.extract_facts("<blockquote><footer>x</footer></blockquote>")["has_footer"])
+
+    def test_the_excluding_ancestor_closes_with_its_own_end_tag(self):
+        facts = page_facts.extract_facts('<div role="region"><p>x</div><footer><h2>f</h2></footer>')
+        self.assertTrue(facts["has_footer"])
+
     def test_unclosed_tag_inside_the_footer_closes_with_it(self):
         html = '<footer><p>Imprint<h2>Company</h2></footer><h2>After</h2>'
         self.assertEqual([h["in_footer"] for h in page_facts.extract_facts(html)["headings"]], [True, False])

@@ -970,6 +970,12 @@ class HeroBuildTests(unittest.TestCase):
                      "body face", "sentence case", "never a pill", "[NEEDED:", "never invent", "recorded departure"):
             self.assertIn(part, flat(hero_section(3)))
 
+    def test_call_out_above_the_h1_leaves_the_strip_two_kinds_of_proof(self):
+        self.assertIn("`prooftop` holds an audience call-out above the H1, the proof strip under the button carries "
+                      "two kinds of proof", flat(hero_section(3)))
+        self.assertIn("`prooftop` holds an audience call-out above the H1, the proof strip under the button carries "
+                      "two kinds of proof", flat(hero))
+
     def test_button_rule(self):
         for part in ("what the reader gets", "the concrete next step", "the seller's own name for the offer",
                      "so what", "two to five words", "six or seven", "first person", "what is free",

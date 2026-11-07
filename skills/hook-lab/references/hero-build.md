@@ -49,6 +49,8 @@ The hero holds two proof slots, both filled from the brief.
   its answer-first sentence), so that rule holds and no departure is recorded.
 - **The proof strip.** The second slot, under the button. It carries a second kind of proof, not a repeat of
   `prooftop`: if the first is a rating, the strip can be named clients or a badge, and the other way round.
+  When `prooftop` holds an audience call-out above the H1, the proof strip under the button carries two kinds
+  of proof, so the hero still shows at least two kinds of verifiable proof above the fold.
 
 Both come from the brief. An empty slot holds `[NEEDED: <what the brief must supply>]` and the output
 reports it. The rule is to never invent proof to fill a slot: no rating, count, name, logo or quote that the

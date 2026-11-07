@@ -309,5 +309,18 @@ class RulingsTest(unittest.TestCase):
         self.assertEqual(keys[keys.index("headings") + 1], "headings_scope")
 
 
+class PageTextTests(unittest.TestCase):
+    def test_page_text_keeps_nav_and_footer(self):
+        html = ("<html><head><title>Title words</title><style>.x{}</style></head><body><nav><a href='#'>Menu label</a></nav>"
+                "<main><p>Body line.</p></main><footer><p>Footer line.</p></footer><script>var a = 1;</script></body></html>")
+        text = search_check.page_text(html)
+        self.assertEqual(text, "Menu label Body line. Footer line.")
+        self.assertEqual(search_check.visible_text(html), "Body line.")
+
+    def test_page_text_reads_a_footer_inside_a_section_too(self):
+        html = "<section><p>Body.</p><footer>Card footer</footer></section><footer role='contentinfo'>Page footer</footer>"
+        self.assertEqual(search_check.page_text(html), "Body. Card footer Page footer")
+
+
 if __name__ == "__main__":
     unittest.main()

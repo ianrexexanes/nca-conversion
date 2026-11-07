@@ -1622,6 +1622,58 @@ class DesignTests(unittest.TestCase):
         self.assertNotIn("Emil", self.text)
 
 
+class CheckTests(unittest.TestCase):
+    def setUp(self):
+        self.raw = read_or_empty("skills", "cro", "references", "check.md")
+        self.text = flat(self.raw)
+
+    def steps(self):
+        return [(int(m.group(1)), flat(m.group(2))) for m in re.finditer(r"^(\d+)\. (.*(?:\n(?!\d+\. |\n).*)*)", self.raw, re.M)]
+
+    def test_it_opens_with_the_paths_note(self):
+        self.assertRegex(self.text, r"This is the procedure `/cro check` follows\. It writes the plugin's folder as `\$\{CLAUDE_PLUGIN_ROOT\}`")
+
+    def test_it_names_every_gate_in_order_with_its_invocation(self):
+        gates = ("deck_check.py", "client_check.py", "site_check.py", "asset_text_check.py", "redirect_check.py", "launch_render.py",
+                 "search_check.py", "speed_check.py", "/nca-conversion:cro form")
+        first = [next((n for n, body in self.steps() if gate in body), None) for gate in gates]
+        self.assertNotIn(None, first, list(zip(gates, first)))
+        self.assertEqual(first, sorted(first))
+        for part in ("--final", "--visible-text", "--dist", "--url", "--deck", "--map", "--pages", "--forbid", "--dir", "--cases"):
+            self.assertIn(part, self.text)
+
+    def test_the_copy_gate_comes_first_and_runs_the_deck_check_before_the_client_check(self):
+        steps = self.steps()
+        self.assertTrue(steps)
+        self.assertIn("deck_check.py", steps[0][1])
+        self.assertLess(steps[0][1].index("deck_check.py"), steps[0][1].index("client_check.py"))
+        self.assertIn("deck_check.py", self.text.split("client_check.py")[0])
+        self.assertIn("--visible-text", steps[0][1] + " " + steps[1][1])
+
+    def test_it_cites_the_pages_the_noindex_rule_rests_on(self):
+        for url in ("developers.google.com/search/docs/crawling-indexing/block-indexing",
+                    "developers.google.com/search/docs/crawling-indexing/google-special-case-crawlers", "support.google.com/google-ads",
+                    "support.google.com/adspolicy"):
+            self.assertIn(url, self.text)
+        self.assertIn("UNVERIFIED", self.text)
+
+    def test_it_names_emils_skills_as_an_optional_review_of_motion(self):
+        paragraphs = re.split(r"\n\s*\n", self.raw)
+        self.assertTrue(any("Emil" in p and "optional" in p.lower() and "motion" in p.lower() and "design principle" in p.lower()
+                            for p in (flat(q) for q in paragraphs)) or any(
+            "Emil" in body and "optional" in body.lower() and "motion" in body.lower() for _, body in self.steps()))
+
+    def test_it_reports_one_row_per_gate_with_pass_fail_or_skipped(self):
+        for word in ("PASS", "FAIL", "SKIPPED"):
+            self.assertIn(word, self.raw)
+        self.assertRegex(self.text, r"one (report )?row (for|per) (each|every) gate")
+
+    def test_the_gates_it_names_exist(self):
+        for name in ("site_check.py", "asset_text_check.py", "redirect_check.py", "deck_check.py", "client_check.py", "search_check.py",
+                     "speed_check.py"):
+            self.assertTrue((ROOT / "skills" / "cro" / "scripts" / name).is_file(), name)
+
+
 if __name__ == "__main__":
     unittest.main()
 

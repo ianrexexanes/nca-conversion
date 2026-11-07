@@ -60,11 +60,12 @@ class _Text(HTMLParser):
     """Visible text nodes, in order, plus the text that follows the first h1.
 
     Text inside the page footer, as page_facts.FooterScope scopes it, is never read: it holds no node, no h1
-    and no heading that ends the text after the h1."""
+    and no heading that ends the text after the h1. With keep_footer the footer is tracked but read like any other text."""
 
-    def __init__(self, skip):
+    def __init__(self, skip, keep_footer=False):
         super().__init__(convert_charrefs=True)
         self.skip = skip
+        self.keep_footer = keep_footer
         self.stack = []
         self.footer = FooterScope()
         self.nodes = []
@@ -74,7 +75,7 @@ class _Text(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         self.footer.start(tag, dict(attrs))
-        if self.footer.inside:
+        if self.footer.inside and not self.keep_footer:
             if tag not in VOID:
                 self.stack.append(tag)
             return
@@ -103,15 +104,15 @@ class _Text(HTMLParser):
             self.h1_state = "after"
 
     def handle_data(self, data):
-        if self.footer.inside or any(tag in self.skip for tag in self.stack):
+        if (self.footer.inside and not self.keep_footer) or any(tag in self.skip for tag in self.stack):
             return
         self.nodes.append(data)
         if self.h1_state == "after":
             self.after.append(data)
 
 
-def _parse(html, skip):
-    parser = _Text(skip)
+def _parse(html, skip, keep_footer=False):
+    parser = _Text(skip, keep_footer)
     parser.feed(html)
     parser.close()
     return parser
@@ -119,6 +120,11 @@ def _parse(html, skip):
 
 def visible_text(html: str) -> str:
     return " ".join(" ".join(_parse(html, VISIBLE_SKIP).nodes).split())
+
+
+def page_text(html: str) -> str:
+    """Every text node a visitor can see, <nav> and <footer> included: what a copy deck's words are looked for in."""
+    return " ".join(" ".join(_parse(html, SKIP, True).nodes).split())
 
 
 def first_sentence_after_h1(html: str):

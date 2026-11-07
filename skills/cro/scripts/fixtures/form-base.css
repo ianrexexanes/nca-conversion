@@ -1,0 +1,8 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 1.5; color: #333333; background: #ffffff; }
+main { padding: 16px; }
+label { display: block; margin-top: 12px; }
+input, select, textarea { display: block; width: 100%; max-width: 320px; height: 48px; font-size: 16px; color: #333333; background: #ffffff; border: 1px solid #767676; padding: 0 12px; }
+textarea { height: 96px; padding: 12px; }
+input[type=checkbox], input[type=radio] { display: inline-block; width: 44px; height: 44px; margin: 0 8px 0 0; vertical-align: middle; }
+button { display: block; margin-top: 16px; min-width: 160px; height: 48px; font-size: 16px; color: #ffffff; background: #0047b3; border: 0; padding: 0 16px; }

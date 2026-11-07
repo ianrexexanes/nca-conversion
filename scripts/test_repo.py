@@ -1674,6 +1674,52 @@ class CheckTests(unittest.TestCase):
             self.assertTrue((ROOT / "skills" / "cro" / "scripts" / name).is_file(), name)
 
 
+class FormTests(unittest.TestCase):
+    def setUp(self):
+        self.raw = read_or_empty("skills", "cro", "references", "form.md")
+        self.text = flat(self.raw)
+
+    def steps(self):
+        return [(int(m.group(1)), flat(m.group(2))) for m in re.finditer(r"^(\d+)\. (.*(?:\n(?!\d+\. |\n).*)*)", self.raw, re.M)]
+
+    def test_it_opens_with_the_paths_note(self):
+        self.assertRegex(self.text, r"This is the procedure `/cro form` follows\. It writes the plugin's folder as `\$\{CLAUDE_PLUGIN_ROOT\}`")
+
+    def test_it_carries_numbered_steps(self):
+        self.assertGreaterEqual(len(self.steps()), 4)
+
+    def test_it_runs_the_read_only_test_first_then_the_simulations_and_the_send_last(self):
+        text = self.text
+        self.assertRegex(text, r"(?i)read-only")
+        self.assertIn("form_check.py", text)
+        self.assertIn("--simulate", text)
+        self.assertRegex(text, r"(?i)simulated success")
+        self.assertRegex(text, r"(?i)simulated error")
+        self.assertLess(text.index("form_check.py"), text.index("--simulate"))
+        self.assertLess(text.index("--simulate"), text.rindex("form_consent.py"))
+
+    def test_it_sends_only_with_the_owners_yes_and_says_claude_code_asks(self):
+        self.assertIn("only with the owner's yes, given for this test", self.text)
+        self.assertRegex(self.text, r"asks? (you |the user )?before every (real )?send")
+        self.assertRegex(self.text, r"no rule pre-approves `form_consent\.py`|`form_consent\.py` is in no allow rule")
+
+    def test_it_points_at_the_form_audit_and_reads_the_thank_you_step(self):
+        self.assertIn("form-and-signup-audit.md", self.text)
+        self.assertTrue((ROOT / "skills" / "conversion-page-audit" / "references" / "form-and-signup-audit.md").is_file())
+        self.assertIn("what happens next", self.text)
+        self.assertIn("thank-you", self.text.lower())
+        self.assertIn("reply", self.text.lower())
+
+    def test_it_says_what_the_guard_covers_and_what_it_reports_after_the_fact(self):
+        for part in ("formaction", "submits by GET", "redirect that keeps the method", "a GET that the page's own script sends somewhere else is not covered"):
+            self.assertIn(part, self.text)
+        self.assertNotIn("the press cannot send anything", self.text)
+
+    def test_the_scripts_it_names_exist(self):
+        for name in ("form_check.py", "form_consent.py"):
+            self.assertTrue((ROOT / "skills" / "cro" / "scripts" / name).is_file(), name)
+
+
 if __name__ == "__main__":
     unittest.main()
 

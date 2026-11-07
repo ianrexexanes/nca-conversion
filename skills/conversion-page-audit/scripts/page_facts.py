@@ -152,6 +152,48 @@ def fetch(url: str, timeout: float = 30.0) -> str:
         return decode_body(response.read(), response.headers.get_content_charset())
 
 
+class FooterScope:
+    """The page footer, as every check reads it: feed it each start and end tag in document order.
+
+    A footer is the page footer only when no ancestor is article, aside, main, nav or section, or carries the
+    role article, complementary, main, navigation or region (W3C ARIA in HTML, footer row:
+    https://www.w3.org/TR/html-aria/#el-footer; HTML-AAM 3.5.43 and 3.5.44:
+    https://www.w3.org/TR/html-aam-1.0/#el-footer-ancestorbody). An element with role=contentinfo opens the
+    scope wherever it is. A blockquote does not exclude a footer."""
+
+    def __init__(self):
+        self._open = {}          # open count per non-void tag name
+        self._footer = None      # (tag name, its open count at the start tag) while a footer scope is open
+        self.has_footer = False
+        self._not_page_footer = []  # (tag name, open count) of each open element that stops a <footer> being the page footer
+
+    @property
+    def inside(self):
+        return self._footer is not None
+
+    def start(self, tag, attrs):
+        """Runs before any early return, so every start tag is counted. `attrs` is a dict."""
+        if tag in VOID:
+            return
+        self._open[tag] = self._open.get(tag, 0) + 1
+        role = (attrs.get("role") or "").strip().lower()
+        opens = role == "contentinfo" or (tag == "footer" and not self._not_page_footer)
+        if self._footer is None and opens:
+            self._footer = (tag, self._open[tag])
+            self.has_footer = True
+        if tag in NOT_PAGE_FOOTER_TAGS or role in NOT_PAGE_FOOTER_ROLES:
+            self._not_page_footer.append((tag, self._open[tag]))
+
+    def end(self, tag):
+        """An end tag takes one off its tag's count, never below zero; the scope closes with its tag."""
+        if tag in VOID or self._open.get(tag, 0) == 0:
+            return
+        self._open[tag] -= 1
+        self._not_page_footer = [(t, n) for t, n in self._not_page_footer if not (t == tag and self._open[tag] < n)]
+        if self._footer and tag == self._footer[0] and self._open[tag] < self._footer[1]:
+            self._footer = None
+
+
 class _Collector(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
@@ -166,42 +208,16 @@ class _Collector(HTMLParser):
         self._buf = []
         self._svg_depth = 0
         self._in_svg_title = False
-        self._open = {}          # open count per non-void tag name
-        self._footer = None      # (tag name, its open count at the start tag) while a footer scope is open
-        self.has_footer = False
-        self._not_page_footer = []  # (tag name, open count) of each open element that stops a <footer> being the page footer
+        self._scope = FooterScope()
 
-    def _track_start(self, tag, attrs):
-        """Footer bookkeeping: runs before any early return, so every start tag is counted."""
-        if tag in VOID:
-            return
-        self._open[tag] = self._open.get(tag, 0) + 1
-        role = (attrs.get("role") or "").strip().lower()
-        # A footer is the page footer only when no ancestor is article, aside, main, nav or section, or carries the
-        # role article, complementary, main, navigation or region (W3C ARIA in HTML, footer row:
-        # https://www.w3.org/TR/html-aria/#el-footer; HTML-AAM 3.5.43 and 3.5.44:
-        # https://www.w3.org/TR/html-aam-1.0/#el-footer-ancestorbody). An element with role=contentinfo opens the
-        # scope wherever it is. A blockquote does not exclude a footer.
-        opens = role == "contentinfo" or (tag == "footer" and not self._not_page_footer)
-        if self._footer is None and opens:
-            self._footer = (tag, self._open[tag])
-            self.has_footer = True
-        if tag in NOT_PAGE_FOOTER_TAGS or role in NOT_PAGE_FOOTER_ROLES:
-            self._not_page_footer.append((tag, self._open[tag]))
-
-    def _track_end(self, tag):
-        """An end tag takes one off its tag's count, never below zero; the scope closes with its tag."""
-        if tag in VOID or self._open.get(tag, 0) == 0:
-            return
-        self._open[tag] -= 1
-        self._not_page_footer = [(t, n) for t, n in self._not_page_footer if not (t == tag and self._open[tag] < n)]
-        if self._footer and tag == self._footer[0] and self._open[tag] < self._footer[1]:
-            self._footer = None
+    @property
+    def has_footer(self):
+        return self._scope.has_footer
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
-        self._track_start(tag, attrs)
-        in_footer = self._footer is not None
+        self._scope.start(tag, attrs)
+        in_footer = self._scope.inside
         if tag == "svg":
             self._svg_depth += 1
         elif tag == "title" and self._svg_depth:
@@ -240,7 +256,7 @@ class _Collector(HTMLParser):
             self._buf[-1].append(data)
 
     def handle_endtag(self, tag):
-        self._track_end(tag)
+        self._scope.end(tag)
         if tag == "title" and self._in_svg_title:
             self._in_svg_title = False
             return

@@ -275,6 +275,35 @@ class RulingsTest(unittest.TestCase):
         self.assertEqual(check_html(html, keyword="payroll software")["placements"]["h1"], {"status": "missing", "text": None})
         self.assertIsNone(check_html(html, keyword=None)["apparent_target"])
 
+    def test_a_footer_h1_and_its_text_are_not_the_first_sentence(self):
+        html = ('<title>T</title><main><p>Intro text.</p></main>'
+                '<footer><h1>Brand</h1><p>Payroll software since 1990.</p></footer>')
+        result = check_html(html, keyword="payroll software")
+        self.assertNotEqual(result["placements"]["first_sentence"]["status"], "found")
+        self.assertIsNone(search_check.first_sentence_after_h1(html))
+
+    def test_the_first_sentence_follows_the_first_h1_outside_the_footer(self):
+        html = ('<title>T</title><footer><h1>Brand</h1><p>Footer words.</p></footer>'
+                '<h1>Payroll software</h1><p>We make payroll software. More.</p>')
+        self.assertEqual(search_check.first_sentence_after_h1(html), "We make payroll software.")
+
+    def test_role_contentinfo_text_is_not_a_body_use(self):
+        html = '<title>T</title><h1>H</h1><p>Hello.</p><div role="contentinfo"><p>payroll software</p></div>'
+        self.assertEqual(check_html(html, keyword="payroll software")["body_uses"]["exact"], 0)
+
+    def test_an_article_footer_is_body_text(self):
+        html = ('<title>T</title><h1>H</h1><article><p>Story.</p><footer><p>payroll software</p></footer></article>'
+                '<footer><p>Imprint</p></footer>')
+        self.assertEqual(check_html(html, keyword="payroll software")["body_uses"]["exact"], 1)
+
+    def test_a_page_footer_text_is_still_no_body_use(self):
+        html = '<title>T</title><h1>H</h1><p>Hello.</p><footer><p>payroll software</p></footer>'
+        self.assertEqual(check_html(html, keyword="payroll software")["body_uses"]["exact"], 0)
+
+    def test_a_footer_in_a_blockquote_is_still_the_page_footer(self):
+        html = '<title>T</title><h1>H</h1><blockquote><footer>payroll software</footer></blockquote>'
+        self.assertEqual(check_html(html, keyword="payroll software")["body_uses"]["exact"], 0)
+
     def test_headings_scope_follows_headings_in_the_result(self):
         keys = list(check_html("<h1>A</h1>"))
         self.assertEqual(keys[keys.index("headings") + 1], "headings_scope")

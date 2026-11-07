@@ -22,11 +22,11 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "conversion-page-audit" / "scripts"))
-from page_facts import VOID, extract_facts, fetch  # noqa: E402
+from page_facts import VOID, FooterScope, extract_facts, fetch  # noqa: E402
 
 PLACEMENTS = ("title", "meta_description", "url_slug", "h1", "first_sentence", "h2")
 SKIP = {"script", "style", "noscript", "template", "svg", "title"}
-VISIBLE_SKIP = SKIP | {"nav", "footer"}
+VISIBLE_SKIP = SKIP | {"nav"}
 HEADINGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
 STOP_WORDS = {
     "the", "a", "an", "and", "or", "of", "in", "on", "at", "to", "for", "with", "by", "from", "is", "are",
@@ -57,18 +57,27 @@ def matches(text: str, terms: list) -> bool:
 
 
 class _Text(HTMLParser):
-    """Visible text nodes, in order, plus the text that follows the first h1."""
+    """Visible text nodes, in order, plus the text that follows the first h1.
+
+    Text inside the page footer, as page_facts.FooterScope scopes it, is never read: it holds no node, no h1
+    and no heading that ends the text after the h1."""
 
     def __init__(self, skip):
         super().__init__(convert_charrefs=True)
         self.skip = skip
         self.stack = []
+        self.footer = FooterScope()
         self.nodes = []
         self.h1_index = None
         self.h1_state = "none"  # none, inside, after, done
         self.after = []
 
     def handle_starttag(self, tag, attrs):
+        self.footer.start(tag, dict(attrs))
+        if self.footer.inside:
+            if tag not in VOID:
+                self.stack.append(tag)
+            return
         if self.h1_state == "after" and tag in HEADINGS:
             self.h1_state = "done"
         if tag in VOID:
@@ -79,10 +88,13 @@ class _Text(HTMLParser):
         self.stack.append(tag)
 
     def handle_startendtag(self, tag, attrs):
-        if self.h1_state == "after" and tag in HEADINGS:
+        self.footer.start(tag, dict(attrs))
+        self.footer.end(tag)
+        if self.h1_state == "after" and tag in HEADINGS and not self.footer.inside:
             self.h1_state = "done"
 
     def handle_endtag(self, tag):
+        self.footer.end(tag)
         if tag not in self.stack:
             return
         index = len(self.stack) - 1 - self.stack[::-1].index(tag)
@@ -91,7 +103,7 @@ class _Text(HTMLParser):
             self.h1_state = "after"
 
     def handle_data(self, data):
-        if any(tag in self.skip for tag in self.stack):
+        if self.footer.inside or any(tag in self.skip for tag in self.stack):
             return
         self.nodes.append(data)
         if self.h1_state == "after":

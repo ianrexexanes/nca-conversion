@@ -1420,6 +1420,9 @@ class FixWave1Tests(unittest.TestCase):
         for name in ("hero.md", "page.md"):
             self.assertIn("leave the key out when there are none", flat(read("skills", "cro", "references", name)), name)
 
+    def test_page_reads_the_brief_the_command_names(self):
+        self.assertIn("the brief the command names", step_of(page, 1))
+
 
 if __name__ == "__main__":
     unittest.main()

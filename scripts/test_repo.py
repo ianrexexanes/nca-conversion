@@ -1180,6 +1180,7 @@ research_modes = read_or_empty("skills", "audience-research", "references", "res
 research = read_or_empty("skills", "cro", "references", "research.md")
 hero = read_or_empty("skills", "cro", "references", "hero.md")
 page = read_or_empty("skills", "cro", "references", "page.md")
+vsl = read_or_empty("skills", "cro", "references", "vsl.md")
 
 
 def step_of(text, n):
@@ -1199,6 +1200,25 @@ def step_of(text, n):
             end = i
             break
     return flat("\n".join(lines[start:end]))
+
+
+def output_format(text):
+    # the content of the first fenced block in text: the lines between the opening and the closing fence, with the opening
+    # line's indentation removed; the opening line is spaces, three or more backticks and an optional info string, the closing
+    # line the same count of backticks with only spaces around it; "" when the text is empty or holds no fence
+    lines = text.splitlines()
+    for i, line in enumerate(lines):
+        m = re.match(r"( *)(`{3,})[^`]*$", line)
+        if not m:
+            continue
+        indent, fence = m.group(1), m.group(2)
+        out = []
+        for later in lines[i + 1:]:
+            if later.strip() == fence:
+                return "\n".join(out)
+            out.append(later[len(indent):] if later.startswith(indent) else later.lstrip(" "))
+        return ""
+    return ""
 
 
 class ResearchTests(unittest.TestCase):
@@ -1281,6 +1301,26 @@ class PageCommandTests(unittest.TestCase):
                      "names its visual", "mini hero", "no menu", "FAQPage schema", "faq.q1", "answer-first sentence",
                      "deck_check.py", "/nca-conversion:cro sweep", "German copy is flagged for the user's own check"):
             self.assertIn(part, flat(page))
+
+
+class VslTests(unittest.TestCase):
+    def test_vsl_output_headings_in_order(self):
+        heads = [l for l in output_format(vsl).splitlines() if l.startswith("## ")]
+        self.assertEqual(heads, ["## Hook", "## The deliverable on screen", "## Proof", "## The ask", "## Shot list"])
+
+    def test_vsl_rules(self):
+        for part in ("plays on a click", "never autoplay with sound", "captions", "the exact deliverable",
+                     "only as strong as its script", "a graphic of the deliverable", "the page's one action"):
+            self.assertIn(part, flat(vsl))
+        self.assertIsNone(re.search(r"\d+\s?%", vsl))
+
+    def test_vsl_opens_with_the_paths_note(self):
+        self.assertIn("full paths", vsl.split("1. ")[0])
+
+    def test_vsl_routes_the_text_through_a_voice_skill(self):
+        self.assertIn("humanizer", vsl)
+        self.assertIn("banned-vocabulary.md", vsl)
+        self.assertIn("German copy is flagged for the user's own check", flat(vsl))
 
 
 if __name__ == "__main__":

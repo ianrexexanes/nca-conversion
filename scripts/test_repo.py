@@ -1451,6 +1451,57 @@ class FixWave1Tests(unittest.TestCase):
         self.assertIn("the next planned release", text)
 
 
+class DesignRulesTests(unittest.TestCase):
+    HEADS = ["## The six rules", "## Measured thresholds", "## What design never does", "## Design skills, by mode", "## Rulings"]
+
+    def setUp(self):
+        self.text = read_or_empty("skills", "design-handoff", "references", "design-rules.md")
+
+    def section(self, n):
+        parts = re.split(r"^## .*$", self.text, flags=re.M)
+        return flat(parts[n]) if len(parts) > n else ""
+
+    def test_headings_in_order(self):
+        self.assertEqual([l.strip() for l in self.text.splitlines() if l.startswith("## ")], self.HEADS)
+
+    def test_six_rules(self):
+        for part in ("three to four times the body size", "dark grey, not black", "a directional cue",
+                     "emotional, social and functional", "no carousels", "tight hero padding on a phone"):
+            self.assertIn(part, self.section(1))
+
+    def test_thresholds(self):
+        for part in ("4.5:1", "3:1", "24 by 24", "44 by 44", "https://www.w3.org/TR/WCAG22/"):
+            self.assertIn(part, self.section(2))
+
+    def test_never_list(self):
+        for part in ("award-chasing", "scroll-jacking", "preloaders", "sliders", "autoplaying background video"):
+            self.assertIn(part, self.section(3))
+
+    def test_ladder_in_order(self):
+        s = self.section(4)
+        rungs = [s.find(w) for w in ("WCAG 2.2", "conversion rules", "Impeccable", "Hallmark", "Taste", "Emil")]
+        self.assertNotIn(-1, rungs)
+        self.assertEqual(rungs, sorted(rungs))
+        for part in ("Direct page", "Search page", "design authority", "never apply to a conversion page", "built code"):
+            self.assertIn(part, s)
+
+    def test_rulings(self):
+        s = self.section(5)
+        self.assertIn("- <skill> <rule>: <what this page does instead>, because <conversion rule>; mode <search or direct>.", s)
+        for part in ("prooftop", "audience call-out", "body face", "sentence case", "matched to a ruling line",
+                     "/hallmark:hallmark audit"):
+            self.assertIn(part, s)
+
+    def test_rung_one_states_the_safety_rule_as_the_spec_does(self):
+        row = next(l for l in self.text.splitlines() if l.startswith("| 1. WCAG"))
+        self.assertIn("blocked", row)
+        self.assertIn("tags", row)
+        self.assertNotIn("nothing in the design blocks analytics", row)
+
+    def test_handoff_points_to_the_rules(self):
+        self.assertIn("references/design-rules.md", read("skills", "design-handoff", "SKILL.md"))
+
+
 if __name__ == "__main__":
     unittest.main()
 

@@ -90,6 +90,8 @@ else here is structural and travels unchanged — the same section has to do the
 reader whoever that reader is. `references/figma-refinement-spec.md` carries that one intersection,
 and it is the only file in this skill that reads a register row.
 
+The design rules a wireframe and a design are checked against, and the order the design skills follow when they disagree, are in `references/design-rules.md`.
+
 ## What this skill does not do
 
 - **It does not rewrite copy.** If a section cannot be laid out because the copy never says what the

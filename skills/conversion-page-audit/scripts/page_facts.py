@@ -25,6 +25,7 @@ re-architecting the collector to track nested subtrees is out of scope here.
 Usage:
     python3 page_facts.py <file.html|url> [--url <original-url>] [--out FILE]
 """
+import argparse
 import codecs
 import json
 import re
@@ -346,14 +347,12 @@ def extract_facts(html, url=""):
 
 
 def main(argv):
-    if not argv:
-        print(__doc__)
-        return 2
-    target = argv[0]
-    url = ""
-    if "--url" in argv:
-        url = argv[argv.index("--url") + 1]
-    out = argv[argv.index("--out") + 1] if "--out" in argv else None
+    parser = argparse.ArgumentParser(description="Deterministic page facts from static markup.")
+    parser.add_argument("target", metavar="file.html|url")
+    parser.add_argument("--url", default="", help="the original URL, for a saved file")
+    parser.add_argument("--out", help="write the JSON to this file and print one summary line")
+    args = parser.parse_args(argv)
+    target, url, out = args.target, args.url, args.out
     if target.startswith("http"):
         html = fetch(target)
         url = url or target

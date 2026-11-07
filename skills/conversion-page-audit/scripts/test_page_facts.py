@@ -315,6 +315,45 @@ class FetchHelpersTest(unittest.TestCase):
             self.assertNotIn("Secret link text", done.stdout)
             self.assertNotIn("Imprint", done.stdout)
 
+    def _run(self, *args):
+        import subprocess
+        import sys
+        return subprocess.run([sys.executable, page_facts.__file__, *args], capture_output=True, encoding="utf-8")
+
+    def test_out_with_no_value_exits_2_with_usage(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as folder:
+            page = Path(folder) / "page.html"
+            page.write_text("<h1>H</h1>", encoding="utf-8")
+            done = self._run(str(page), "--out")
+        self.assertEqual(done.returncode, 2)
+        self.assertIn("usage:", done.stderr)
+        self.assertNotIn("Traceback", done.stderr)
+
+    def test_url_with_no_value_exits_2_with_usage(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as folder:
+            page = Path(folder) / "page.html"
+            page.write_text("<h1>H</h1>", encoding="utf-8")
+            done = self._run(str(page), "--url")
+        self.assertEqual(done.returncode, 2)
+        self.assertIn("usage:", done.stderr)
+        self.assertNotIn("Traceback", done.stderr)
+
+    def test_out_before_the_page_still_reads_the_page(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as folder:
+            page = Path(folder) / "page.html"
+            page.write_text("<h1>Hello</h1>", encoding="utf-8")
+            out = Path(folder) / "facts.json"
+            done = self._run("--out", str(out), str(page))
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual(json.loads(out.read_text(encoding="utf-8"))["headings"][0]["text"], "Hello")
+
     def _decoded(self, head, encoding="cp1252"):
         raw = ("<html><head>%s</head><body><p>Preis: €</p></body></html>" % head).encode(encoding)
         return page_facts.decode_body(raw, None)

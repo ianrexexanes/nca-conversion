@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import check_frontmatter  # noqa: E402
 
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 
 
 def skill_version(path: Path) -> str:
@@ -742,7 +742,7 @@ class AuditSlice2Tests(unittest.TestCase):
         self.assertIn("under the button", f3)
         self.assertIn("after nearly every major section", factor(4))
         self.assertIn("beside each button", factor(6))
-        self.assertIn("Changed in %s: factors 3, 4 and 6" % VERSION, how_to_score())
+        self.assertIn("Changed in 0.3.0: factors 3, 4 and 6", how_to_score())
 
     def test_step_9_says_what_a_null_measure_means(self):  # minor 111
         s = flat(audit_step(9))

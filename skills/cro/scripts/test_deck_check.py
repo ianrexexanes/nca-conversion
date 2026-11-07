@@ -148,10 +148,15 @@ class DeckCheckTest(unittest.TestCase):
     def test_generic_labels_fail_in_four_languages(self):
         for label in ("Submit", "Contact us", "Contact us today", "Learn more", "Get started", "Let’s talk", "Buy now",
                       "Absenden", "Jetzt kaufen", "Mehr erfahren", "Envoyer", "En savoir plus", "Invia", "Scopri di più",
-                      "Learn more.", "Heute anmelden", "Contattaci subito", "Ora acquista", "Contactez-nous maintenant"):
+                      "Learn more.", "Heute anmelden", "Contattaci subito", "Ora acquista", "Contactez-nous maintenant",
+                      "Learn more →", "Learn more ->", "Submit ▶", "→ Learn more", "Contact us, today",
+                      "Kontakt aufnehmen →", "Scopri di piu\u0300", "Learn more »", "Learn more…"):
             self.assertIn("BUTTON_GENERIC", fails(with_button(label)), label)
         self.assertNotIn("BUTTON_GENERIC", fails(with_button("Book my pump check")))
         self.assertNotIn("BUTTON_GENERIC", fails(with_button("Book my free pump check today")))
+
+    def test_a_symbol_is_not_a_word(self):
+        self.assertIsNone(level_of("BUTTON_WORDS", with_button("Book my free pump check →")))
 
     def test_button_word_count_bands(self):
         for label, level in (("Start", "FAIL"), ("Book inspection", None), ("Book my free pump check", None),

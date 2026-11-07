@@ -126,11 +126,19 @@ NOTE_NONE = "- None: the register changed no rule."
 PAGE_ONLY = ("BUTTON_GAP", "CLOSER_PARTS", "VISUAL_MISSING", "PAIN_ORDER", "HEADER_EXITS", "VALUE_BLOCKS", "FAQ_PAIRS")
 
 
+def _symbol_only(token):
+    return bool(token) and all(unicodedata.category(c)[0] in "PS" for c in token)
+
+
 def fold_label(label):
-    text = label.casefold().replace("’", "'").replace("‘", "'")
+    text = unicodedata.normalize("NFC", label).casefold().replace("’", "'").replace("‘", "'")
     text = " ".join(text.split())
-    while text and unicodedata.category(text[-1]).startswith("P"):
+    # a comma before a time word is not part of the label: "Contact us, today" folds like "Contact us today"
+    text = re.sub(r",\s+(?=(?:%s)\b)" % "|".join(re.escape(w) for w in TIME_WORDS), " ", text)
+    while text and unicodedata.category(text[-1])[0] in "PS":
         text = text[:-1].rstrip()
+    while text and unicodedata.category(text[0])[0] in "PS":
+        text = text[1:].lstrip()
     return text
 
 
@@ -231,7 +239,7 @@ def check_namespace(deck, ns, part, final, add):
     for k, label in labels:
         if label is None:
             continue
-        n = len(label.split())
+        n = len([t for t in label.split() if not _symbol_only(t)])
         if n == 1 or n >= 8:
             add("FAIL", k, "BUTTON_WORDS", "%d word(s) in %r; use two to five" % (n, label))
         elif n >= 6:

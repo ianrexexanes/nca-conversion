@@ -1146,6 +1146,70 @@ class DeckSectionsTest(unittest.TestCase):
         self.assertEqual(list(deck_check.SECTIONS), [r[0] for r in order_rows(architecture("The long-form order"))])
 
 
+def section(text, name):
+    # the first heading line that is exactly `name` starts the section; it ends before the next heading of the
+    # same or a higher level, or at the end of the text; "" when no heading matches
+    lines = text.splitlines()
+    start = level = None
+    for n, line in enumerate(lines):
+        found = re.match(r"(#{1,6}) (.*?)\s*$", line)
+        if found and found.group(2) == name:
+            start, level = n, len(found.group(1))
+            break
+    if start is None:
+        return ""
+    end = len(lines)
+    for n in range(start + 1, len(lines)):
+        found = re.match(r"(#{1,6}) ", lines[n])
+        if found and len(found.group(1)) <= level:
+            end = n
+            break
+    return "\n".join(lines[start:end])
+
+
+def read_or_empty(*parts):
+    try:
+        return read(*parts)
+    except FileNotFoundError:
+        return ""
+
+
+template = read_or_empty("skills", "audience-research", "assets", "conversion-brief-template.md")
+audience_skill = read_or_empty("skills", "audience-research", "SKILL.md")
+research_modes = read_or_empty("skills", "audience-research", "references", "research-modes.md")
+research = read_or_empty("skills", "cro", "references", "research.md")
+
+
+class ResearchTests(unittest.TestCase):
+    def test_brief_template_has_the_new_parts_and_one_proof_section(self):
+        for head in ("## Page modes and keywords", "## Traffic and awareness", "## Proof available", "## Visual inventory"):
+            self.assertIn(head, template)
+        self.assertNotIn("## Proof inventory", template)
+        self.assertIn("| Page | Language | Mode | Keyword | Variants | Volume | Difficulty | Tool | Date checked |",
+                      section(template, "Page modes and keywords"))
+        self.assertIn("| Item | Source | May be shown | Where it goes |", section(template, "Proof available"))
+        self.assertIn("all thirteen sections", flat(template))
+        self.assertIn("Thirteen sections:", flat(audience_skill))
+
+    def test_traffic_part_records_temperature_and_its_offer(self):
+        for part in ("temperature", "cold", "warm", "hot", "the offer that suits it"):
+            self.assertIn(part, section(template, "Traffic and awareness"))
+
+    def test_research_modes_has_the_notebooklm_route(self):
+        s = section(research_modes, "NotebookLM route")
+        for part in ("optional", "skipped", "rewritten, never pasted", "sources"):
+            self.assertIn(part, s)
+
+    def test_research_procedure(self):
+        for part in ("keyword research", "seo-dataforseo", "never picks a keyword", "per language", "awareness", "temperature",
+                     "render_check.py", "voice of customer", "Proof available", "Visual inventory", "before the design tool opens"):
+            self.assertIn(part, research)
+        self.assertLess(len(research.splitlines()), 100)
+
+    def test_research_opens_with_the_paths_note(self):
+        self.assertIn("full paths", research.split("1. ")[0])
+
+
 if __name__ == "__main__":
     unittest.main()
 

@@ -21,9 +21,10 @@ exhausted and the next mode is warranted.
 
 ## The brief
 
-Fill `assets/conversion-brief-template.md` — copy it, don't summarize it. Ten sections: ICP,
-Personas, Problems (ranked), Voice of customer, Competitive landscape, Differentiation, Objections,
-Proof available, Register, Open and unconfirmed. Each section in the template states what it
+Fill `assets/conversion-brief-template.md` — copy it, don't summarize it. Thirteen sections: Page modes and
+keywords, Traffic and awareness, ICP, Personas, Problems (ranked), Voice of customer, Competitive
+landscape, Differentiation, Objections, Proof available, Visual inventory, Register, Open and
+unconfirmed. Each section in the template states what it
 establishes and the failure mode of leaving it thin — read those before filling, not after.
 
 Three sections have their own reference file, because getting them wrong is expensive and the

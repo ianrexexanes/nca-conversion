@@ -10,7 +10,7 @@ every section, and treat gaps as findings rather than as formatting to clean up 
 > unblocked. Write it even when the answer is boring — "NOT ESTABLISHED — client has not shared
 > churn data; would need a CRM export."
 
-The filled example below runs through all ten sections as one coherent brief for a single
+The filled example below runs through all thirteen sections as one coherent brief for a single
 fictional company, **Lindero Systems**, a fictional B2B inventory-forecasting software vendor
 selling into mid-market manufacturers. Lindero Systems does not exist. Replace every line of the
 example with your own client's material — nothing in this file is real research.
@@ -30,6 +30,51 @@ tags: [conversion-brief, audience-research]
 ```
 
 ---
+
+## Page modes and keywords
+
+**Establishes:** for each page, its mode (Search or Direct, or pending) and, for a Search page, the
+keyword research behind it, recorded once per language: the keyword, its variants, its volume and
+difficulty, the tool that produced them and the date they were checked. The plugin never picks a
+keyword; the user decides whether one can be won.
+
+| Page | Language | Mode | Keyword | Variants | Volume | Difficulty | Tool | Date checked |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| <page> | <language> | <Search, Direct or pending: keyword research> | <keyword> | <spelling variants> | <monthly volume> | <difficulty> | <tool> | <YYYY-MM-DD> |
+
+**Failure mode of leaving it thin:** a Search page written before its keyword is settled gets
+rewritten when the keyword changes, and a keyword nobody recorded cannot be checked later against
+where it sits on the page.
+
+**Filled example — Lindero Systems:**
+
+| Page | Language | Mode | Keyword | Variants | Volume | Difficulty | Tool | Date checked |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Inventory forecasting service page | English | pending: keyword research | inventory forecasting software (proposed by the client) | NOT ESTABLISHED | NOT ESTABLISHED | NOT ESTABLISHED | NOT ESTABLISHED | NOT ESTABLISHED |
+| Plant-manager outreach landing page | English | Direct | none | none | none | none | none | none |
+
+`NOT ESTABLISHED — keyword research has not run for the service page; would need a volume and
+difficulty export from a keyword tool, or the client's own result, before any copy is written.`
+
+## Traffic and awareness
+
+**Establishes:** for each page, where the visitors come from, how aware they are of the problem
+(cold awareness is problem-aware: they feel the problem but do not know a fix exists; warm
+awareness is solution-aware: they know solutions exist and are comparing), and their temperature
+(cold, warm or hot) with the offer that suits it. Awareness and temperature are two separate
+answers; neither is read off the page's mode. The offer follows the temperature: a small first step
+for cold, a deeper one for warm, the paid step itself for hot.
+
+**Failure mode of leaving it thin:** awareness decides the hero and whether pain or proof comes
+first, and temperature decides how big the first ask can be. Without them a page asks a cold reader
+for the paid step, or hands a hot reader a small free one and loses them.
+
+**Filled example — Lindero Systems:**
+Service page: organic search, warm awareness (the reader already knows forecasting tools exist),
+temperature warm, so the offer that suits it is a guided look at the product with their own data.
+Outreach landing page: sent by the sales team to plant managers, cold awareness, temperature cold,
+so the offer that suits it is a short, free first step, such as a stockout-risk review of one
+product line, and never a demo booking.
 
 ## ICP
 
@@ -162,6 +207,17 @@ register's proof requirements.
 sets up page copy that fails the moment a reader checks it, and per the register rules a single
 unbackable claim discredits every checkable one beside it.
 
+List each item in a table: the item, its source, whether it may be shown, and where it goes on the
+page. Where it goes is `prooftop`, the strip, beside a button or the wall. An item with no source,
+or one the client has not cleared, is a gap and never a table row to fill by guessing.
+
+| Item | Source | May be shown | Where it goes |
+| --- | --- | --- | --- |
+| Reference customer quote, Operations Director | Client, quote cleared with role and company | Yes | The wall |
+| Reference customer quote, second customer | Client, quote cleared with role and company | Yes | Beside a button |
+| Reference customer quote, third customer | Client, quote cleared with role and company | Yes | The strip |
+| Before/after stockout-rate case study | Client's analytics, stated measurement period | Not yet: method unconfirmed | The wall, once confirmed |
+
 **Filled example — Lindero Systems:**
 Available: three named reference customers willing to be quoted with role and company (Operations
 Director titles, matches the persona), one before/after stockout-rate case study with a stated
@@ -169,6 +225,21 @@ measurement period. Not available: no third-party audited results, no published 
 the named competitor. `NOT ESTABLISHED — client has not confirmed whether the case study's
 stockout-rate figure was measured the same way before and after; would need the underlying method
 from their analytics team before it can be published as a comparable number.`
+
+## Visual inventory
+
+**Establishes:** the real images the page can use: product shots, screenshots of the working tool,
+photos of the team, and where each one is kept. Stock images are not part of the inventory.
+
+**Failure mode of leaving it thin:** a page designed before anyone knows which real images exist
+ends up filled with stock photos that prove nothing, or with placeholders that never get replaced.
+
+**Filled example — Lindero Systems:**
+Available: screenshots of the daily forecast view and the stockout-risk list, taken from the live
+product by the client's product team; a team photo of the customer-success group. Not available: a
+photo of the Operations Director persona's own site. `NOT ESTABLISHED — client has not confirmed a
+customer may be pictured; would need written clearance from the reference customer before any photo
+of their plant is used.`
 
 ## Register
 
@@ -197,11 +268,13 @@ test on its own.
 
 **Establishes:** every question raised in the sections above that is not yet answered, in one
 place, so a reader does not have to re-scan the whole brief to find every `NOT ESTABLISHED` line.
+A brief written without the NotebookLM route lists the skip here: `- NotebookLM: skipped, because <reason>.`
 
 **Failure mode of leaving it thin:** open items scattered only inline get missed by whoever picks
 up the brief next; a single consolidated list is what actually gets closed before the page ships.
 
 **Filled example — Lindero Systems:**
+- NotebookLM: skipped, because no notebook of sources was shared.
 - Case study measurement method for the before/after stockout figure (see Proof available).
 - Whether the Controller persona ever visits the page directly or only sees a forwarded PDF —
   changes whether the pricing page needs to stand alone.

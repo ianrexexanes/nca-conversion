@@ -76,3 +76,16 @@ originate the brief from scratch.
 unconfirmed` list stops shrinking between conversations, not when a fixed amount of contact has
 happened. What's left after that point goes into `Open and unconfirmed` as `NOT ESTABLISHED`
 rather than being guessed at to close the section.
+
+## NotebookLM route
+
+**What it is.** An optional route beside the three modes, not a fourth mode. It applies when the
+user has a notebook of sources and a NotebookLM tool is connected: put the research questions to
+the notebook and read what it returns against the brief's sections.
+
+**How to use the answers.** Answers are rewritten, never pasted, and each one keeps the sources it
+rests on, so the brief can point to where a claim came from. An answer with no source behind it is
+treated as unconfirmed and goes to `Open and unconfirmed`.
+
+**When it does not apply.** With no notebook or no connected tool, the route is skipped and the brief
+says so and why: `- NotebookLM: skipped, because <reason>.` in `Open and unconfirmed`.

@@ -1366,6 +1366,11 @@ class Slice2RoundFixesTests(unittest.TestCase):
         self.assertIn("homepage or service page", rows[0])
         self.assertIn("standard navigation", rows[0])
 
+    def test_hero_step_4_allows_an_audience_call_out(self):
+        step = flat(step_of(hero, 4))
+        self.assertIn("audience call-out", step)
+        self.assertIn("the strip still carries proof", step)
+
 
 if __name__ == "__main__":
     unittest.main()

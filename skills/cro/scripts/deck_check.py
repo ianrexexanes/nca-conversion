@@ -125,7 +125,8 @@ GAP = re.compile(r"\[NEEDED:[^\]]*\]|\[[A-Z][A-Z0-9 _-]*(?::[^\]]*)?\]|NOT ESTAB
 STOCK = re.compile(r"\bstock\b", re.I)
 NOTE_LINE = re.compile(r"^- [^:]+: .+, because .+\.$")
 NOTE_NONE = "- None: the register changed no rule."
-PAGE_ONLY = ("BUTTON_GAP", "CLOSER_PARTS", "VISUAL_MISSING", "PAIN_ORDER", "HEADER_EXITS", "VALUE_BLOCKS", "FAQ_PAIRS")
+PAGE_ONLY = ("BUTTON_GAP", "CLOSER_PARTS", "VISUAL_MISSING", "PAIN_ORDER", "HEADER_EXITS", "VALUE_BLOCKS", "FAQ_PAIRS",
+             "SECTION_MISSING")
 
 
 def _symbol_only(token):
@@ -326,6 +327,8 @@ def check_namespace(deck, ns, part, final, add):
         blocks = [k for k in keys if re.fullmatch(re.escape(ns) + r"\.value\.block\d+", k)]
         if not 4 <= len(blocks) <= 8:
             add("WARN", ns + ".value", "VALUE_BLOCKS", "%d value blocks; four to eight" % len(blocks))
+        if not any(k.startswith(ns + ".faq.") for k in keys):
+            add("FAIL", ns + ".faq", "SECTION_MISSING", "the page has no FAQ section")
         qs = {int(k.rsplit("q", 1)[1]) for k in keys if re.fullmatch(re.escape(ns) + r"\.faq\.q\d+", k)}
         as_ = {int(k.rsplit("a", 1)[1]) for k in keys if re.fullmatch(re.escape(ns) + r"\.faq\.a\d+", k)}
         for n in sorted(qs - as_):

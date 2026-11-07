@@ -140,6 +140,13 @@ class DeckCheckTest(unittest.TestCase):
         self.assertNotIn("DECK_SYNTAX", fails(text))
         self.assertEqual(deck_check.parse_deck(text).errors, [])
 
+    def test_a_page_deck_without_a_faq_fails_section_missing(self):
+        text = re.sub(r"(?m)^p\.faq\..*\n", "", read("deck-clean-direct.md"))
+        self.assertIn("SECTION_MISSING", fails(text))
+        self.assertEqual(details("SECTION_MISSING", text), ["the page has no FAQ section"])
+        self.assertNotIn("SECTION_MISSING", rules(text, part="hero"))
+        self.assertNotIn("SECTION_MISSING", rules(read("deck-clean-direct.md")))
+
     def test_clean_decks_have_no_fail(self):
         for name in ("deck-clean-direct.md", "deck-clean-search.md", "deck-variants.md"):
             self.assertEqual(fails(read(name)), set(), name)

@@ -37,6 +37,8 @@ Version 2 adds an eighth skill, `cro`, in front of the seven. Type `/nca-convers
 | `compare` | nothing yet | not built yet, slice 3 |
 | `diagnose` | nothing yet | not built yet, slice 3 |
 
+Slice 3 is the next planned release. `/cro page` and `/cro hero` write a copy deck, a file named "Copy Deck" with the page name and the date, in your project folder. `/cro vsl` writes the hero video script from that deck. `skills/cro/scripts/deck_check.py` checks a deck against the plugin's rules and prints FAIL and WARN lines.
+
 ### Setup and the PageSpeed key
 
 `/cro setup` builds a small Python environment with a browser for the rendered checks. `/cro doctor` changes nothing and reports what is installed and what is missing.

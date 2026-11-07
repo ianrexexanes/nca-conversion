@@ -1426,6 +1426,12 @@ class FixWave1Tests(unittest.TestCase):
     def test_kickoff_offers_the_five_traffic_values(self):
         self.assertIn("6. **Traffic source.** Cold outreach, ads, search, email or mixed?", read("skills", "cro", "references", "kickoff.md"))
 
+    def test_readme_says_what_the_copy_deck_is(self):
+        text = flat(read("README.md"))
+        self.assertIn("copy deck", text)
+        self.assertIn("deck_check.py", text)
+        self.assertIn("the next planned release", text)
+
 
 if __name__ == "__main__":
     unittest.main()

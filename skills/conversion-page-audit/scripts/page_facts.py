@@ -39,13 +39,13 @@ CTA_HINTS = ("sign up", "get started", "book", "buy", "register", "contact",
              "demo", "anmelden", "jetzt", "kontakt", "buchen")
 LCP_CANDIDATE_CAP = 3
 # Chrome ships a stable release every two weeks since Chrome 153:
-# https://developer.chrome.com/blog/chrome-two-week-release (read 2026-11-06). The
+# https://developer.chrome.com/blog/chrome-two-week-release (read 2026-11-07). The
 # count does not skip the year-end breaks, so from December 2026 it runs up to two
 # majors ahead of the real stable release, and further each year: move the anchor
 # below at each release of this plugin.
 RELEASE_CYCLE_DAYS = 14
 # One stable release and its date from Chrome's schedule:
-# https://chromiumdash.appspot.com/schedule (read 2026-11-06).
+# https://chromiumdash.appspot.com/schedule (read 2026-11-07).
 ANCHOR_MAJOR = 157
 ANCHOR_DATE = date(2026, 11, 3)
 

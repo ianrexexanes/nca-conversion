@@ -128,6 +128,18 @@ class DeckCheckTest(unittest.TestCase):
     def test_two_copy_fences_in_one_section_is_a_syntax_error(self):
         self.assertIn("DECK_SYNTAX", fails("## p: Page\n```copy\np.page.mode: direct\n```\n\n```copy\np.page.role: landing\n```\n"))
 
+    def test_a_fence_under_register_notes_is_outside_a_section(self):
+        text = read("deck-clean-direct.md") + "\n## Register notes\n\n```copy\np.page.extra: x\n```\n"
+        got = [d for d in details("DECK_SYNTAX", text)]
+        self.assertTrue(any("copy fence outside a '## ns: Title' section" in d for d in got), got)
+        self.assertFalse(any("2 copy fences" in d for d in got), got)
+
+    def test_one_fence_under_each_of_two_headings_of_a_namespace_is_clean(self):
+        text = ("## p: First\n```copy\np.page.mode: direct\n```\n\n"
+                "## p: Second\n```copy\np.page.role: landing\n```\n")
+        self.assertNotIn("DECK_SYNTAX", fails(text))
+        self.assertEqual(deck_check.parse_deck(text).errors, [])
+
     def test_clean_decks_have_no_fail(self):
         for name in ("deck-clean-direct.md", "deck-clean-search.md", "deck-variants.md"):
             self.assertEqual(fails(read(name)), set(), name)

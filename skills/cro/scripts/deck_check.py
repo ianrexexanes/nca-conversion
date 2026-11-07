@@ -46,7 +46,7 @@ class Deck:
 
 def parse_deck(text):
     deck = Deck()
-    ns, in_fence, fences, notes, first = None, False, {}, False, {}
+    ns, in_fence, fences, notes, first = None, False, [], False, {}  # fences: (namespace, count) per heading
     for number, raw in enumerate(text.splitlines(), 1):
         line = raw.rstrip()
         if not in_fence:
@@ -56,14 +56,16 @@ def parse_deck(text):
                 if notes and deck.register_lines is None:
                     deck.register_lines = []
                 head = SECTION_HEAD.match(line)
-                if head:
-                    ns = head.group("ns")
-                    if ns not in deck.namespaces:
-                        deck.namespaces.append(ns)
+                ns = head.group("ns") if head else None  # any other '## ' heading ends the namespace
+                if head and ns not in deck.namespaces:
+                    deck.namespaces.append(ns)
+                fences.append([ns, 0])
             elif line.strip() == "```copy":
                 if ns is None:
                     deck.errors.append(("L%d" % number, "DECK_SYNTAX", "copy fence outside a '## ns: Title' section"))
-                fences[ns] = fences.get(ns, 0) + 1
+                if not fences:
+                    fences.append([None, 0])
+                fences[-1][1] += 1
                 in_fence = True
             elif notes and line.strip():
                 deck.register_lines.append(line.strip())
@@ -90,7 +92,7 @@ def parse_deck(text):
         first[key] = number
     if in_fence:
         deck.errors.append(("EOF", "DECK_SYNTAX", "unclosed copy fence"))
-    for name, count in fences.items():
+    for name, count in fences:
         if count > 1 and name is not None:
             deck.errors.append((name, "DECK_SYNTAX", "%d copy fences in one section" % count))
     return deck

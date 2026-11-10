@@ -1720,6 +1720,70 @@ class FormTests(unittest.TestCase):
             self.assertTrue((ROOT / "skills" / "cro" / "scripts" / name).is_file(), name)
 
 
+class DataTests(unittest.TestCase):
+    def setUp(self):
+        self.raw = read_or_empty("skills", "cro", "references", "data.md")
+        self.text = flat(self.raw)
+
+    def test_it_opens_with_the_paths_note(self):
+        self.assertRegex(self.text, r"This is the procedure `/cro data` follows\. It writes the plugin's folder as `\$\{CLAUDE_PLUGIN_ROOT\}`")
+
+    def test_it_carries_numbered_steps(self):
+        steps = re.findall(r"^\d+\. ", self.raw, re.M)
+        self.assertGreaterEqual(len(steps), 4)
+
+    def test_it_names_the_ga4_route_and_its_fallback(self):
+        self.assertRegex(self.text, r"(?i)GA4 MCP server")
+        self.assertRegex(self.text, r"(?i)last 28 days")
+        self.assertRegex(self.text, r"(?i)(ask|asks) the user for a GA4 export")
+        for part in ("landing page", "form start", "device", "source and medium"):
+            self.assertIn(part, self.text.lower())
+
+    def test_it_runs_clarity_through_the_script_within_its_budget(self):
+        self.assertIn("clarity_export.py", self.text)
+        self.assertIn("--dimension URL --dimension Device", self.text)
+        self.assertIn('--out "<audit data folder>/clarity.json"', self.text)
+        self.assertIn("clarity-token", self.text)
+        self.assertIn("setup.md", self.text)
+        self.assertRegex(self.text, r"(?i)never ask for the token in the chat")
+        self.assertRegex(self.text, r"(?i)ten (calls|requests)")
+        self.assertNotIn("--endpoint", self.text)
+
+    def test_it_maps_each_clarity_metric_to_an_audit_factor(self):
+        text = self.text
+        self.assertRegex(text, r"(?i)rage clicks?[^.]*dead clicks?[^.]*factor 9|dead clicks?[^.]*rage clicks?[^.]*factor 9")
+        self.assertRegex(text, r"(?i)quick-?backs?[^.]*factor 2")
+        self.assertRegex(text, r"(?i)scroll depth[^.]*where the page loses people")
+        self.assertRegex(text, r"(?i)form starts[^.]*factor 8")
+
+    def test_it_marks_the_reset_time_unverified_with_a_429_as_the_authority(self):
+        self.assertRegex(self.text, r"(?i)reset time is UNVERIFIED")
+        self.assertRegex(self.text, r"(?i)429[^.]*(authority|decides)|(authority|decides)[^.]*429")
+
+    def test_it_invents_nothing_and_says_when_a_result_is_cut(self):
+        self.assertRegex(self.text, r"(?i)missing, never estimated or invented")
+        self.assertIn("truncated", self.text)
+        self.assertIn("clarity.json", self.text)
+
+    def test_it_names_no_c_prefixed_file(self):
+        self.assertNotIn("[C]", self.raw)
+
+    def test_the_script_it_names_exists(self):
+        self.assertTrue((ROOT / "skills" / "cro" / "scripts" / "clarity_export.py").is_file())
+
+    def test_setup_md_has_the_token_section_and_the_two_doctor_rows(self):
+        setup = read_or_empty("skills", "cro", "references", "setup.md")
+        flat_setup = flat(setup)
+        self.assertIn("## The Clarity token", setup)
+        self.assertLess(setup.index("## The PageSpeed key"), setup.index("## The Clarity token"))
+        self.assertIn("read -rs -p 'Clarity token: '", setup)
+        self.assertIn("~/.config/nca-conversion/clarity.token", setup)
+        self.assertIn("NCA_CLARITY_TOKEN", setup)
+        self.assertIn("--token-file", setup)
+        rows = [line.split("|")[1].strip() for line in setup.splitlines() if line.startswith("| `")]
+        self.assertEqual(rows, ["`python`", "`venv`", "`playwright`", "`browser`", "`pagespeed-key`", "`clarity-token`", "`lighthouse`", "`companions`", "`hallmark-lint`"])
+        self.assertIn("never the token", flat_setup)
+
+
 if __name__ == "__main__":
     unittest.main()
-

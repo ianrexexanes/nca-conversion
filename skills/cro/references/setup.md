@@ -28,8 +28,10 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/doctor.py --data-dir ${CLAUDE_P
 | `playwright` | the installed version | yes |
 | `browser` | `chrome <major>` or `chromium (bundled)` | yes |
 | `pagespeed-key` | where the key comes from, never the key | no |
+| `clarity-token` | where the Clarity token comes from, never the token | no |
 | `lighthouse` | `npx` is present | no |
 | `companions` | which companion plugins are on | no |
+| `hallmark-lint` | where Hallmark's lint script is, or `not found` | no |
 
 Exit 0 when the first four are `OK`, else 1.
 
@@ -58,3 +60,15 @@ umask 077 && mkdir -p ~/.config/nca-conversion && read -rs -p 'PageSpeed key: ' 
 ```
 
 The key file path is `~/.config/nca-conversion/pagespeed.key`. The environment variable `NCA_PAGESPEED_KEY` overrides it. Without a key, speed is measured by local Lighthouse and labelled "lab data".
+
+## The Clarity token
+
+Optional. A project admin makes the token in Clarity, under Settings, Data Export, Generate new API token. The token is yours; you store it, and it never goes into the chat.
+
+In your own terminal, type this line. It asks for the token without showing it, and it is for bash:
+
+```bash
+umask 077 && mkdir -p ~/.config/nca-conversion && read -rs -p 'Clarity token: ' t && printf '%s' "$t" > ~/.config/nca-conversion/clarity.token && unset t && echo
+```
+
+The token file path is `~/.config/nca-conversion/clarity.token`. The environment variable `NCA_CLARITY_TOKEN` overrides it. A second project's token goes in its own file, mode 600, and `clarity_export.py` reads it from `--token-file`. Without a token, `/cro data` reads GA4 or your export only.

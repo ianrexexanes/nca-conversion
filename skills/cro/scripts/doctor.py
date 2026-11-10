@@ -83,6 +83,10 @@ def run_checks(data_dir: Path):
     status = {"env": "OK", "file": "OK", "file-loose-permissions": "WARN"}.get(source, "MISSING")
     rows.append(row("pagespeed-key", status, source))
 
+    _, token_source = cro_runtime.clarity_token()
+    token_status = {"env": "OK", "file": "OK", "file-loose-permissions": "WARN"}.get(token_source, "MISSING")
+    rows.append(row("clarity-token", token_status, token_source))
+
     has_npx = shutil.which("npx") is not None
     rows.append(row("lighthouse", "OK" if has_npx else "MISSING", "npx found" if has_npx else "npx not found"))
 

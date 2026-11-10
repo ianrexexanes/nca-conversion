@@ -9,6 +9,8 @@ from urllib.parse import urlsplit
 PLAYWRIGHT_VERSION = "1.62.0"
 KEY_ENV = "NCA_PAGESPEED_KEY"
 KEY_FILE = Path.home() / ".config" / "nca-conversion" / "pagespeed.key"
+CLARITY_ENV = "NCA_CLARITY_TOKEN"
+CLARITY_FILE = Path.home() / ".config" / "nca-conversion" / "clarity.token"
 ALLOWED_METHODS = ("GET", "HEAD", "OPTIONS")
 OWN_ABORTS = ("net::ERR_FAILED", "net::ERR_BLOCKED_BY_CLIENT")
 
@@ -283,6 +285,27 @@ def pagespeed_key() -> tuple[str | None, str]:
         content = KEY_FILE.read_text(encoding="utf-8").strip()
         mode = stat.S_IMODE(KEY_FILE.stat().st_mode)
     except OSError:
+        return None, "missing"
+    if not content:
+        return None, "missing"
+    return content, "file-loose-permissions" if mode & 0o077 else "file"
+
+
+def clarity_token(token_file: Path | None = None) -> tuple[str | None, str]:
+    """The Clarity export token and where it came from. A named token file is the only place looked at."""
+    if token_file is not None:
+        try:
+            content = Path(token_file).expanduser().read_text(encoding="utf-8").strip()
+        except (OSError, ValueError):
+            return None, "missing"
+        return (content, "token-file") if content else (None, "missing")
+    value = os.environ.get(CLARITY_ENV, "").strip()
+    if value:
+        return value, "env"
+    try:
+        content = CLARITY_FILE.read_text(encoding="utf-8").strip()
+        mode = stat.S_IMODE(CLARITY_FILE.stat().st_mode)
+    except (OSError, ValueError):
         return None, "missing"
     if not content:
         return None, "missing"

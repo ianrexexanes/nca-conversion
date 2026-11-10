@@ -253,6 +253,59 @@ class PagespeedKeyTest(unittest.TestCase):
             self.assertEqual(cro_runtime.pagespeed_key(), (None, "missing"))
 
 
+class ClarityTokenTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.default = Path(self.tmp.name) / "clarity.token"
+        self.second = Path(self.tmp.name) / "second.token"
+        patcher = mock.patch.object(cro_runtime, "CLARITY_FILE", self.default)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _env(self, **values):
+        env = {k: v for k, v in os.environ.items() if k != cro_runtime.CLARITY_ENV}
+        env.update(values)
+        return mock.patch.dict(os.environ, env, clear=True)
+
+    def test_names(self):
+        self.assertEqual(cro_runtime.CLARITY_ENV, "NCA_CLARITY_TOKEN")
+
+    def test_env_wins_over_the_default_file(self):
+        self.default.write_text("FILE-TOKEN")
+        os.chmod(self.default, 0o600)
+        with self._env(**{cro_runtime.CLARITY_ENV: " ENV-TOKEN \n"}):
+            self.assertEqual(cro_runtime.clarity_token(), ("ENV-TOKEN", "env"))
+
+    def test_default_file_and_loose_permissions(self):
+        self.default.write_text("FILE-TOKEN\n")
+        with self._env():
+            os.chmod(self.default, 0o600)
+            self.assertEqual(cro_runtime.clarity_token(), ("FILE-TOKEN", "file"))
+            os.chmod(self.default, 0o644)
+            self.assertEqual(cro_runtime.clarity_token(), ("FILE-TOKEN", "file-loose-permissions"))
+
+    def test_missing_and_empty_are_missing(self):
+        with self._env():
+            self.assertEqual(cro_runtime.clarity_token(), (None, "missing"))
+            self.default.write_text("  \n")
+            self.assertEqual(cro_runtime.clarity_token(), (None, "missing"))
+
+    def test_token_file_is_read_first_whatever_its_mode(self):
+        self.second.write_text("SECOND\n")
+        os.chmod(self.second, 0o644)
+        self.default.write_text("FILE-TOKEN")
+        with self._env(**{cro_runtime.CLARITY_ENV: "ENV-TOKEN"}):
+            self.assertEqual(cro_runtime.clarity_token(self.second), ("SECOND", "token-file"))
+
+    def test_a_bad_token_file_does_not_fall_back(self):
+        self.default.write_text("FILE-TOKEN")
+        with self._env(**{cro_runtime.CLARITY_ENV: "ENV-TOKEN"}):
+            self.assertEqual(cro_runtime.clarity_token(self.second), (None, "missing"))
+            self.second.write_text("\n")
+            self.assertEqual(cro_runtime.clarity_token(self.second), (None, "missing"))
+
+
 class BlankValuesAndHostlessUrlsTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()

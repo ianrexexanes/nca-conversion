@@ -38,6 +38,12 @@ class DoctorTest(unittest.TestCase):
         key_file = mock.patch.object(cro_runtime, "KEY_FILE", Path(self.tmp.name) / "none.key")
         key_file.start()
         self.addCleanup(key_file.stop)
+        token_file = mock.patch.object(cro_runtime, "CLARITY_FILE", Path(self.tmp.name) / "none.token")
+        token_file.start()
+        self.addCleanup(token_file.stop)
+        no_env = mock.patch.dict(os.environ, {k: v for k, v in os.environ.items() if k != cro_runtime.CLARITY_ENV}, clear=True)
+        no_env.start()
+        self.addCleanup(no_env.stop)
 
     def test_doctor_reports_missing_venv_and_exits_1(self):
         with mock.patch.object(doctor.subprocess, "run", side_effect=no_claude):
@@ -51,12 +57,34 @@ class DoctorTest(unittest.TestCase):
         self.assertNotIn("SECRET-XYZ", out)
         self.assertIn("OK pagespeed-key: env", out)
 
+    def test_doctor_never_prints_the_clarity_token_and_names_only_its_source(self):
+        with mock.patch.object(doctor.subprocess, "run", side_effect=no_claude):
+            code, out = run_doctor(["--data-dir", self.data], env={cro_runtime.CLARITY_ENV: "CLARITY-SECRET"})
+        self.assertNotIn("CLARITY-SECRET", out)
+        self.assertIn("OK clarity-token: env", out)
+
+    def test_a_missing_clarity_token_leaves_the_exit_code_alone(self):
+        with mock.patch.object(doctor.subprocess, "run", side_effect=no_claude):
+            code, out = run_doctor(["--data-dir", self.data])
+            rows = {r["check"]: r["status"] for r in json.loads(run_doctor(["--data-dir", self.data, "--json"])[1])}
+        self.assertIn("MISSING clarity-token: missing", out)
+        self.assertEqual(code, 1)
+        self.assertEqual(rows["clarity-token"], "MISSING")
+
+    def test_a_loose_clarity_token_file_warns(self):
+        loose = Path(self.tmp.name) / "loose.token"
+        loose.write_text("x")
+        os.chmod(loose, 0o644)
+        with mock.patch.object(cro_runtime, "CLARITY_FILE", loose), mock.patch.object(doctor.subprocess, "run", side_effect=no_claude):
+            code, out = run_doctor(["--data-dir", self.data])
+        self.assertIn("WARN clarity-token: file-loose-permissions", out)
+
     def test_doctor_json_shape(self):
         with mock.patch.object(doctor.subprocess, "run", side_effect=no_claude):
             code, out = run_doctor(["--data-dir", self.data, "--json"])
         rows = json.loads(out)
         self.assertEqual([r["check"] for r in rows],
-                         ["python", "venv", "playwright", "browser", "pagespeed-key", "lighthouse", "companions", "hallmark-lint"])
+                         ["python", "venv", "playwright", "browser", "pagespeed-key", "clarity-token", "lighthouse", "companions", "hallmark-lint"])
         for row in rows:
             self.assertEqual(sorted(row), ["check", "detail", "status"])
             self.assertIn(row["status"], ("OK", "WARN", "MISSING"))

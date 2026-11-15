@@ -1,0 +1,59 @@
+{
+  "url": "https://harborlantern.example/",
+  "title": "Handmade boat lanterns",
+  "meta_description": "Handmade lanterns for boats and patios.",
+  "headings": [
+    {
+      "level": 1,
+      "text": "Handmade boat lanterns",
+      "in_footer": false
+    },
+    {
+      "level": 2,
+      "text": "Sizes",
+      "in_footer": false
+    },
+    {
+      "level": 2,
+      "text": "Contact the studio",
+      "in_footer": true
+    }
+  ],
+  "ctas": [
+    {
+      "text": "Shop lanterns",
+      "href": "/shop",
+      "kind": "button"
+    }
+  ],
+  "forms": [
+    {
+      "action": "/subscribe",
+      "method": "post",
+      "fields": [
+        "email"
+      ]
+    }
+  ],
+  "schema_types": [
+    "Organization"
+  ],
+  "images": [],
+  "lcp_candidates": [],
+  "notes": [],
+  "links": [
+    {
+      "text": "Shop lanterns",
+      "href": "/shop-lanterns",
+      "kind": "button",
+      "in_footer": false
+    },
+    {
+      "text": "Privacy",
+      "href": "/privacy",
+      "in_footer": true,
+      "kind": "a"
+    }
+  ],
+  "has_footer": true
+}

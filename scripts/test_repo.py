@@ -1785,5 +1785,42 @@ class DataTests(unittest.TestCase):
         self.assertIn("never the token", flat_setup)
 
 
+class CompareTests(unittest.TestCase):
+    def setUp(self):
+        self.raw = read_or_empty("skills", "cro", "references", "compare.md")
+        self.text = flat(self.raw)
+
+    def test_it_opens_with_the_paths_note(self):
+        self.assertRegex(self.text, r"This is the procedure `/cro compare` follows\. It writes the plugin's folder as `\$\{CLAUDE_PLUGIN_ROOT\}`")
+
+    def test_it_carries_numbered_steps(self):
+        steps = re.findall(r"^\d+\. ", self.raw, re.M)
+        self.assertGreaterEqual(len(steps), 4)
+
+    def test_it_runs_the_script_and_the_script_exists(self):
+        self.assertIn("python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/compare.py <before folder> <after folder>", self.text)
+        self.assertTrue((ROOT / "skills" / "cro" / "scripts" / "compare.py").is_file())
+
+    def test_it_writes_compare_md_in_the_after_audits_data_folder(self):
+        self.assertRegex(self.text, r"(?i)write `compare\.md` in the after audit's data folder")
+
+    def test_it_names_the_client_file_and_checks_it(self):
+        self.assertIn("Before and After \u2014 <Page> \u2014 <YYYY-MM-DD> \u2014 client.md", self.text)
+        self.assertIn("client_check.py", self.text)
+
+    def test_the_client_version_lists_fixed_and_open_leaks_and_no_score(self):
+        self.assertRegex(self.text, r"(?i)lists the fixed leaks and the open leaks and gives no score")
+
+    def test_a_live_test_changes_one_thing_at_a_time(self):
+        self.assertRegex(self.text, r"(?i)a live test changes one thing at a time")
+        self.assertIn("The result cannot be put down to either change.", self.text)
+
+    def test_it_never_edits_a_sheet_to_make_a_comparison_run(self):
+        self.assertRegex(self.text, r"(?i)never edited to make a comparison run")
+
+    def test_it_names_no_c_prefixed_file(self):
+        self.assertNotIn("[C]", self.raw)
+
+
 if __name__ == "__main__":
     unittest.main()

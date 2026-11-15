@@ -1,0 +1,23 @@
+{
+  "url": "https://harborlantern.example/",
+  "checked_at": "2026-11-01",
+  "source": "pagespeed",
+  "label": "PageSpeed Insights",
+  "results": {
+    "mobile": {
+      "performance": 54,
+      "lcp_s": 4.2,
+      "cls": 0.1,
+      "tbt_ms": 340,
+      "field": null
+    },
+    "desktop": {
+      "performance": 84,
+      "lcp_s": 4.2,
+      "cls": 0.1,
+      "tbt_ms": 340,
+      "field": null
+    }
+  },
+  "reason": null
+}

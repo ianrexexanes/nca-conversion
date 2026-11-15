@@ -1,0 +1,23 @@
+{
+  "url": "https://harborlantern.example/",
+  "checked_at": "2026-10-01",
+  "source": "lighthouse-lab",
+  "label": "lab data",
+  "results": {
+    "mobile": {
+      "performance": 60,
+      "lcp_s": 3.4,
+      "cls": 0.05,
+      "tbt_ms": 200,
+      "field": null
+    },
+    "desktop": {
+      "performance": 80,
+      "lcp_s": 1.8,
+      "cls": 0.02,
+      "tbt_ms": 50,
+      "field": null
+    }
+  },
+  "reason": null
+}

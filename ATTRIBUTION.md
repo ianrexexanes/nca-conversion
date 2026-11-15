@@ -17,6 +17,7 @@ on, so the intellectual debt is visible even where no source file was ever pulle
 | [Mahanaicoach/alex-hormozi-coach](https://github.com/Mahanaicoach/alex-hormozi-coach) | Mahanaicoach | MIT | `VOICE.md` (five voice laws, phrase bank, say-this-not-that) — the basis for the direct-response register profile. |
 | [jonathanmalkin/hormozi-brain-claude-project](https://github.com/jonathanmalkin/hormozi-brain-claude-project) | jonathanmalkin | MIT | Frameworks summary and `sources.csv`. |
 | [autonnel/autonnel-skills](https://github.com/autonnel/autonnel-skills) | autonnel | Apache-2.0 | The four-section audit report shape (Fix now / Test, don't guess / Not a problem / Could not check), the evidence-boundary pattern, and — from that repo's `landing-page-conversion-audit` skill — the impact-ordered check categories (message match, above-the-fold clarity, offer clarity, trust at the decision moment, the path after conversion, measurement), redistributed under a page-section structure, plus one reporting-discipline rule (never promise a percentage lift for a specific fix; rank relatively instead). |
+| [getagentseal/founder-playbook](https://github.com/getagentseal/founder-playbook), read at commit `e811e63be42c9b64a208707220b145451ad4b6c8` | AgentSeal | MIT | Read as data at that one commit, never installed, vendored or run. Its text was rewritten in plain words, never copied, for `skills/cro/references/positioning.md` (from `skills/obviously-awesome`), `skills/cro/references/lead-sources.md` (from `skills/100m-leads`) and the discovery questions in `skills/cro/references/sales-follow-up.md` (from `skills/spin-selling`). In `sales-follow-up.md`, the response-time and confirmation sections are the plugin's own rules and draw on no source. The licence notice and the source books follow this section's notes. |
 
 **Note on Alex Hormozi:** Alex Hormozi is a real person. This plugin describes frameworks as
 Hormozi-derived. It is not affiliated with, endorsed by, or authored by him.
@@ -25,6 +26,50 @@ Hormozi-derived. It is not affiliated with, endorsed by, or authored by him.
 and are deliberately not listed as sources — `rediumvex/hormozi-sales-cold-outreach-claude` and
 `Microck/ordinary-claude-skills`. Both carry no licence (NOASSERTION — all rights reserved under
 default copyright), so nothing was drawn from either.
+
+**founder-playbook licence.** The pinned `LICENSE` of `getagentseal/founder-playbook`, word for word, because three of this plugin's reference files were rewritten from that repository.
+
+```text
+MIT License
+
+Copyright (c) 2026 AgentSeal
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+**founder-playbook's source books**, as its README lists them. They are listed here because the three reference files rewritten from founder-playbook (`skills/cro/references/positioning.md`, `lead-sources.md` and `sales-follow-up.md`) name none of them.
+
+- The Four Steps to the Epiphany — Steve Blank
+- The Lean Startup — Eric Ries
+- The Mom Test — Rob Fitzpatrick
+- Obviously Awesome — April Dunford
+- Monetizing Innovation — Ramanujam & Tacke
+- $100M Offers — Alex Hormozi
+- SPIN Selling — Neil Rackham
+- Crossing the Chasm — Geoffrey Moore
+- Blue Ocean Strategy — Kim & Mauborgne
+- Traction — Weinberg & Mares
+- Influence — Robert Cialdini
+- $100M Leads — Alex Hormozi
+- Building a StoryBrand — Donald Miller
+- Made to Stick — Chip & Dan Heath
+- $100M Money Models — Alex Hormozi
 
 ## 2. Statement of changes
 
@@ -168,3 +213,6 @@ remaining files is original, and its rows say so explicitly rather than being om
 | `skills/conversion-page-audit/scripts/test_page_facts.py` | None | **Original. No derivation.** Original stdlib Python `unittest` test file for `page_facts.py`, written for this plugin. Row added to close the five-file gap the table's own completeness statement in §3 requires it not to have. |
 | `skills/conversion-page-audit/scripts/fixtures/sample.html` | None | **Original. No derivation.** A hand-written fixture page used by `test_page_facts.py`; no source repository contains this fixture. Row added to close the five-file gap the table's own completeness statement in §3 requires it not to have. |
 | `skills/audience-research/assets/conversion-brief-template.md` | None | **Original. No derivation.** Covered by the defect #18 n-gram sweep (the sweep's local corpus was every `.md` file under `skills/`, found via `find skills -name '*.md'`, so this file was included regardless of its `assets/` subfolder): zero 7-gram hits, and the only 5/6-gram hits are generic strings ("this is the single most common", "what this means for the") against unrelated source sentences — the sweep report records "no pattern indicating undisclosed copying." This is the Conversion Brief template that `audience-research` produces; its ICP/persona/problem/voice-of-customer/competitor/objection/proof/register structure is the same structure that skill's own `SKILL.md` row above already discloses as original, with no counterpart in either licensed repository. Row added to close the sixth and last gap the table's own completeness statement in §3 requires it not to have. |
+| `skills/cro/references/positioning.md` | `getagentseal/founder-playbook` at `e811e63`, `skills/obviously-awesome` | Reasoning framework rewritten in plain words with archetype examples; no passage copied, and no figure or case from the source. Terms kept word for word: "competitive alternatives", "market category", "unique attribute", "so what?" and "Who cares most" (the first, second and last are headings of the file). |
+| `skills/cro/references/lead-sources.md` | `getagentseal/founder-playbook` at `e811e63`, `skills/100m-leads` | Reasoning framework rewritten in plain words with archetype examples; no passage copied, and no figure or case from the source. Term kept word for word: "lead magnet". The source's names for the four ways and for the people who bring leads are not carried over. |
+| `skills/cro/references/sales-follow-up.md` | `getagentseal/founder-playbook` at `e811e63`, `skills/spin-selling` | Reasoning framework rewritten in plain words with archetype examples; no passage copied, and no figure or case from the source. This applies to the discovery-call questions only; the source's names for the question types are not carried over. No term is kept word for word. The response-time and confirmation sections draw on no source: they are the plugin's own rules. |

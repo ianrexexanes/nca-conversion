@@ -1822,5 +1822,128 @@ class CompareTests(unittest.TestCase):
         self.assertNotIn("[C]", self.raw)
 
 
+def section_between(text, start, end):
+    # the text from the first line that starts with `start` up to the first later line that starts with `end`; "" when
+    # `start` is absent
+    lines = text.splitlines()
+    begin = next((n for n, line in enumerate(lines) if line.startswith(start)), None)
+    if begin is None:
+        return ""
+    stop = next((n for n in range(begin + 1, len(lines)) if lines[n].startswith(end)), len(lines))
+    return "\n".join(lines[begin:stop])
+
+
+class FounderPlaybookTests(unittest.TestCase):
+    REFS = ("skills", "cro", "references")
+    COMMIT = "e811e63be42c9b64a208707220b145451ad4b6c8"
+
+    def raw_of(self, name):
+        return read_or_empty(*self.REFS, name)
+
+    def headings(self, raw):
+        return re.findall(r"^## (.+?)\s*$", raw, re.M)
+
+    def check_sections(self, name, title, headings):
+        raw = self.raw_of(name)
+        self.assertTrue(raw, name + " is missing")
+        self.assertEqual(raw.splitlines()[0], title)
+        self.assertEqual(self.headings(raw), headings)
+        first = raw.index("\n## ")
+        between = raw[len(title):first].strip()
+        self.assertTrue(between and "\n\n" not in between, "one paragraph between the title and the first section")
+
+    def no_code(self, raw):
+        return re.sub(r"`[^`\n]*`", "", raw)
+
+    def test_positioning_has_its_sections_in_order(self):
+        self.check_sections("positioning.md", "# Positioning", [
+            "Competitive alternatives", "What is unique", "The value it enables", "Who cares most",
+            "The market category", "How each feeds the page"])
+
+    def test_lead_sources_has_its_sections_in_order(self):
+        self.check_sections("lead-sources.md", "# Lead sources", [
+            "The four ways leads arrive", "Lead magnets", "How the traffic leg reads them"])
+
+    def test_sales_follow_up_has_its_sections_in_order(self):
+        self.check_sections("sales-follow-up.md", "# Sales follow-up", [
+            "The discovery-call questions", "Response time", "The promised next step", "The confirmation message"])
+
+    def test_a_lead_hears_back_within_minutes_not_days(self):
+        s = flat(section(self.raw_of("sales-follow-up.md"), "Response time"))
+        self.assertIn("a lead hears back within minutes, not days", s)
+
+    def test_the_confirmation_says_what_happens_next_and_when(self):
+        s = flat(section(self.raw_of("sales-follow-up.md"), "The confirmation message"))
+        self.assertIn("what happens next and when", s)
+
+    def test_attribution_carries_the_founder_playbook_row(self):
+        text = flat(read("ATTRIBUTION.md"))
+        self.assertIn("[getagentseal/founder-playbook](https://github.com/getagentseal/founder-playbook)", text)
+        self.assertIn(self.COMMIT, text)
+        row = next((r for r in read("ATTRIBUTION.md").splitlines() if "getagentseal/founder-playbook](" in r), "")
+        self.assertIn("AgentSeal", row)
+        self.assertIn("| MIT |", row)
+        for path, folder in (("positioning.md", "skills/obviously-awesome"), ("lead-sources.md", "skills/100m-leads"),
+                             ("sales-follow-up.md", "skills/spin-selling")):
+            self.assertIn("`skills/cro/references/%s`" % path, row)
+            self.assertIn("`%s`" % folder, row)
+        self.assertRegex(flat(row), r"(?i)response-time and confirmation sections are the plugin's own rules")
+
+    def test_attribution_carries_the_mit_notice(self):
+        block = section_between(read("ATTRIBUTION.md"), "**founder-playbook licence.**", "## 2. Statement of changes")
+        self.assertIn("```text", block)
+        self.assertIn("MIT License", block)
+        self.assertIn("Copyright (c) 2026 AgentSeal", block)
+        self.assertIn("Permission is hereby granted, free of charge", block)
+
+    def test_attribution_lists_the_fifteen_source_books(self):
+        block = section_between(read("ATTRIBUTION.md"), "**founder-playbook's source books**", "## 2. Statement of changes")
+        books = re.findall(r"^- (.+?) — (.+?)\s*$", block, re.M)
+        self.assertEqual(len(books), 15)
+        self.assertTrue(all(title and author for title, author in books))
+
+    def test_the_source_books_block_claims_only_what_this_task_can_know(self):
+        block = flat(section_between(read("ATTRIBUTION.md"), "**founder-playbook's source books**", "## 2. Statement of changes"))
+        self.assertNotIn("nowhere else", block)
+        self.assertRegex(block, r"the three reference files rewritten from founder-playbook .*name none of them")
+
+    def test_attribution_maps_each_new_file_to_its_folder(self):
+        rows = [r for r in read("ATTRIBUTION.md").splitlines() if r.startswith("| `skills/cro/references/")]
+        for path, folder in (("positioning.md", "skills/obviously-awesome"), ("lead-sources.md", "skills/100m-leads"),
+                             ("sales-follow-up.md", "skills/spin-selling")):
+            hit = [r for r in rows if r.startswith("| `skills/cro/references/%s`" % path)]
+            self.assertEqual(len(hit), 1, path)
+            self.assertIn("`getagentseal/founder-playbook` at `e811e63`", hit[0])
+            self.assertIn("`%s`" % folder, hit[0])
+        positioning_row = next(r for r in rows if r.startswith("| `skills/cro/references/positioning.md`"))
+        for term in ("competitive alternatives", "market category", "unique attribute", "so what?", "Who cares most"):
+            self.assertIn('"%s"' % term, positioning_row)
+        self.assertNotIn("Nothing else is kept", positioning_row)
+        follow = next(r for r in rows if "sales-follow-up.md" in r)
+        self.assertRegex(flat(follow), r"(?i)response-time and confirmation sections draw on no source")
+
+    def test_research_sends_positioning_gaps_to_positioning(self):
+        raw = read("skills", "cro", "references", "research.md")
+        step = step_of(raw, 7)
+        self.assertIn("positioning gap", step)
+        self.assertIn("${CLAUDE_PLUGIN_ROOT}/skills/cro/references/positioning.md", step)
+        self.assertEqual(len(re.findall(r"^\d+\. ", raw, re.M)), 11)
+
+    def test_the_three_references_hold_no_digit(self):
+        for name in ("positioning.md", "lead-sources.md", "sales-follow-up.md"):
+            raw = self.raw_of(name)
+            self.assertTrue(raw, name + " is missing")
+            self.assertNotRegex(self.no_code(raw), r"\d", name)
+
+    def test_the_three_references_name_no_source(self):
+        for name in ("positioning.md", "lead-sources.md", "sales-follow-up.md"):
+            raw = self.raw_of(name)
+            self.assertTrue(raw, name + " is missing")
+            for word in ("founder-playbook", "obviously-awesome", "100m-leads", "spin-selling"):
+                self.assertNotIn(word, raw, name)
+            for domain in re.findall(r"\b[\w-]+(?:\.[\w-]+)*\.(?:[a-z]{2,})\b", self.no_code(raw)):
+                self.assertTrue(domain.endswith(".example"), "%s: %s" % (name, domain))
+
+
 if __name__ == "__main__":
     unittest.main()

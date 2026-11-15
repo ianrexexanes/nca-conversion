@@ -8,7 +8,7 @@ This is the procedure `/cro research` follows. It writes the plugin's folder as 
 4. Mine the voice of customer, through `${CLAUDE_PLUGIN_ROOT}/skills/audience-research/references/voice-of-customer-mining.md`. Keep the customers' own words, with where each came from.
 5. Behaviour data, where the site has it, as exports the user supplies, never invented; `/cro data` is not built yet. What is missing goes to `## Open and unconfirmed`.
 6. Personas and jobs, through `${CLAUDE_PLUGIN_ROOT}/skills/audience-research/references/persona-and-jtbd.md`.
-7. The offer, broken into value propositions through `/cro offer`.
+7. The offer, broken into value propositions through `/cro offer`. Where the brief cannot yet say what buyers would use instead, what only this offer has, or who cares most, that is a positioning gap, worked through `${CLAUDE_PLUGIN_ROOT}/skills/cro/references/positioning.md`.
 8. The `## Proof available` section: a table of each item, its source, whether it may be shown, and where it goes (`prooftop`, the strip, beside a button, the wall). Proof is never invented; a missing item is a gap, written `NOT ESTABLISHED — <what it would take>`.
 9. The `## Visual inventory`: the real product shots, screenshots and team photos the page can use, never stock. What is missing is a gap, written the same way.
 10. The NotebookLM route, when it is available, as `${CLAUDE_PLUGIN_ROOT}/skills/audience-research/references/research-modes.md` describes it. Otherwise write `- NotebookLM: skipped, because <reason>.` in the brief's `## Open and unconfirmed` list.

@@ -1704,6 +1704,18 @@ class WireframeTests(unittest.TestCase):
         text = flat(read("skills", "cro", "references", "wireframe.md"))
         self.assertIn("The `prooftop` element comes before the H1 on a Direct page and after it on a Search page.", text)
 
+    def test_wireframe_reference_names_every_rule_the_checker_prints_and_fixes_the_second_run(self):
+        script = read("skills", "cro", "scripts", "wire_check.py")
+        rules = set(re.findall(r'add\("(?:FAIL|WARN)",[^,]+,\s*"([A-Z_]+)"', script))
+        self.assertGreaterEqual(len(rules), 11, rules)
+        raw = read("skills", "cro", "references", "wireframe.md")
+        text = flat(raw)
+        self.assertEqual([r for r in sorted(rules) if "`%s`" % r not in text], [])
+        step5 = flat(re.search(r"^5\. .*$", raw, re.M).group(0))
+        self.assertIn("A `NOTES` WARN at this step only means the notes block is not written yet", step5)
+        step8 = flat(re.search(r"^8\. .*$", raw, re.M).group(0))
+        self.assertIn("Every FAIL of the second run is fixed before the frames are reported", step8)
+
     def test_wireframe_reference_reads_the_nav_as_a_list(self):
         text = flat(read("skills", "cro", "references", "wireframe.md"))
         self.assertIn("`<ns>.header.nav` is a list split on semicolons, and each label is its own link", text)

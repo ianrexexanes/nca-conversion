@@ -46,7 +46,7 @@ def png_text(data):
                 if flag:
                     text = zlib.decompress(text)
                 yield " ".join([latin(key), latin(translated), text.decode("utf-8", "replace")])
-        except (ValueError, zlib.error):
+        except (ValueError, IndexError, zlib.error):  # a malformed chunk is skipped, as the others are
             continue
         if kind == b"IEND":
             break

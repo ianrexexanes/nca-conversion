@@ -17,7 +17,7 @@ def run(*args):
     return done.returncode, done.stdout + done.stderr
 
 
-def png(texts=(), itxt=None):
+def png(texts=(), itxt=None, extra=()):
     def chunk(kind, data):
         return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data) & 0xFFFFFFFF)
     out = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0))
@@ -25,6 +25,8 @@ def png(texts=(), itxt=None):
         out += chunk(b"tEXt", key.encode("latin-1") + b"\x00" + value.encode("latin-1"))
     if itxt:
         out += chunk(b"iTXt", b"Description\x00\x01\x00\x00\x00" + zlib.compress(itxt.encode("utf-8")))
+    for kind, data in extra:
+        out += chunk(kind, data)
     return out + chunk(b"IDAT", zlib.compress(b"\x00\xff\xff\xff")) + chunk(b"IEND", b"")
 
 
@@ -85,6 +87,21 @@ class AssetTextCheckTests(unittest.TestCase):
         for name in marked:
             self.assertRegex(out, r"(?m)^FAIL %s ASSET_TEXT: " % re.escape(name), name)
         self.assertTrue(out.rstrip().endswith("asset_text_check: %d FAIL, 0 WARN" % len(marked)), out)
+
+    def test_ztxt_text_is_found(self):
+        ztxt = b"Comment\x00\x00" + zlib.compress(b"TODO swap this picture")
+        tmp, root = self.folder({"z.png": png(extra=[(b"zTXt", ztxt)])})
+        code, out = run("--dir", str(root))
+        self.assertEqual(code, 1, out)
+        self.assertRegex(out, r"(?m)^FAIL z\.png ASSET_TEXT: ")
+
+    def test_a_malformed_itxt_chunk_does_not_crash(self):
+        bad = {"short.png": png(extra=[(b"iTXt", b"Description\x00")]), "cut.png": png(extra=[(b"iTXt", b"Description\x00\x01\x00")])}
+        tmp, root = self.folder(bad)
+        code, out = run("--dir", str(root))
+        self.assertNotIn("Traceback", out)
+        self.assertEqual(code, 0, out)
+        self.assertTrue(out.rstrip().endswith(SUMMARY_0), out)
 
     def test_clean_images_pass_and_pixel_bytes_never_match(self):
         files = {"a.png": png([("Software", "Example editor")]), "b.jpg": jpeg(), "d.webp": webp(), "f.gif": gif(),

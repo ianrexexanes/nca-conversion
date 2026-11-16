@@ -183,6 +183,22 @@ class IsBlockedTest(unittest.TestCase):
     def test_google_consent_collect_is_blocked(self):
         self.assertIsNotNone(cro_runtime.is_blocked("https://www.google.com/ccm/collect?en=page_view"))
 
+    EXPECTED_BLOCKED_HOSTS = (
+        "google-analytics.com", "analytics.google.com", "googletagmanager.com", "doubleclick.net", "googleadservices.com",
+        "googlesyndication.com", "clarity.ms", "connect.facebook.net", "px.ads.linkedin.com", "snap.licdn.com",
+        "analytics.tiktok.com", "bat.bing.com", "bat.bing.net", "hotjar.com", "hotjar.io", "plausible.io", "cdn.segment.com",
+        "api.segment.io", "mixpanel.com", "heapanalytics.com", "static.cloudflareinsights.com", "stats.wp.com", "pixel.wp.com",
+        "js.hs-scripts.com", "js.hs-analytics.net", "track.hubspot.com", "static.ads-twitter.com", "analytics.twitter.com",
+        "ct.pinterest.com", "matomo.cloud", "i.posthog.com", "app.posthog.com",
+    )
+
+    def test_the_block_list_is_pinned_and_every_host_is_blocked(self):
+        # The expected list is written out here, so dropping a host from cro_runtime needs a second edit that names it.
+        self.assertEqual(tuple(cro_runtime.BLOCKED_HOSTS), self.EXPECTED_BLOCKED_HOSTS)
+        for host in self.EXPECTED_BLOCKED_HOSTS:
+            for url in ("https://%s/x.js" % host, "https://sub.%s/collect" % host):
+                self.assertIsNotNone(cro_runtime.is_blocked(url), url)
+
     def test_added_tag_hosts_are_blocked_one_family_each(self):
         for url in ("https://stats.wp.com/e-202544.js", "https://pixel.wp.com/g.gif?v=ext",
                     "https://js.hs-scripts.com/123.js", "https://js.hs-analytics.net/analytics/1/123.js",

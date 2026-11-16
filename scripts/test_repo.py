@@ -1767,6 +1767,10 @@ class FormTests(unittest.TestCase):
         self.assertIn("With permission prompts off or a broad allow rule of your own nothing asks, so print the exact command "
                       "with every value it will send, ask the user for the owner's yes again in the chat, and run it only on that yes", self.text)
 
+    def test_it_says_what_to_tell_the_user_when_the_fill_is_refused(self):
+        self.assertIn("When the form's own validation refuses the fill, the script prints `not sent: the fill does not satisfy "
+                      "<field> (<message>)`; tell the user the field and the message and that nothing was sent.", self.text)
+
     def test_it_says_the_send_needs_a_request_that_carries_the_typed_address(self):
         self.assertIn("The one send goes only to a request whose body carries the address given in `--email`. When no request to "
                       "the form's host carries it, such as a form with no email field or one that sends the address in another "
@@ -2059,6 +2063,10 @@ class DiagnoseTests(unittest.TestCase):
                       "skill gave you in their place in every command you run and every file you read. Any argument that can hold "
                       "a space, such as a folder name, goes in quotation marks. The output is a buyer-path diagnosis of one site, "
                       "internal first and then a client version.", self.before)
+
+    def test_step_three_says_where_the_audits_internal_report_stays(self):
+        self.assertIn("The audit's internal report stays in the audit data folder as the page leg's evidence; the diagnosis "
+                      "report cites it and does not copy it.", flat(self.step(3)))
 
     def test_it_carries_eleven_numbered_steps(self):
         numbers = [int(n) for n in re.findall(r"^(\d+)\. ", self.raw, re.M)]

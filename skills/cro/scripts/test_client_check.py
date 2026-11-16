@@ -25,6 +25,12 @@ class ClientCheckTests(unittest.TestCase):
     def test_fails_on_tool_names(self):
         code, out = run("A Playwright run in a headless browser.\n")
         self.assertEqual(code, 1); self.assertIn("FAIL tool-name", out)
+    def test_fails_on_the_plugins_own_script_and_file_names(self):
+        for name in ["search_check", "search.json", "site_check", "deck_check", "launch_render", "form_check",
+                     "redirect_check", "asset_text_check", "wire_check", "design_check"]:
+            with self.subTest(name=name):
+                code, out = run("What I saw: %s reported it.\n" % name)
+                self.assertEqual(code, 1); self.assertIn("FAIL tool-name", out)
     def test_headless_cms_warns_headless_browser_fails(self):
         code, out = run("We recommend a headless CMS.\n")
         self.assertEqual(code, 0); self.assertIn("WARN tool-word: line 1", out); self.assertIn("client_check: 0 FAIL, 1 WARN", out)

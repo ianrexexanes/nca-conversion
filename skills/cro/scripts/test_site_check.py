@@ -302,6 +302,13 @@ class SiteCheckTests(unittest.TestCase):
         out = self.site({"/index.html": page_html(CLEAN_DECK)}, {"robots.txt": "\ufeffUser-agent: *\nDisallow: /\n"})[1]
         self.assertRegex(out, r"(?m)^FAIL /index\.html ROBOTS: ")
 
+    def test_inline_markup_does_not_break_parity(self):
+        page = page_html(CLEAN_DECK)
+        marked = page.replace("One technician, one", "One <b>technician</b>, one", 1)
+        self.assertNotEqual(marked, page)
+        out = self.site({"/index.html": marked}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")[1]
+        self.assertNotIn("PARITY", out)
+
     def test_sitemap_index_is_followed_one_level(self):
         files = {"sitemap.xml": None, "sitemap-index.xml": sitemap_index([ORIGIN + "/sitemap-pages.xml"]),
                  "sitemap-pages.xml": urlset([ORIGIN + "/"]),

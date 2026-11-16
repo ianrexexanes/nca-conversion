@@ -119,6 +119,7 @@ class Page:
         self.site = site
         self.text = page_text(html)
         self.squashed = squash(self.text)
+        self.compact = "".join(self.text.split())  # no whitespace at all: inline markup beside punctuation adds spaces
 
     @property
     def path(self):
@@ -215,7 +216,7 @@ def page_rows(page, deck, mapped, forbid, add, internal_link):
         for key, kind, value in rows:
             if kind == "label" and has_button:
                 continue  # every button shows the label, and each button is checked on its own row
-            if squash(value) not in page.squashed:
+            if squash(value) not in page.squashed and "".join(value.split()) not in page.compact:
                 add("FAIL", url, "PARITY", "%s is not in the page text: %r" % (key, shorten(squash(value))))
         want = deck_faq(deck, ns)
         got, found, broken = faq_entities(page)

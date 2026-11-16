@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -110,6 +111,21 @@ class FollowTests(unittest.TestCase):
         self.assertRegex(out, r"(?m)^FAIL %s/r1 REDIRECT_HTTPS: " % self.base)
         self.assertNotRegex(out, r"REDIRECT_(TARGET|STATUS|HOPS)")
         self.assertTrue(out.rstrip().endswith("redirect_check: 1 FAIL, 0 WARN"), out)
+
+    def test_redirect_code_as_status_gets_a_hint(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        cases = Path(tmp.name) / "cases.json"
+        hint = "status is the final answer's status at \"to\" (usually 200), not the redirect's"
+        for status, hinted in ((301, True), (200, False)):
+            cases.write_text(json.dumps([{"from": self.base + "/r1", "to": self.base + "/final", "status": status}]), encoding="utf-8")
+            code, out = run("--cases", str(cases))
+            self.assertEqual(code, 1, out)  # the loopback chain is HTTP, so REDIRECT_HTTPS fails either way
+            if hinted:
+                self.assertRegex(out, r"(?m)^FAIL %s/r1 REDIRECT_STATUS: .*%s" % (self.base, re.escape(hint)))
+            else:
+                self.assertNotIn("REDIRECT_STATUS", out)
+                self.assertNotIn(hint, out)
 
     def test_bad_cases_exit_2(self):
         tmp = tempfile.TemporaryDirectory()

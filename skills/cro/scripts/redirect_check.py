@@ -60,7 +60,10 @@ def judge(case: dict, hops: list) -> list:
     if last_url != case["to"]:
         out.append(("FAIL", "REDIRECT_TARGET", "the chain ends at %s, not %s" % (last_url, case["to"])))
     if last_status != case["status"]:
-        out.append(("FAIL", "REDIRECT_STATUS", "the last answer is %d, not %d" % (last_status, case["status"])))
+        detail = "the last answer is %d, not %d" % (last_status, case["status"])
+        if 300 <= case["status"] < 400:
+            detail += "; status is the final answer's status at \"to\" (usually 200), not the redirect's"
+        out.append(("FAIL", "REDIRECT_STATUS", detail))
     if case.get("hops") is not None:
         if statuses != case["hops"]:
             out.append(("FAIL", "REDIRECT_STATUS", "the hops answered %s, not %s" % (statuses, case["hops"])))

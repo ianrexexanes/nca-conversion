@@ -2250,6 +2250,12 @@ REFS = ROOT / "skills/cro/references"
 
 
 class RoundFixTests(unittest.TestCase):
+    def test_check_redirect_status_is_the_final_answer(self):
+        text = (REFS / "check.md").read_text(encoding="utf-8")
+        step = [l for l in text.splitlines() if l.startswith("4.")][0]
+        self.assertIn("final answer", step)
+        self.assertIn('{"from": "http://example.com/", "to": "https://example.com/", "status": 200}', step)
+
     def test_form_tests_write_to_separate_folders(self):
         form = (REFS / "form.md").read_text(encoding="utf-8")
         for folder in ("read-only", "simulated-success", "simulated-error", "consent"):

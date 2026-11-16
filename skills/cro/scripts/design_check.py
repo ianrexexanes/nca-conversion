@@ -8,6 +8,7 @@ TOKENS.json is `_design/tokens.json`: {"colors": {"text", "background", "action"
 """
 import argparse
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -85,8 +86,11 @@ def check(colors, sizes):
     for name, value in colors.items():
         if name != "action" and value == colors["action"]:
             add("WARN", "colors." + name, "ACTION_ISOLATED", "equals the action colour %s; the button should be the only thing in it" % value)
+    unusable = [name for name in REQUIRED_SIZES if not math.isfinite(sizes[name])]  # JSON allows NaN and Infinity
+    for name in unusable:
+        add("FAIL", "type." + name, "TYPE_SIZE", "%s is not a finite number of pixels" % name)
     ratio = sizes["h1_px"] / sizes["body_px"]
-    if not RATIO_MIN <= ratio <= RATIO_MAX:
+    if not unusable and not RATIO_MIN <= ratio <= RATIO_MAX:
         add("WARN", "type.h1_px", "HEADLINE_RATIO", "the headline is %.2f times the body size; three to four is the rule" % ratio)
     if colors["text"] == "#000000":
         add("WARN", "colors.text", "BODY_BLACK", "body text is pure black; dark grey reads easier")

@@ -63,6 +63,20 @@ class RuleTest(unittest.TestCase):
         self.assertEqual(rule_levels(PLANTED)["HEADLINE_RATIO"], "WARN")
         self.assertNotIn("HEADLINE_RATIO", rule_levels(CLEAN))
 
+    def test_a_type_size_of_nan_or_infinity_is_a_fail_row(self):
+        for token in ("NaN", "Infinity"):
+            for name in ("h1_px", "body_px"):
+                sizes = {"h1_px": 52, "body_px": 16, name: token}
+                text = '{"colors": {"text": "#333333", "background": "#ffffff", "action": "#0047b3", "action_text": "#ffffff"},' \
+                       ' "type": {"h1_px": %s, "body_px": %s}}' % (sizes["h1_px"], sizes["body_px"])
+                with tempfile.TemporaryDirectory() as tmp:
+                    path = Path(tmp) / "t.json"
+                    path.write_text(text, encoding="utf-8")
+                    code, data = findings(path)
+                self.assertEqual(code, 1, (token, name))
+                self.assertIn(("FAIL", "type." + name, "TYPE_SIZE"),
+                              [(f["level"], f["key"], f["rule"]) for f in data["findings"]], (token, name))
+
     def test_body_black_warns_on_pure_black_text_and_only_that(self):
         code, data = findings(BLACK)
         self.assertEqual(code, 0)

@@ -17,6 +17,17 @@ def load():
         return handle.read()
 
 
+class UserAgentTemplateTest(unittest.TestCase):
+    def test_the_two_chrome_user_agent_templates_agree(self):
+        import importlib.util
+        path = os.path.join(os.path.dirname(__file__), "..", "..", "cro", "scripts", "cro_runtime.py")
+        spec = importlib.util.spec_from_file_location("cro_runtime_for_ua", path)
+        runtime = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(runtime)
+        major = page_facts.chrome_major()
+        self.assertEqual(runtime.chrome_ua(major), page_facts.CHROME_UA)
+
+
 class ExtractFactsTest(unittest.TestCase):
     def setUp(self):
         self.html = load()

@@ -48,5 +48,6 @@ Reference files write this plugin's folder as CLAUDE_PLUGIN_ROOT and its data fo
 ## Rules
 
 - Start no subagents. This skill only routes.
+- Run `setup.py` only when the user typed `setup`. In any other command, report that the runtime is missing, say to run `/cro setup`, and stop.
 - Rendered evidence comes only from the plugin's guarded routes, which share the analytics guard in `cro_runtime.py`.
 - Client-facing text follows `references/client-version.md`.

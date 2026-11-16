@@ -566,6 +566,8 @@ class CroRulingsTest(unittest.TestCase):
         self.assertNotIn("Later list", body)
         self.assertIn("A row that names a reference file and a skill: read and follow the reference file; "
                       "its steps say when to use the skill.", " ".join(body.split()))
+        self.assertIn("- Run `setup.py` only when the user typed `setup`. In any other command, report that the runtime is missing, "
+                      "say to run `/cro setup`, and stop.", " ".join(body.split()))
 
     def test_kickoff_parts(self):
         text = KICKOFF.read_text(encoding="utf-8")

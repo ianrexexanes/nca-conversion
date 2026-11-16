@@ -372,6 +372,16 @@ def guard_bypasses(source: str, name: str) -> list[str]:
     return problems
 
 
+RENDERED = ("render_check.py", "launch_render.py", "form_check.py", "form_consent.py")
+NOT_RENDERING = ("cro_runtime.py", "setup.py", "doctor.py", "guard_tests.py", "form_tests.py")  # the guard itself, smoke launches, test pieces
+
+
+def rendered_scripts(folder: Path) -> list[str]:
+    """Every script in the folder that names playwright, apart from the tests and the files that only hold or smoke-test the guard."""
+    return sorted(p.name for p in folder.glob("*.py")
+                  if not p.name.startswith("test_") and p.name not in NOT_RENDERING and "playwright" in p.read_text(encoding="utf-8"))
+
+
 class FakeRoute:
     """A Playwright route that records whether it was continued or aborted."""
 
@@ -401,17 +411,26 @@ class GuardStackTest(unittest.TestCase):
         self.assertEqual([e["outcome"] for e in rec.entries if e["method"] == "POST"], ["consented", "blocked", "blocked"])
 
     def test_no_rendered_script_builds_its_own_browser_or_context(self):
-        for name in ("render_check.py", "launch_render.py", "form_check.py", "form_consent.py"):
-            path = HERE / name
-            if not path.exists():
-                continue
-            text = path.read_text(encoding="utf-8")
+        # Discovered, not listed: a script that renders is any other script that names playwright, so a fifth one is read too.
+        self.assertEqual(rendered_scripts(HERE), sorted(RENDERED), "a rendered script appeared, vanished or was renamed")
+        for name in RENDERED:
+            text = (HERE / name).read_text(encoding="utf-8")  # a missing one raises
             allowed = text.replace("page.context.route(", "") if name == "form_check.py" else text  # its action-address route, see guard_bypasses
             for banned in ("chromium.launch", "new_context(", "route_web_socket(", "new_cdp_session(", "context.route("):
                 self.assertNotIn(banned, allowed, name)
             self.assertIn("cro_runtime.guarded_launch", text, name)
             self.assertIn("cro_runtime.guarded_context", text, name)
             self.assertEqual(guard_bypasses(text, name), [], name)
+
+    def test_the_discovery_of_rendered_scripts_sees_a_new_one_and_a_missing_one(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in RENDERED:
+                (Path(tmp) / name).write_text("import playwright\n", encoding="utf-8")
+            self.assertEqual(rendered_scripts(Path(tmp)), sorted(RENDERED))
+            (Path(tmp) / "fifth_check.py").write_text("p.chromium.launch(headless=True)  # playwright\n", encoding="utf-8")
+            self.assertIn("fifth_check.py", rendered_scripts(Path(tmp)))
+            (Path(tmp) / "form_consent.py").unlink()
+            self.assertNotIn("form_consent.py", rendered_scripts(Path(tmp)))
 
     def test_bypass_check_catches_every_way_around_the_guard(self):
         clean_calls = ("browser = cro_runtime.guarded_launch(p)\n"

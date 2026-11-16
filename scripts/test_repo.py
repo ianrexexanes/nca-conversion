@@ -1776,6 +1776,29 @@ class FormTests(unittest.TestCase):
         self.assertIn("When the form's own validation refuses the fill, the script prints `not sent: the fill does not satisfy "
                       "<field> (<message>)`; tell the user the field and the message and that nothing was sent.", self.text)
 
+    GUARD_LIMIT = ("So no non-GET request leaves in this run at any time, and after the route is installed no request to the "
+                   "form's address leaves; a GET that the page's own script sends somewhere else is not covered, and neither is a GET "
+                   "to that address while the page loads or on the phone pass.")
+    POPUP_LIMIT = ("A route on the browser context aborts every request to the form's action address first, whatever its method, "
+                   "and to every submit control's own `formaction` address. The form's target is set to the same page and "
+                   "`window.open` returns null before the press, but a page that saved `window.open` earlier, or that clicks a "
+                   "`target=\"_blank\"` link itself, can still open a popup during the press. Such a popup is under the guard's "
+                   "context rules (every non-GET request aborted, the blocked hosts stopped) and under the form-address route, "
+                   "but not under the address block the guard puts on the page it opens itself, so a GET the popup sends to a path "
+                   "on the site's own host is not covered.")
+
+    def test_it_says_when_the_form_address_promise_holds_and_what_a_popup_can_still_do(self):
+        self.assertIn(self.POPUP_LIMIT, self.text)
+        self.assertIn(self.GUARD_LIMIT, self.text)
+        self.assertNotIn("No non-GET request and no request to the form's address leaves the browser", self.text)
+        self.assertNotIn("A page route aborts", self.text)
+        doc = flat(read("skills/cro/scripts/form_check.py").split('"""')[1])
+        self.assertIn("A route on the browser context aborts every request to the form's action address first", doc)
+        self.assertIn("after the route is installed no request to the form's action address", doc)
+        self.assertIn("is under the guard's context rules and the form-address route, but not under the address block the guard "
+                      "puts on the page it opens itself", doc)
+        self.assertNotIn("so no popup carries a request past the route", doc)
+
     def test_it_says_the_send_needs_a_request_that_carries_the_typed_address(self):
         self.assertIn("The one send goes only to a request whose body carries the address given in `--email`. When no request to "
                       "the form's host carries it, such as a form with no email field or one that sends the address in another "
@@ -2219,7 +2242,7 @@ class RouterTests(unittest.TestCase):
                        "If that folder's path holds a space, the commands have to quote it, so the rules do not match and "
                        "Claude Code keeps asking before each script.")
     FORM_PARAGRAPH = ("`/nca-conversion:cro form` reads a form without sending it. Its simulated success and simulated error press the submit "
-                      "button, but the plugin replies in place of the form's own address, so nothing reaches the owner. A real "
+                      "button, but after the plugin's route is installed it replies in place of the form's own address, so nothing reaches the owner. A real "
                       "test submission runs only through `form_consent.py`, and only with the owner's yes for that test. "
                       "In the default permission mode Claude Code asks before that script runs, because no `allowed-tools` rule "
                       "pre-approves it and `/nca-conversion:cro setup --permissions` prints no rule for it. With permission prompts off, or a "

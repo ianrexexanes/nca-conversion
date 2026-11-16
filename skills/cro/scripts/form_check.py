@@ -4,13 +4,16 @@ Run by the plugin's venv python:
     form_check.py URL --out DIR [--form CSS] [--simulate success|error] [--timeout 45]
 
 Read-only (the default): reads every field, the status regions and the thank-you link, captures the form at 1440 and 390
-wide, then presses submit once with the fields empty to see the browser's validation. A page route aborts every request to
+wide, then presses submit once with the fields empty to see the browser's validation. A route on the browser context aborts every request to
 the form's action address first, whatever its method, and the guard's context route aborts every other non-GET request.
 --simulate fills archetype test data and answers the action address itself with a 200 (success) or a 500 (error), so both
-states can be seen. In these two modes no non-GET request and no request to the form's action address (the form's action and every submit
-control's formaction) leaves the browser; a GET the page's own script sends elsewhere is not covered. Before any press the form's
-target and the controls' formtarget are set to _self and window.open returns null, so no popup carries a request past the route.
-The page route never continues a request: it aborts or answers, or hands the request on to the guard with fallback. Exit 0 without a FAIL, 1 with one, 2 on bad input, 3 when the form
+states can be seen. In these two modes no non-GET request leaves the browser at any time, and after the route is installed no request to the
+form's action address (the form's action and every submit control's formaction) leaves; a GET the page's own script sends
+elsewhere is not covered, and neither is a GET to that address while the page loads or on the phone pass. Before any press the form's
+target and the controls' formtarget are set to _self and window.open returns null. A popup the page still opens during the
+press (a window.open it saved earlier, or a target="_blank" link it clicks itself) is under the guard's context rules and the
+form-address route, but not under the address block the guard puts on the page it opens itself, so a GET it sends to a path on the site's own host is not covered.
+The route never continues a request: it aborts or answers, or hands the request on to the guard with fallback. Exit 0 without a FAIL, 1 with one, 2 on bad input, 3 when the form
 cannot be read. The browser is closed last, with browser.close() alone.
 """
 import argparse

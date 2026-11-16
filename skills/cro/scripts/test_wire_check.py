@@ -115,6 +115,27 @@ class WireCheckTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("FAIL p.pain.h2 MISSING_KEY", out)
 
+    def test_foreign_variant_key_fails(self):
+        # variant b's headline in frame a, and the shared slot variant b replaces in frame b, are copy the frame must not show
+        other = self.write(read(WIRE_A).replace("</main>", '<h2 data-key="p.hero.b.h1">Cut downtime for the whole plant</h2>\n</main>', 1))
+        code, out = run(other, "--deck", DECK, "--variant", "a")
+        self.assertEqual(code, 0, out)
+        self.assertIn("WARN p.hero.b.h1 FOREIGN_KEY", out)
+        deck = self.write(TINY_DECK.replace("p.hero.h1: Know which pump fails next\n", "p.hero.a.h1: Know which pump fails next\np.hero.b.h1: Stop pump downtime\n"
+                                            "p.hero.sub: One written report per pump\np.hero.b.sub: One written report, every visit\n"), "deck.md")
+        frame = TINY_FRAME.replace("Know which pump fails next</h1>", "Stop pump downtime</h1>").replace('data-key="p.hero.h1"', 'data-key="p.hero.b.h1"')
+        frame = frame.replace('data-variant=""', 'data-variant="b"').replace("</section>", '<p data-key="p.hero.b.sub">One written report, every visit</p>\n'
+                                                                       '<p data-key="p.hero.sub">One written report per pump</p>\n</section>', 1)
+        code, out = run(self.write(frame), "--deck", deck, "--variant", "b")
+        self.assertIn("WARN p.hero.sub FOREIGN_KEY", out)
+        self.assertNotIn("p.hero.b.sub", out)
+
+    def test_a_key_the_deck_lacks_fails(self):
+        framed = self.write(read(WIRE_A).replace("</main>", '<p data-key="p.hero.zzz">An invented line</p>\n</main>', 1))
+        code, out = run(framed, "--deck", DECK, "--variant", "a")
+        self.assertEqual(code, 1)
+        self.assertIn("FAIL p.hero.zzz NOT_IN_DECK", out)
+
     def test_variant_frame_ignores_other_variants_keys(self):
         code, out = run(WIRE_A, "--deck", DECK, "--variant", "a")
         self.assertEqual(code, 0)

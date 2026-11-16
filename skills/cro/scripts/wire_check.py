@@ -255,6 +255,13 @@ def check(deck, frame, ns, v):
                 add("FAIL", key, "BUTTON", "a <%s>; a button is an <a> or a <button>" % tag)
             if shown != squash(text):
                 add("FAIL", key, "PARITY", differs(shown, squash(text)))
+    shown = {key for key, _, _ in rendered(deck, ns, v)}
+    for key in dict.fromkeys(k for k, _, _ in frame.keyed):
+        parts = key.split(".")
+        if key not in deck.values:
+            add("FAIL", key, "NOT_IN_DECK", "no key of this name in the deck: copy the deck never approved")
+        elif key not in shown and parts[0] == ns and len(parts) > 2 and parts[1] not in ("page", "meta") and parts[-1] != "visual":
+            add("WARN", key, "FOREIGN_KEY", "this key is another variant's, or the shared slot this variant replaces")
     for section, text in frame.loose:
         add("WARN", section["name"], "EXTRA_TEXT", "text outside every key: %s" % text[:60])
     return out

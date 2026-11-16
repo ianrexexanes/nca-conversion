@@ -2542,6 +2542,23 @@ class AttributionTextTests(unittest.TestCase):
             hit = [r for r in rows if r.startswith("| `%s`" % path)]
             self.assertGreaterEqual(len(hit), 1, path)
 
+    def test_slice_3_rows_claim_only_what_their_file_names(self):
+        section = read("ATTRIBUTION.md").split("## 3. Derivation map", 1)[1]
+        rows = [r for r in section.splitlines() if r.startswith("| `")]
+        names = ("audit", "client-version", "compare", "form", "hero", "modes", "page", "vsl", "kickoff",
+                 "research", "data", "setup", "wireframe", "check", "design")
+        for name in names:
+            first = "| `skills/cro/references/%s.md` |" % name
+            hit = [r for r in rows if r.startswith(first)]
+            self.assertEqual(len(hit), 1, name)
+            row = hit[0]
+            for banned in ("Original", "No derivation", "taken from", "text is used", "is copied"):
+                self.assertNotIn(banned, row, name)
+            self.assertNotIn("original", row.lower(), name)
+            source = row.split("|")[2].strip()
+            self.assertNotEqual(source, "None", name)
+            self.assertNotEqual(source, "", name)
+
 
 class EvidenceRulesTextTests(unittest.TestCase):
     def test_evidence_rules_use_no_browser_tool_and_click_no_banner(self):

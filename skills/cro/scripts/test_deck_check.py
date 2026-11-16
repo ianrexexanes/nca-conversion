@@ -260,6 +260,14 @@ class DeckCheckTest(unittest.TestCase):
             if fires:
                 self.assertEqual(details("CLOSER_PARTS", text), ["closer lacks three to five bullets (has %d)" % n])
 
+    def test_a_section_button_must_carry_the_default_label(self):
+        deck = read("deck-clean-direct.md")
+        self.assertNotIn("ONE_ACTION", rules(deck))
+        bad = with_line(deck, "p.proof.cta", "Order a pump service")
+        got = [f[:3] for f in findings(bad) if f[2] == "ONE_ACTION"]
+        self.assertEqual(got, [("FAIL", "p.proof.cta", "ONE_ACTION")])
+        self.assertIn("differs from the default label 'Book my pump check'", details("ONE_ACTION", bad)[0])
+
     def test_value_blocks_warn_outside_four_to_eight(self):
         deck = read("deck-clean-direct.md")
         for n, level in ((3, "WARN"), (4, None), (8, None), (9, "WARN")):

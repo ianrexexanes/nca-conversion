@@ -1699,6 +1699,13 @@ class DesignTests(unittest.TestCase):
     def setUp(self):
         self.text = flat(read_or_empty("skills", "cro", "references", "design.md"))
 
+    def test_steps_4_and_11_name_the_skip_when_hallmark_is_not_on(self):
+        raw = read_or_empty("skills", "cro", "references", "design.md")
+        skip = "Hallmark audit skipped: Hallmark is not on"
+        self.assertIn(skip, flat(step_of(raw, 11)))
+        self.assertIn("Without Hallmark, write", flat(step_of(raw, 11)))
+        self.assertIn("Hallmark's four questions skipped: Hallmark is not on", flat(step_of(raw, 4)))
+
     def test_it_points_to_the_rules_and_restates_none(self):
         self.assertIn("design-rules.md", self.text)
         rules = flat(read("skills", "design-handoff", "references", "design-rules.md")).lower().split()

@@ -1858,7 +1858,7 @@ class FormTests(unittest.TestCase):
                       "for the owner's yes to it in the chat, whatever the permission mode.", step)
         self.assertIn("On that yes the user runs the command in a terminal of their own; do not run it yourself.", step)
         self.assertIn("Unless the form sends to the machine's own loopback address, the script prints the host the form sends to and sends "
-                      "only when a person types that host back at the terminal; a run with no terminal prints `SKIPPED ... SEND` with exit 3 "
+                      "only when that host is typed back at the terminal; a run with no terminal prints `SKIPPED ... SEND` with exit 3 "
                       "and sends nothing.", step)
         self.assertIn("When the user says it has run, read `<folder>/consent/form.json` for the result.", step)
         self.assertNotIn("run it only on that yes", step)
@@ -2353,11 +2353,12 @@ class RouterTests(unittest.TestCase):
                       "You then run the command yourself in a terminal. Unless the form sends to your own machine's loopback address, "
                       "the script prints the host the form sends to and sends only when you type that host back; without a terminal it sends nothing. "
                       "That check stops a run that has no terminal. It cannot tell a person from a program that imitates one. "
-                      "Claude Code's own prompt is a further check only where it appears. No `allowed-tools` rule pre-approves the script and "
-                      "`/nca-conversion:cro setup --permissions` prints no rule for it, so in Manual mode (`default` in the settings) Claude Code asks "
-                      "before the command runs, until you choose \"don't ask again\". It does not ask in auto mode, with permission prompts off, "
-                      "or under an allow rule of your own, and Claude Code 2.1.283 and later start in auto mode by default "
-                      "(see https://code.claude.com/docs/en/permissions and https://code.claude.com/docs/en/permission-modes).")
+                      "Claude Code's own permission prompt is no part of this flow, because a command you run in your own terminal never passes "
+                      "through it. It could show only if the model ran the command itself, which the procedure tells it not to do. "
+                      "No `allowed-tools` rule pre-approves the script and `/nca-conversion:cro setup --permissions` prints no rule for it. "
+                      "Even so, the prompt does not show in auto mode, with permission prompts off, under an allow rule of your own, or after "
+                      "you chose \"don't ask again\". Interactive terminal and VS Code sessions of Claude Code 2.1.283 and later start in auto "
+                      "mode by default (see https://code.claude.com/docs/en/permissions and https://code.claude.com/docs/en/permission-modes).")
     GUARDED_NEW = ("Rendered checks run only through the plugin's own scripts, which share one guard: `render_check.py`, "
                    "`launch_render.py`, `form_check.py` and `form_consent.py`.")
     GUARDED_OLD = "Rendered checks run only through `render_check.py`."
@@ -2422,7 +2423,7 @@ class RouterTests(unittest.TestCase):
         for cell, goes, status in CroRulingsTest.ROWS:
             self.assertTrue(any(line.startswith("| " + cell + " |") for line in section.splitlines()), cell)
 
-    def test_readme_form_section_says_the_consent_script_always_asks(self):
+    def test_readme_form_section_says_who_runs_the_consent_script(self):
         text = README.read_text(encoding="utf-8")
         a = text.index("### Rendered checks and your client's analytics")
         b = text.index("### The form test and the consent script")

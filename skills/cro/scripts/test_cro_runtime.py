@@ -380,7 +380,7 @@ def guard_bypasses(source: str, name: str) -> list[str]:
             called.add(attr)
         elif attr in BYPASS_CALLS:
             problems.append("%s: %s.%s() builds its own browser, context or page layer" % (name, receiver, attr))
-        elif attr == "route" and not (name == "form_check.py" and receiver in ("page", "page.context")):
+        elif attr == "route" and not (name == "form_check.py" and receiver == "page.context"):
             problems.append("%s: %s.route() adds a route outside the guard" % (name, receiver))
     for missing in GUARDED:
         if missing not in called:
@@ -483,6 +483,7 @@ class GuardStackTest(unittest.TestCase):
             allowed = text.replace("page.context.route(", "") if name == "form_check.py" else text  # its action-address route, see guard_bypasses
             for banned in ("chromium.launch", "new_context(", "route_web_socket(", "new_cdp_session(", "context.route("):
                 self.assertNotIn(banned, allowed, name)
+            self.assertEqual(text.count(".route(") if name == "form_check.py" else 0, 1 if name == "form_check.py" else 0, name)  # one route only
             self.assertIn("cro_runtime.guarded_launch", text, name)
             self.assertIn("cro_runtime.guarded_context", text, name)
             self.assertEqual(guard_bypasses(text, name), [], name)
@@ -523,8 +524,9 @@ class GuardStackTest(unittest.TestCase):
         for dropped in ("guarded_launch", "guarded_context"):  # every helper but one is called: the missing one is named
             partial = "".join(line + "\n" for line in clean_calls.splitlines() if "cro_runtime." + dropped not in line)
             self.assertEqual(guard_bypasses(partial, "render_check.py"), ["render_check.py: no call to cro_runtime." + dropped], dropped)
-        clean = clean_calls + "page.route(action, h)\nbrowser.close()\n"
+        clean = clean_calls + "page.context.route(action, h)\nbrowser.close()\n"
         self.assertEqual(guard_bypasses(clean, "form_check.py"), [])
+        self.assertTrue(guard_bypasses(clean_calls + "page.route(action, h)\n", "form_check.py"), "page.route in form_check")
         self.assertEqual(guard_bypasses(clean_calls + "browser.close()\n", "render_check.py"), [])
         self.assertTrue(guard_bypasses(clean, "render_check.py"))
 

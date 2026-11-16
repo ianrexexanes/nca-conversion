@@ -1,5 +1,6 @@
 import json
 import re
+import socket
 import subprocess
 import sys
 import tempfile
@@ -60,11 +61,13 @@ class JudgeTests(unittest.TestCase):
 
 class _Chain(BaseHTTPRequestHandler):
     agents = []
+    ftp_port = 0
 
     def do_GET(self):
         _Chain.agents.append(self.headers.get("User-Agent"))
         port = self.server.server_address[1]
-        moves = {"/r1": "/r2", "/r2": "http://127.0.0.1:%d/final" % port, "/loop": "/loop"}
+        moves = {"/r1": "/r2", "/r2": "http://127.0.0.1:%d/final" % port, "/loop": "/loop",
+                 "/ftp": "ftp://127.0.0.1:%d/x" % _Chain.ftp_port, "/file": "file:///etc/hostname"}
         if self.path in moves:
             self.send_response(301)
             self.send_header("Location", moves[self.path])
@@ -97,6 +100,29 @@ class FollowTests(unittest.TestCase):
         hops = redirect_check.follow(self.base + "/loop")
         self.assertEqual(len(hops), 6)
         self.assertTrue(all(status == 301 for _, status in hops))
+
+    def test_a_redirect_to_ftp_or_file_is_not_followed(self):
+        listener = socket.socket()
+        listener.bind(("127.0.0.1", 0))
+        listener.listen(1)
+        listener.settimeout(0.5)
+        self.addCleanup(listener.close)
+        _Chain.ftp_port = listener.getsockname()[1]
+        for path, target in (("/ftp", "ftp://127.0.0.1:%d/x" % _Chain.ftp_port), ("/file", "file:///etc/hostname")):
+            try:
+                hops = redirect_check.follow(self.base + path)
+            except Exception as error:  # a crash is a failed assertion here
+                self.fail("follow raised %r on %s" % (error, path))
+            self.assertEqual(hops, [(self.base + path, 301), (target, 0)])
+        with self.assertRaises(socket.timeout):
+            listener.accept()  # nothing connected to the ftp address
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        cases = Path(tmp.name) / "cases.json"
+        cases.write_text(json.dumps([{"from": self.base + "/file", "to": "https://a.test/", "status": 200}]), encoding="utf-8")
+        code, out = run("--cases", str(cases))
+        self.assertEqual(code, 1, out)
+        self.assertNotIn("Traceback", out)
 
     def test_an_unreachable_host_ends_the_chain_with_status_0(self):
         self.assertEqual(redirect_check.follow("http://127.0.0.1:1/x"), [("http://127.0.0.1:1/x", 0)])

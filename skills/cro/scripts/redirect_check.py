@@ -35,6 +35,9 @@ def follow(url: str, max_hops: int = MAX_REDIRECTS) -> list:
     `max_hops` (so judge() can see the limit was broken); status 0 means no answer."""
     hops = []
     while True:
+        if urllib.parse.urlparse(url).scheme not in ("http", "https"):  # never open ftp:, file: or the like
+            hops.append((url, 0))
+            return hops
         request = urllib.request.Request(url, headers={"User-Agent": CHROME_UA, "Accept": "text/html,*/*;q=0.8"})
         try:
             with _OPENER.open(request, timeout=20) as response:

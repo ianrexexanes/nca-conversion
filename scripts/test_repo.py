@@ -278,6 +278,11 @@ class AuditRulingsTest(unittest.TestCase):
         starts = [i for i, line in enumerate(lines) if re.match(r"\d+\. ", line)]
         return {int(lines[i].split(".")[0]): "\n".join(lines[i:j]) for i, j in zip(starts, starts[1:] + [len(lines)])}
 
+    def test_step_one_asks_the_keyword_and_step_ten_applies_the_modes_line(self):
+        steps = self.steps()
+        self.assertIn("For a Search page also ask the keyword and its spelling variants", steps[1])
+        self.assertIn("apply the line of the page's mode", steps[10])
+
     def test_audit_is_a_title_an_opening_and_fifteen_steps(self):
         lines = self.lines()
         self.assertTrue(lines[0].startswith("# ") and not lines[0].startswith("## "), lines[0])

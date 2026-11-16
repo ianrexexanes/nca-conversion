@@ -2520,6 +2520,8 @@ class ScoreRulePinsTest(unittest.TestCase):
     def test_three_states_are_missing_not_applicable_and_not_checked(self):
         t = self.anchors()
         self.assertIn("Three states.", t)
+        self.assertIn("A thing the page should have and lacks (a form, a button, proof) is a finding and scores low.", t)
+        self.assertIn("A thing the page role does not need is handled by the role line under that factor.", t)
         self.assertIn("A thing that could not be observed is `not_checked`: it is left out of the total and lowers coverage", t)
 
     def test_wireframe_says_which_layout_route_was_used(self):

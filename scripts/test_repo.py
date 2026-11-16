@@ -1008,7 +1008,7 @@ class HeroBuildTests(unittest.TestCase):
             self.assertIn(part, flat(hero_section(4)))
 
     def test_by_mode_gives_both_modes(self):
-        for part in ("keyword near the front", "one claim", "two lines on desktop", "one or two sentences",
+        for part in ("keyword near the front", "one claim", "two lines on desktop", "never cut to meet a design limit", "one or two sentences",
                      "no stacked benefits", "up to five", "continues the ad or message"):
             self.assertIn(part, flat(hero_section(5)))
 

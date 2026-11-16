@@ -8,6 +8,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 SCRIPT = HERE / "form_check.py"
 
+import form_check  # noqa: E402
 from form_tests import FormServer, run_script, start_server  # noqa: E402
 from guard_tests import SKIP, GuardLeakPathsMixin  # noqa: E402
 
@@ -93,6 +94,47 @@ class FormCheckTests(unittest.TestCase):
 
     def test_simulate_error_shows_the_error_state_and_sends_nothing(self):
         self.check_simulated("error", "went wrong")
+
+    def test_url_like_text_field_gets_a_url(self):
+        def field(**over):
+            base = {"index": 0, "name": None, "id": None, "label": None, "type": "text", "required": True, "autocomplete": None,
+                    "inputmode": None, "visible": True, "disabled": False, "readonly": False, "maxlength": None, "value": None,
+                    "first_option": None}
+            return dict(base, **over)
+        cases = {"inputmode": field(name="site", inputmode="url"), "autocomplete": field(name="site", autocomplete="section-x url"),
+                 "name": field(name="website"), "id": field(id="homepage-link"), "label": field(label="Your URL")}
+        for what, f in cases.items():
+            plan = form_check.plan_fill([f], "free text line", None)
+            self.assertEqual([v for _f, _a, v in plan], ["https://example.com"], what)
+        mail = form_check.plan_fill([field(name="email", label="Website email")], "free text line", "me@example.com")
+        self.assertEqual([v for _f, _a, v in mail], ["me@example.com"])
+        plain = form_check.plan_fill([field(name="message", label="Currently using")], "free text line", None)
+        self.assertEqual([v for _f, _a, v in plain], ["free text line"])
+
+    def test_simulation_presses_past_a_url_pattern(self):
+        run = self.run_page("form-url-pattern.html", "--simulate", "success")
+        self.assertEqual(run.code, 0, run.err)
+        submit = run.form["submit"]
+        self.assertTrue(submit["pressed"], submit)
+        self.assertEqual(submit["validation"], [])
+        self.assertEqual(submit["state"], "changed")
+        self.assertIn("Thanks", submit["status_text"])
+        self.assertEqual(run.form["filled"]["website"], "https://example.com")
+        self.assertEqual(run.posts(), [])
+
+    def test_fill_that_breaks_a_pattern_is_named_before_the_press(self):
+        run = self.run_page("form-code-pattern.html", "--simulate", "success")
+        self.assertEqual(run.code, 0, run.err)
+        submit = run.form["submit"]
+        self.assertFalse(submit["pressed"], submit)
+        self.assertEqual([v["field"] for v in submit["validation"]], ["code"])
+        self.assertTrue(submit["validation"][0]["message"], submit)
+        self.assertIn(("WARN", "FILL"), run.rules(), run.lines)
+        detail = [d for lv, _f, r, d in run.lines if (lv, r) == ("WARN", "FILL")][0]
+        self.assertIn("the test data does not satisfy code (", detail)
+        self.assertIn("the form was not pressed", detail)
+        self.assertEqual(run.posts(), [])
+        self.assertEqual(run.paths().count("/lead"), 0)
 
     def test_simulate_on_a_form_that_posts_elsewhere_is_skipped(self):
         run = self.run_page("form-fetch.html", "--simulate", "success")

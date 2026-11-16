@@ -107,6 +107,14 @@ class FormConsentTests(unittest.TestCase):
             self.assertIn("Chrome/", agent)
             self.assertNotIn("Headless", agent)
 
+    def test_consent_does_not_press_when_the_fill_breaks_a_pattern(self):
+        run = self.consent("form-code-pattern.html")
+        self.assertNotEqual(run.code, 0, run.err)
+        self.assertEqual(run.posts(), [])
+        self.assertIn("not sent: the fill does not satisfy code (", run.out)
+        self.assertEqual(run.data["network"]["consented"], 0)
+        self.assertFalse(run.form["submit"]["pressed"], run.form)
+
     def test_a_second_post_is_aborted(self):
         run = self.consent("form-twice.html")
         self.assertEqual([p for _m, p in run.posts()], ["/lead-twice"])

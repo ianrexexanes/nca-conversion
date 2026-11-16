@@ -11,7 +11,7 @@ consented by <owner>, <date>" in the other text fields), and only then sets the 
 presses submit once, timing the press to the thank-you state. The guard lets exactly one non-GET request leave, to that host; a
 second is aborted. Afterwards the consented request must be to the form's own action (or the pressed control's formaction), and no
 non-GET request may show as completed, which is what a 307 or 308 redirect hop looks like; either is a FAIL SEND, exit 1. A form
-that sends anywhere else, or by GET, is SKIPPED and exit 3, with nothing sent. Claude Code asks before every run: no allow rule covers this script.
+that sends anywhere else, or by GET, is SKIPPED and exit 3, with nothing sent. So is a form whose own validation refuses the fill. Claude Code asks before every run: no allow rule covers this script.
 Exit 0 when the send went through, 1 on a FAIL, 2 on bad input, 3 when nothing was sent. The browser is closed last, with
 browser.close() alone.
 """
@@ -107,6 +107,13 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         add_issue(entry, "SKIPPED", "SEND", why + ", which the guard can neither count nor limit; nothing was sent")
         return False
     entry["filled"] = form_check.apply_plan(page, info["i"], form_check.plan_fill(info["fields"], line, args.email))
+    problems = form_check.fill_problems(page, info["i"])
+    if problems:
+        entry["submit"]["validation"] = problems
+        for p in problems:
+            print("not sent: the fill does not satisfy %s (%s)" % (p["field"], p["message"]))
+        add_issue(entry, "SKIPPED", "SEND", "the fill does not satisfy %s; nothing was sent" % ", ".join(p["field"] for p in problems))
+        return False
     sender.allow_post_host = host  # open the consent now, for the press alone
     mark = len(sender.entries)
 

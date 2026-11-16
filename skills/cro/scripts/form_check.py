@@ -471,8 +471,25 @@ def press(page, i, info, limit_ms, stop=None):
     return submit, text
 
 
+URL_WORDS = re.compile(r"website|homepage|(?<![a-z])url(?![a-z])")
+
+
+def url_like(f):
+    """A free-text field the page means for an address: inputmode url, an autocomplete url token, or website, homepage
+    or url in its name, id or label."""
+    tokens = str(f.get("autocomplete") or "").lower().split()
+    named = " ".join(str(f.get(k) or "") for k in ("name", "id", "label")).lower()
+    return str(f.get("inputmode") or "").lower() == "url" or "url" in tokens or bool(URL_WORDS.search(named))
+
+
+def fill_problems(page, i):
+    """The fields of form i that the page's own validation refuses after the fill, as {"field", "message"}. Empty when none."""
+    return safe_eval(page, VALIDATION, i, [])
+
+
 def plan_fill(fields, line, email):
-    """What to type, check or choose, as (field, action, value). line goes in the free-text fields, email in the email fields."""
+    """What to type, check or choose, as (field, action, value). line goes in the free-text fields, email in the email fields,
+    https://example.com in the URL fields."""
     plan = []
     required_groups = {f["name"] or "#%d" % f["index"] for f in fields if f["type"] == "radio" and f["required"]}
     done = set()
@@ -496,7 +513,7 @@ def plan_fill(fields, line, email):
             plan.append((f, "fill", email or SIM_EMAIL))
         elif kind == "tel":
             plan.append((f, "fill", "0000000000"))
-        elif kind == "url":
+        elif kind == "url" or (kind in ("text", "search", "") and url_like(f)):
             plan.append((f, "fill", "https://example.com"))
         elif kind == "number":
             plan.append((f, "fill", "1"))
@@ -595,7 +612,15 @@ def run_simulate(args, browser, major, session, doc, out_dir, timeout_ms):
     targets = install_action_route(page, recorder, [info], args.simulate)
     entry["filled"] = apply_plan(page, info["i"], plan_fill(info["fields"], SIM_LINE, None))
     mark = len(recorder.entries)
-    entry["submit"], text = press(page, info["i"], info, 10000)
+    problems = fill_problems(page, info["i"])
+    if problems:
+        text = None
+        entry["submit"]["validation"] = problems
+        for p in problems:
+            add_issue(entry, "WARN", "FILL", "the test data does not satisfy %s (%s); the form was not pressed"
+                      % (p["field"], p["message"]))
+    else:
+        entry["submit"], text = press(page, info["i"], info, 10000)
     entry["thank_you"]["text"] = text
     if entry["submit"]["state"] == "navigated":
         entry["thank_you"]["url"] = page.url
@@ -606,7 +631,7 @@ def run_simulate(args, browser, major, session, doc, out_dir, timeout_ms):
     if elsewhere:
         add_issue(entry, "SKIPPED", "SIMULATE", "the form sends to %s, not to its action address %s, so nothing was simulated"
                   % (elsewhere[0]["url"], info["action"]))
-    elif not answered and entry["submit"]["state"] == "none":
+    elif not problems and not answered and entry["submit"]["state"] == "none":
         add_issue(entry, "SKIPPED", "SIMULATE", "the press sent nothing to %s; the form may need a field this test data does not fill"
                   % info["action"])
     page.wait_for_timeout(500)

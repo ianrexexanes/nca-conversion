@@ -65,7 +65,7 @@ class ClientCheckTests(unittest.TestCase):
                 code, out = run("As %s teaches, the page should say so.\n" % name)
                 self.assertEqual(code, 1); self.assertIn("FAIL person", out)
     def test_fails_on_factor_scores_and_tables(self):
-        for line in ["| 3 | Headline | weak |", "Factor 4 needs work.", "Score: 6", "Your Conversion-Score is high."]:
+        for line in ["| 1. What's in it for me? | 6 | headline is vague |", "| 2. Proof | not checked | no data |", "Factor 4 needs work.", "Score: 6", "Your Conversion-Score is high."]:
             with self.subTest(line=line):
                 code, out = run(line + "\n")
                 self.assertEqual(code, 1); self.assertIn("FAIL score", out)
@@ -73,6 +73,9 @@ class ClientCheckTests(unittest.TestCase):
             with self.subTest(line=line):
                 code, out = run(line + "\n")
                 self.assertEqual(code, 0); self.assertIn("WARN score-count", out)
+    def test_numbered_table_without_a_score_cell_passes(self):
+        code, out = run("| 1 | Rewrite the headline | this week |\n")
+        self.assertEqual(code, 0); self.assertIn("client_check: 0 FAIL", out)
     def test_passes_measured_pagespeed_fact(self):
         code, out = run("Google's PageSpeed Insights, run on October 13, 2026, "
                         "scores the home page 55 out of 100 on a phone.\n")

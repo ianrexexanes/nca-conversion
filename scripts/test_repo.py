@@ -1657,6 +1657,8 @@ class WireframeTests(unittest.TestCase):
         for part in ("wire_check.py", "--variant", "get_guide", "finish_working_on_nodes", "1440", "390", "a visual per section",
                      "one frame per variant", "design-rules.md", "directional cue", "carousel", "deck_check.py", "--final"):
             self.assertIn(part, text)
+        self.assertRegex(text, r"When Impeccable or Taste is on, take direction from them as `design-rules\.md` ranks them")
+        self.assertIn("name any that were off in the report", text)
 
     def test_wireframe_reference_runs_wire_check_again_after_the_notes_block(self):
         raw = read("skills", "cro", "references", "wireframe.md")

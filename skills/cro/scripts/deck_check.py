@@ -106,6 +106,7 @@ META_VALUES = {
     "traffic": ("cold-outreach", "ads", "search", "email", "mixed"),
     "awareness": ("cold", "warm"),
 }
+GENERIC_LANGUAGES = ("en", "de", "fr", "it")
 TIME_WORDS = frozenset({"now", "today", "jetzt", "heute", "maintenant", "aujourd'hui", "ora", "oggi", "subito"})
 GENERIC_LABELS = frozenset({
     # English
@@ -251,6 +252,10 @@ def check_namespace(deck, ns, part, final, add):
             add("WARN", k, "BUTTON_WORDS", "%d words in %r; keep it only when the outcome needs the words" % (n, label))
         if is_generic(label):
             add("FAIL", k, "BUTTON_GENERIC", "%r says nothing about what the reader gets" % label)
+    lang = pagev("language")
+    if lang and LANGUAGE.match(lang) and lang.split("-")[0].lower() not in GENERIC_LANGUAGES:
+        add("WARN", ns + ".page.language", "BUTTON_GENERIC",
+            "no generic-label list for %r (English, German, French, Italian only); the generic-button check was skipped" % lang)
     if ns + ".cta.fud" not in keys:
         add("FAIL", ns + ".cta.fud", "FUD_MISSING", "no doubt reducers under the button")
     # BUTTON_GAP

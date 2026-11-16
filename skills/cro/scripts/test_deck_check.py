@@ -174,6 +174,15 @@ class DeckCheckTest(unittest.TestCase):
         self.assertNotIn("BUTTON_GENERIC", fails(with_button("Book my pump check")))
         self.assertNotIn("BUTTON_GENERIC", fails(with_button("Book my free pump check today")))
 
+    def test_a_language_without_a_generic_label_list_warns(self):
+        for lang in ("es", "es-ES", "nl"):
+            text = with_line(read("deck-clean-direct.md"), "p.page.language", lang)
+            self.assertEqual(level_of("BUTTON_GENERIC", text), "WARN", lang)
+            self.assertIn("skipped", details("BUTTON_GENERIC", text)[0])
+            self.assertEqual(fails(text), set(), lang)
+        for lang in ("en", "de-CH", "fr", "it-CH"):
+            self.assertIsNone(level_of("BUTTON_GENERIC", with_line(read("deck-clean-direct.md"), "p.page.language", lang)), lang)
+
     def test_a_symbol_is_not_a_word(self):
         self.assertIsNone(level_of("BUTTON_WORDS", with_button("Book my free pump check →")))
 

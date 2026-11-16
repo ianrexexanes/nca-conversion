@@ -139,6 +139,7 @@ class CompareTests(Base):
     def test_two_sheets_without_plugin_version_are_compared(self):
         lines = self.lines(OLD_A, OLD_B)
         self.assertEqual(lines[0], "Neither sheet has plugin_version: both read as 0.2.x.")
+        self.assertEqual(lines[1], "Caution: 0.2.1 changed factor 10's anchors, so a change in factor 10 may come from the version, not the page.")
         self.assertFalse([l for l in lines if l.startswith("Anchors changed")])
         self.assertIn("Factor 2 (Is it for me?): 4 -> 5, +1", lines)
         self.assertIn("Factor 3 (Does it work?): 4 -> 4, +0", lines)

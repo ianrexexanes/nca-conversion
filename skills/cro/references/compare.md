@@ -8,7 +8,7 @@ Two audits are comparable only within one mode, one method and one set of anchor
 2. Run `python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/compare.py <before folder> <after folder>`. Add `--json` for the same lines as data. On exit code 2 the stderr lines each name the side and the file to fix. Fix the file's format or find the right folder, and rerun. A sheet's scores are never edited to make a comparison run.
 3. Read the lines by what each case means.
    - `New baseline`: the mode or the page role changed, so the after audit is the new baseline. No before and after is written.
-   - The version note: a sheet without `plugin_version` reads as the oldest anchors, and the line says which sheet it is.
+   - The version note: a sheet without `plugin_version` reads as the oldest anchors, and the line says which sheet it is. When both sheets lack it, a caution says 0.2.1 changed factor 10's anchors, so a change in factor 10 may come from the version.
    - `Anchors changed in 0.3.0`: the two scores were set with different anchors. Read them side by side, never as a change, and name no factor as better or worse.
    - The factor lines: a factor scored on both sides shows its change, and a factor scored on one side is not compared. There is no total change line, because two totals over different sets of factors do not subtract.
    - The speed lines: shown only when both sides used one source, such as PageSpeed Insights on both. Two sources are not compared.

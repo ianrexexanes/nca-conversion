@@ -1800,6 +1800,10 @@ class CompareTests(unittest.TestCase):
     def test_it_opens_with_the_paths_note(self):
         self.assertRegex(self.text, r"This is the procedure `/cro compare` follows\. It writes the plugin's folder as `\$\{CLAUDE_PLUGIN_ROOT\}`")
 
+    def test_the_version_note_warns_that_021_changed_factor_10(self):
+        self.assertIn("a sheet without `plugin_version` reads as the oldest anchors, and the line says which sheet it is. "
+                      "When both sheets lack it, a caution says 0.2.1 changed factor 10's anchors, so a change in factor 10 may come from the version.", self.text)
+
     def test_it_carries_numbered_steps(self):
         steps = re.findall(r"^\d+\. ", self.raw, re.M)
         self.assertGreaterEqual(len(steps), 4)

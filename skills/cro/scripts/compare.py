@@ -156,6 +156,7 @@ def score_block(b, a, speed_b=None, speed_a=None):
     missing = [side for side, sheet in zip(SIDES, (b, a)) if sheet.get("plugin_version") is None]
     if len(missing) == 2:
         out.append("Neither sheet has plugin_version: both read as 0.2.x.")
+        out.append("Caution: 0.2.1 changed factor 10's anchors, so a change in factor 10 may come from the version, not the page.")
     elif missing:
         out.append(f"The {missing[0]} sheet has no plugin_version: read as 0.2.x.")
     same = _anchors(b) == _anchors(a)

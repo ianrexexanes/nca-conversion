@@ -268,6 +268,20 @@ class DeckCheckTest(unittest.TestCase):
         self.assertEqual(got, [("FAIL", "p.proof.cta", "ONE_ACTION")])
         self.assertIn("differs from the default label 'Book my pump check'", details("ONE_ACTION", bad)[0])
 
+    def test_description_register_and_search_keyword_rules(self):
+        deck = read("deck-clean-search.md")
+        desc = with_line(deck, "p.meta.description", "Fast and friendly pay for busy teams")
+        self.assertEqual([f[:3] for f in findings(desc) if f[2] == "SEARCH_PLACEMENT"],
+                         [("FAIL", "p.meta.description", "SEARCH_PLACEMENT")])
+        self.assertEqual(details("SEARCH_PLACEMENT", desc), ["description lacks the keyword or a named variant"])
+        reg = with_line(deck, "p.page.register", "Playful")
+        self.assertEqual([f[:3] for f in findings(reg) if f[2] == "META"], [("FAIL", "p.page.register", "META")])
+        self.assertEqual(details("META", reg), ["'Playful' is not a register name"])
+        nokw = drop_line(deck, "p.page.keyword")
+        self.assertEqual([f[:3] for f in findings(nokw) if f[2] == "META"], [("FAIL", "p.page.keyword", "META")])
+        self.assertEqual(details("META", nokw), ["a Search page needs a keyword"])
+        self.assertNotIn("META", rules(drop_line(read("deck-clean-direct.md"), "p.page.keyword")))
+
     def test_value_blocks_warn_outside_four_to_eight(self):
         deck = read("deck-clean-direct.md")
         for n, level in ((3, "WARN"), (4, None), (8, None), (9, "WARN")):

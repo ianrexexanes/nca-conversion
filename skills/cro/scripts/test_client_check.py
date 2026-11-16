@@ -54,6 +54,11 @@ class ClientCheckTests(unittest.TestCase):
     def test_fails_on_hormozi(self):
         code, out = run("This follows Hormozi's value equation.\n")
         self.assertEqual(code, 1); self.assertIn("FAIL person", out)
+    def test_fails_on_the_other_panel_names(self):
+        for name in ["David Ogilvy", "Eugene Schwartz", "April Dunford", "Rory Sutherland", "Byron Sharp", "Seth Godin"]:
+            with self.subTest(name=name):
+                code, out = run("As %s teaches, the page should say so.\n" % name)
+                self.assertEqual(code, 1); self.assertIn("FAIL person", out)
     def test_passes_measured_pagespeed_fact(self):
         code, out = run("Google's PageSpeed Insights, run on October 13, 2026, "
                         "scores the home page 55 out of 100 on a phone.\n")

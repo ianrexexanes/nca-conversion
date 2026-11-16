@@ -187,7 +187,7 @@ class DeckCheckTest(unittest.TestCase):
         self.assertIsNone(level_of("BUTTON_WORDS", with_button("Book my free pump check →")))
 
     def test_button_word_count_bands(self):
-        for label, level in (("Start", "FAIL"), ("Book inspection", None), ("Book my free pump check", None),
+        for label, level in (("Start", "FAIL"), ("→", "FAIL"), (">>", "FAIL"), ("Book inspection", None), ("Book my free pump check", None),
                              ("See which of my pumps fail", "WARN"), ("See which of my pumps need service", "WARN"),
                              ("See which of my pumps need a service", "FAIL")):
             self.assertEqual(level_of("BUTTON_WORDS", with_button(label)), level, label)

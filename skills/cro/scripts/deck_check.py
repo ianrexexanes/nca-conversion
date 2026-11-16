@@ -246,7 +246,7 @@ def check_namespace(deck, ns, part, final, add):
         if label is None:
             continue
         n = len([t for t in label.split() if not _symbol_only(t)])
-        if n == 1 or n >= 8:
+        if n <= 1 or n >= 8:
             add("FAIL", k, "BUTTON_WORDS", "%d word(s) in %r; use two to five" % (n, label))
         elif n >= 6:
             add("WARN", k, "BUTTON_WORDS", "%d words in %r; keep it only when the outcome needs the words" % (n, label))

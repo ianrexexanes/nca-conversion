@@ -1406,6 +1406,13 @@ class PageCommandTests(unittest.TestCase):
             self.assertIn(part, flat(page))
 
 
+class PageDeckOrderTests(unittest.TestCase):
+    def test_step_9_puts_the_header_keys_before_the_hero_keys(self):
+        step = flat(step_of(read("skills", "cro", "references", "page.md"), 9))
+        self.assertNotIn("then the header keys between", step)
+        self.assertIn("The header keys go after the cta keys and before the hero keys, and every other section follows in the order step 2 chose", step)
+
+
 class PendingModeTests(unittest.TestCase):
     def test_page_and_hero_step_1_stop_for_a_mode_pending_page_and_the_kickoff_goes_on(self):
         rule = "When the brief records the page as `mode pending: keyword research`, write nothing and name `/cro research`."

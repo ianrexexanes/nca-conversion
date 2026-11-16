@@ -307,8 +307,8 @@ def read_label(args):
     label = deck.label(ns, v)
     if label is None:
         raise BadInput("the deck has no button label for %s (neither %s.cta.hook.<variant> nor %s.cta.button)" % (ns, ns, ns))
-    args.label = label
-    args.label_key = "%s.cta.hook.%s" % (ns, v) if v and "%s.cta.hook.%s" % (ns, v) in deck.values else "%s.cta.button" % ns
+    args.label = " ".join(label.split())  # the page side is folded the same way (clean() in the page script)
+    args.label_key = deck.label_key(ns, v)
     args.variant_used = v
 
 

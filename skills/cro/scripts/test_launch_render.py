@@ -98,6 +98,14 @@ class LaunchRenderTests(unittest.TestCase):
         _c, out, rows = self.render("late-button.html", 1440, "--deck", str(VARIANTS), "--variant", "b")
         self.assertTrue(self.has(rows, "FAIL", "LABEL_FOLD", 1440, "p.cta.hook.b"), out)
 
+    def test_a_label_with_a_no_break_space_is_found_on_the_page(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            deck = Path(tmp) / "deck.md"
+            deck.write_text(VARIANTS.read_text(encoding="utf-8").replace("p.cta.button: Book my pump check", "p.cta.button: Book my pump check\u202f!", 1), encoding="utf-8")
+            _c, out, rows = self.render("label-spaces.html", 1440, "--deck", str(deck), "--variant", "c")
+        self.assertFalse(self.has(rows, "FAIL", "LABEL_FOLD", 1440), out)
+        self.assertFalse(self.has(rows, "FAIL", "ONE_TARGET", 1440), out)
+
     def test_every_action_button_shares_one_target(self):
         _c, out, rows = self.render("two-targets.html", 1440, "--deck", str(VARIANTS), "--variant", "c")
         self.assertTrue(self.has(rows, "FAIL", "ONE_TARGET", 1440), out)

@@ -38,10 +38,11 @@ class Deck:
             return self.values["%s.hero.%s.%s" % (ns, v, slot)]
         return self.values.get("%s.hero.%s" % (ns, slot))
 
+    def label_key(self, ns, v):
+        return "%s.cta.hook.%s" % (ns, v) if v and "%s.cta.hook.%s" % (ns, v) in self.values else "%s.cta.button" % ns
+
     def label(self, ns, v):
-        if v and "%s.cta.hook.%s" % (ns, v) in self.values:
-            return self.values["%s.cta.hook.%s" % (ns, v)]
-        return self.values.get("%s.cta.button" % ns)
+        return self.values.get(self.label_key(ns, v))
 
 
 def parse_deck(text):

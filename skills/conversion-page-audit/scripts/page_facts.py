@@ -14,13 +14,12 @@ specifically, because that particular defect — deferring the browser's earlies
 candidate behind the lazy-load trigger — IS deterministically visible in markup
 even though LCP identification itself is not.
 
-Known limitation: the heading/link/button collector is one stack shared across
-all three tag families, not a per-subtree accumulator. An `<a>` nested inside a
-heading routes its text into the link's buffer instead of the heading's, so
-`<h1>See <a href="#">more</a></h1>` reports as `{"level": 1, "text": "See"}` —
-the heading loses the anchor text. This is a fidelity limit of treating
-headings/links/buttons as siblings on one stack, not a parsing bug, and
-re-architecting the collector to track nested subtrees is out of scope here.
+Nesting: the heading/link/button collector is one stack, but every open element on it
+receives each text node, as a browser's textContent does. `<h1>See <a href="#">more</a></h1>`
+reports as `{"level": 1, "text": "See more"}` and also lists the link "more"; an `<a>` that wraps
+a heading carries that heading's text as its label. What remains true: the text of a nested
+element counts once for each element that contains it, so a link inside a heading is in both lists,
+and the collector reads markup only, not styles or scripts that change what a visitor sees.
 
 Usage:
     python3 page_facts.py <file.html|url> [--url <original-url>] [--out FILE]
@@ -252,8 +251,8 @@ class _Collector(HTMLParser):
     def handle_data(self, data):
         if self._in_svg_title:
             return
-        if self._buf:
-            self._buf[-1].append(data)
+        for buf in self._buf:  # every open element gets the text, as a browser's textContent does
+            buf.append(data)
 
     def handle_endtag(self, tag):
         self._scope.end(tag)

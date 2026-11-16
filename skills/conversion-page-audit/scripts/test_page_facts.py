@@ -26,6 +26,13 @@ class ExtractFactsTest(unittest.TestCase):
         self.assertEqual(headings[0]["level"], 1)
         self.assertEqual([h["level"] for h in headings], [1, 2, 2, 3])
 
+    def test_a_heading_that_wraps_a_link_keeps_its_text(self):
+        html = ('<body><h1><a href="/">Bike repair in <span>Harbor</span> Lane</a></h1>'
+                '<h2>See <a href="/x">more</a></h2><a href="/c"><h3>Card title</h3></a></body>')
+        facts = extract_facts(html)
+        self.assertEqual([h["text"] for h in facts["headings"]], ["Bike repair in Harbor Lane", "See more", "Card title"])
+        self.assertEqual([l["text"] for l in facts["links"]], ["Bike repair in Harbor Lane", "more", "Card title"])
+
     def test_single_h1_produces_no_heading_note(self):
         notes = extract_facts(self.html)["notes"]
         self.assertFalse(any("h1" in n.lower() for n in notes))

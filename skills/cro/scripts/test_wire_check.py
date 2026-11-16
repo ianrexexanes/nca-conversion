@@ -38,6 +38,9 @@ TINY_FRAME = """<main data-deck="tiny.md" data-ns="p" data-variant="">
 <figure data-visual="p.hero.visual">A technician beside a pump</figure>
 </section>
 </main>
+<!--
+- hero: split-media, because the hero must name the visitor and the offer at once.
+-->
 """
 
 
@@ -216,6 +219,43 @@ class WireCheckTest(unittest.TestCase):
     def test_a_deck_with_one_variant_needs_no_flag(self):
         deck, frame = self.write(TINY_DECK, "deck.md"), self.write(TINY_FRAME)
         self.assertEqual(run(frame, "--deck", deck), (0, SUMMARY_0 + "\n"))
+
+    def test_notes_family_differs_from_layout_fails(self):
+        framed = self.write(replace_once(read(WIRE_A), r'(data-section="p\.faq" data-layout=")accordion"', r'\1stacked"'))
+        code, out = run(framed, "--deck", DECK, "--variant", "a")
+        self.assertEqual(code, 1)
+        self.assertIn("FAIL p.faq NOTES: notes say accordion, the frame says stacked", out)
+        self.assertTrue(out.endswith("wire_check: 1 FAIL, 0 WARN\n"), out)
+
+    def test_section_without_notes_line_warns(self):
+        framed = self.write(replace_once(read(WIRE_A), r"(?m)^- faq: .*\n", ""))
+        code, out = run(framed, "--deck", DECK, "--variant", "a")
+        self.assertEqual(code, 0, out)
+        self.assertIn("WARN p.faq NOTES", out)
+        self.assertTrue(out.endswith("wire_check: 0 FAIL, 1 WARN\n"), out)
+        bare = self.write(replace_once(read(WIRE_A), r"(?s)<!--\n- header.*?-->\n", ""))
+        code, out = run(bare, "--deck", DECK, "--variant", "a")
+        self.assertEqual(code, 0, out)
+        self.assertRegex(out, r"(?m)^WARN \S+ NOTES: no comment after </main>")
+        self.assertTrue(out.endswith("wire_check: 0 FAIL, 1 WARN\n"), out)
+
+    def test_ruling_lines_are_not_section_notes(self):
+        ruling = ("- Impeccable eyebrow ban: the line above the H1 stays, because the visitor asks who the page is for; mode search.\n"
+                  "- Hallmark Floor rule on eyebrows: stacked, because the answer comes first; mode direct.\n")
+        text = replace_once(read(WIRE_A), r"(?m)^- faq: .*\n", ruling)
+        code, out = run(self.write(text), "--deck", DECK, "--variant", "a")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(out.count("NOTES"), 1, out)  # the faq line is gone; the ruling lines add no row of their own
+        self.assertIn("WARN p.faq NOTES", out)
+
+    def test_matching_notes_pass(self):
+        for wire, variant in ((WIRE_A, "a"), (WIRE_B, "b")):
+            self.assertEqual(run(wire, "--deck", DECK, "--variant", variant), (0, SUMMARY_0 + "\n"))
+        full = replace_once(read(WIRE_A), r"(?m)^- hero: ", "- p.hero: ")  # the full data-section value names a section too
+        self.assertEqual(run(self.write(full), "--deck", DECK, "--variant", "a"), (0, SUMMARY_0 + "\n"))
+        inside = read(WIRE_A).replace("</main>\n", "", 1).replace("</body>", "</main>\n</body>", 1)  # notes before </main> are no notes
+        code, out = run(self.write(inside), "--deck", DECK, "--variant", "a")
+        self.assertIn("NOTES: no comment after </main>", out)
 
     def test_unreadable_input_is_bad_input(self):
         self.bad(str(FIXTURES / "no-such-file.html"), "--deck", DECK, "--variant", "a")

@@ -27,6 +27,7 @@ LAYOUT_RULES = {
     "faq": ("accordion", "stacked"),
     "closer": ("cta-band", "form-split"),
 }
+NOTES_LINE = re.compile(r"^\s*-\s*([^:\n]+?)\s*:\s*([^,\n]*?)\s*(?:,|$)")
 NO_VISUAL = ("header", "faq")  # the sections that need no data-visual
 BUTTON_TAGS = ("a", "button")
 VOID = frozenset({"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"})
@@ -59,6 +60,7 @@ class Frame(HTMLParser):
         self.keyed = []  # (key, tag, text) per data-key element
         self.visuals = []  # (visual key, text, owning section dict or None) per data-visual element
         self.loose = []  # (section dict, text) for visible text inside a section and outside every key and visual
+        self.notes = None  # the comments after the last </main>, one string each; None while no </main> has closed
         self.stack = []
 
     def handle_starttag(self, tag, attrs):
@@ -79,7 +81,13 @@ class Frame(HTMLParser):
             self.sections.append(entry["section"])
         self.stack.append(entry)
 
+    def handle_comment(self, data):
+        if self.notes is not None:
+            self.notes.append(data)
+
     def handle_endtag(self, tag):
+        if tag == "main":
+            self.notes = []  # only the comments after the last </main> are the notes block
         for at in range(len(self.stack) - 1, -1, -1):
             if self.stack[at]["tag"] == tag:
                 while len(self.stack) > at:
@@ -175,6 +183,35 @@ def visual_key(deck, ns, section, v):
     return "%s.%s.visual" % (ns, section)
 
 
+def notes_families(frame):
+    """{section name: family} from the notes lines `- <section>: <family>, because ...` in the comments after </main>. <section>
+    is a section's data-section value or the part after its first dot; a line that names no section of the frame is no note."""
+    names = {}
+    for section in frame.sections:
+        name = section["name"]
+        names[name] = names[name.split(".", 1)[-1]] = name
+    families = {}
+    for comment in frame.notes or []:
+        for line in comment.splitlines():
+            found = NOTES_LINE.match(line)
+            if found and found.group(1) in names:
+                families.setdefault(names[found.group(1)], found.group(2))
+    return families
+
+
+def check_notes(frame, add):
+    if not frame.notes:
+        add("WARN", "main", "NOTES", "no comment after </main>")
+        return
+    families = notes_families(frame)
+    for section in frame.sections:
+        name = section["name"]
+        if name not in families:
+            add("WARN", name, "NOTES", "no notes line for this section")
+        elif section["layout"] and families[name] != section["layout"]:
+            add("FAIL", name, "NOTES", "notes say %s, the frame says %s" % (families[name], section["layout"]))
+
+
 def check(deck, frame, ns, v):
     out = []
 
@@ -205,6 +242,7 @@ def check(deck, frame, ns, v):
                 add("FAIL", name, "VISUAL", "the figure names %s; this frame's visual is %s" % (key, want))
             elif text and key in deck.values and text != squash(deck.values[key]):
                 add("FAIL", key, "PARITY", differs(text, squash(deck.values[key])))
+    check_notes(frame, add)
     for key, kind, text in rendered(deck, ns, v):
         found = [(tag, shown) for k, tag, shown in frame.keyed if k == key]
         if not found:

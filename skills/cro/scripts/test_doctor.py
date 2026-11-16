@@ -2,6 +2,7 @@ import contextlib
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -125,10 +126,44 @@ class HallmarkLintTest(unittest.TestCase):
             script.write_text("// stand-in\n", encoding="utf-8")
             code_one, found = self._line(home)
         self.assertEqual(none["detail"], "not found")
-        self.assertEqual(found["detail"], str(script))
+        self.assertIn(str(script), found["detail"])
         self.assertIn(none["status"], ("OK", "WARN"))
         self.assertIn(found["status"], ("OK", "WARN"))
         self.assertEqual(code_none, code_one)
+
+
+class HallmarkRenderTierTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.home = Path(self.tmp.name, "home")
+        self.script = self.home / ".claude/plugins/cache/stand-in/hallmark/9.9.9/hallmark/scripts/sloplint.mjs"
+        self.script.parent.mkdir(parents=True)
+        self.script.write_text("// stand-in\n", encoding="utf-8")
+        self.project = Path(self.tmp.name, "project")
+        self.project.mkdir()
+
+    def _row(self, roots):
+        with mock.patch.object(doctor.Path, "home", return_value=self.home):
+            return doctor.check_hallmark_lint(roots=roots)
+
+    def test_hallmark_lint_warns_without_puppeteer(self):
+        row = self._row([self.project, self.script.parent])
+        self.assertEqual(row["status"], "WARN")
+        self.assertIn(str(self.script), row["detail"])
+        self.assertIn("render tier off: no puppeteer-core found", row["detail"])
+        with mock.patch.object(doctor.Path, "home", return_value=Path(self.tmp.name, "empty")):
+            self.assertEqual(doctor.check_hallmark_lint(roots=[self.project]), {"check": "hallmark-lint", "status": "WARN", "detail": "not found"})
+
+    def test_hallmark_lint_ok_with_puppeteer(self):
+        for name, folder in (("puppeteer-core", self.project), ("puppeteer", self.script.parent)):
+            package = folder / "node_modules" / name / "package.json"
+            package.parent.mkdir(parents=True)
+            package.write_text("{}", encoding="utf-8")
+            roots = [self.project / "sub" if folder == self.project else self.script.parent]
+            row = self._row(roots)  # a node_modules in the root's own folder or a parent folder counts
+            self.assertEqual((row["status"], row["detail"]), ("OK", str(self.script)), name)
+            shutil.rmtree(folder / "node_modules")
 
 
 class SetupDryRunTest(unittest.TestCase):

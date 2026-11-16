@@ -1,6 +1,7 @@
 """Report the state of the /cro runtime. Changes nothing."""
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -58,10 +59,39 @@ def check_companions():
     return row("companions", "WARN" if missing else "OK", detail)
 
 
-def check_hallmark_lint():
-    """The first sloplint.mjs in a Hallmark install under the home's plugin cache (its 2.0.0 layout)."""
+def puppeteer_roots(script):
+    """Where Hallmark's render tier looks for puppeteer-core or puppeteer, in its order: $HALLMARK_PUPPETEER, the current
+    folder, the folder of its script, the parent of `npm root -g` (skipped when npm is missing or fails)."""
+    roots = [Path(os.environ["HALLMARK_PUPPETEER"])] if os.environ.get("HALLMARK_PUPPETEER") else []
+    roots += [Path.cwd(), script.parent]
+    try:
+        done = subprocess.run(["npm", "root", "-g"], capture_output=True, text=True, timeout=30)
+        if done.returncode == 0 and done.stdout.strip():
+            roots.append(Path(done.stdout.strip()).parent)
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return roots
+
+
+def resolves_puppeteer(roots):
+    """True when puppeteer-core or puppeteer resolves from a root as Node resolves a bare name: a node_modules/<name>/package.json
+    in the root or any parent folder."""
+    for root in roots:
+        for folder in (root, *root.parents):
+            if any((folder / "node_modules" / name / "package.json").is_file() for name in ("puppeteer-core", "puppeteer")):
+                return True
+    return False
+
+
+def check_hallmark_lint(roots=None):
+    """The first sloplint.mjs in a Hallmark install under the home's plugin cache (its 2.0.0 layout), OK only when its render
+    tier can load puppeteer. roots is the list of folders to resolve from; it defaults to puppeteer_roots(script)."""
     found = sorted(Path.home().glob(".claude/plugins/cache/*/hallmark/*/hallmark/scripts/sloplint.mjs"))
-    return row("hallmark-lint", "OK" if found else "WARN", str(found[0]) if found else "not found")
+    if not found:
+        return row("hallmark-lint", "WARN", "not found")
+    if resolves_puppeteer(puppeteer_roots(found[0]) if roots is None else roots):
+        return row("hallmark-lint", "OK", str(found[0]))
+    return row("hallmark-lint", "WARN", "%s; render tier off: no puppeteer-core found" % found[0])
 
 
 def run_checks(data_dir: Path):

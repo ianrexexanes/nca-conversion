@@ -2256,6 +2256,12 @@ class RoundFixTests(unittest.TestCase):
         self.assertIn("final answer", step)
         self.assertIn('{"from": "http://example.com/", "to": "https://example.com/", "status": 200}', step)
 
+    def test_design_step_8_states_a_missing_render_tier(self):
+        step = [l for l in (REFS / "design.md").read_text(encoding="utf-8").splitlines() if l.startswith("8.")][0]
+        self.assertIn("render tier off", step)
+        self.assertIn("without `--render`", step)
+        self.assertIn("design notes", step)
+
     def test_form_tests_write_to_separate_folders(self):
         form = (REFS / "form.md").read_text(encoding="utf-8")
         for folder in ("read-only", "simulated-success", "simulated-error", "consent"):

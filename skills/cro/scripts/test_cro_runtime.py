@@ -506,6 +506,9 @@ class GuardStackTest(unittest.TestCase):
             "p.firefox.launch()": "p.firefox.launch()",
             "launch_persistent_context": "p.chromium.launch_persistent_context(d)",
             "connect_over_cdp": "p.chromium.connect_over_cdp(u)",
+            "connect": "p.chromium.connect(u)",
+            "new_cdp_session": "ctx.new_cdp_session(page)",
+            "route_web_socket": "ctx.route_web_socket(r, h)",
             "spaced new_context": "browser.new_context ()",
             "add_init_script": "ctx.add_init_script(s)",
             "context.route": 'context.route("**/*", h)',
@@ -517,6 +520,9 @@ class GuardStackTest(unittest.TestCase):
         self.assertTrue(guard_bypasses(comment_only, "render_check.py"), "guarded_page only in a comment")
         docstring_only = '"""cro_runtime.guarded_page(context, rec)"""\n' + comment_only
         self.assertTrue(guard_bypasses(docstring_only, "render_check.py"), "guarded_page only in a docstring")
+        for dropped in ("guarded_launch", "guarded_context"):  # every helper but one is called: the missing one is named
+            partial = "".join(line + "\n" for line in clean_calls.splitlines() if "cro_runtime." + dropped not in line)
+            self.assertEqual(guard_bypasses(partial, "render_check.py"), ["render_check.py: no call to cro_runtime." + dropped], dropped)
         clean = clean_calls + "page.route(action, h)\nbrowser.close()\n"
         self.assertEqual(guard_bypasses(clean, "form_check.py"), [])
         self.assertEqual(guard_bypasses(clean_calls + "browser.close()\n", "render_check.py"), [])

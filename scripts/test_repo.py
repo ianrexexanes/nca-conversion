@@ -1945,5 +1945,178 @@ class FounderPlaybookTests(unittest.TestCase):
                 self.assertTrue(domain.endswith(".example"), "%s: %s" % (name, domain))
 
 
+class DiagnoseTests(unittest.TestCase):
+    STEP_FIRST = re.compile(r"^1\. ", re.M)
+    LEGS = (
+        (2, "Traffic and search: are the right people arriving?"),
+        (3, "The page: do they see it is for them?"),
+        (4, "Form and behaviour: do they act?"),
+        (5, "Follow-up: what happens after they act?"),
+        (6, "The offer: would they buy?"),
+        (7, "Demand: do people want it?"),
+    )
+    REF = "${CLAUDE_PLUGIN_ROOT}/skills/cro/references/"
+    NEVER_AUDIT = "Never run claude-seo's `seo-audit`: it audits a whole site and hands its work to subagents."
+    NO_SUBAGENTS = ("Start no subagents, and use no browser tool from an MCP server: every leg runs in this conversation, "
+                    "one after another, and a page is rendered only by the plugin's own scripts, which block the site's analytics.")
+    ORDER = ("The walk keeps the buyer-path order, from the visit to the sale, rather than starting with whether people want the "
+             "offer, because a free diagnosis sees the traffic and the page from outside; only the owner's data answers whether "
+             "people want it.")
+
+    def setUp(self):
+        self.raw = read_or_empty("skills", "cro", "references", "diagnose.md")
+        self.text = flat(self.raw)
+        first = self.STEP_FIRST.search(self.raw)
+        self.before = flat(self.raw[:first.start()]) if first else self.text
+
+    def step(self, n):
+        return flat(step_of(self.raw, n))
+
+    def test_it_opens_with_the_paths_note(self):
+        self.assertTrue(self.raw, "diagnose.md is missing")
+        self.assertEqual(self.raw.splitlines()[0], "# The /cro diagnose procedure")
+        self.assertIn("This is the procedure `/cro diagnose` follows. It writes the plugin's folder as `${CLAUDE_PLUGIN_ROOT}` "
+                      "and its data folder as `${CLAUDE_PLUGIN_DATA}`. The shell sets neither one, so put the full paths the `cro` "
+                      "skill gave you in their place in every command you run and every file you read. Any argument that can hold "
+                      "a space, such as a folder name, goes in quotation marks. The output is a buyer-path diagnosis of one site, "
+                      "internal first and then a client version.", self.before)
+
+    def test_it_carries_eleven_numbered_steps(self):
+        numbers = [int(n) for n in re.findall(r"^(\d+)\. ", self.raw, re.M)]
+        self.assertEqual(numbers, list(range(1, 12)))
+        self.assertEqual(re.findall(r"^## ", self.raw, re.M), [], "no heading below the title")
+
+    def test_the_legs_follow_the_buyer_path(self):
+        for n, label in self.LEGS:
+            self.assertTrue(self.step(n).startswith("%d. **%s**" % (n, label)), "step %d" % n)
+
+    def test_the_walk_keeps_the_buyer_path_order_and_says_why(self):
+        self.assertIn(self.ORDER, self.before)
+        self.assertEqual(self.text.count(self.ORDER), 1)
+
+    def test_each_leg_names_its_command_or_reference(self):
+        names = {
+            1: ["python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/doctor.py --data-dir ${CLAUDE_PLUGIN_DATA}", "companions",
+                "clarity-token", "<project folder>/_audit-data/<page-slug>-<YYYY-MM-DD>/", "Search Console", "**Written by:**"],
+            2: [self.REF + "lead-sources.md", "seo-page", "seo-google", "search_check.py"],
+            3: ["/cro audit", self.REF + "audit.md", self.REF + "positioning.md", "factor 1", "factor 2", "6 or under"],
+            4: ["/cro form", self.REF + "form.md", "/cro data", self.REF + "data.md", "steps 1 to 5"],
+            5: [self.REF + "sales-follow-up.md", "form_consent.py", "owner's yes", "steps 6 and 7",
+                "a lead hears back within minutes, not days"],
+            6: ["${CLAUDE_PLUGIN_ROOT}/skills/offer-architect/references/offer-audit-checklist.md", "no composite score"],
+            7: ["/cro research", self.REF + "research.md"],
+            11: ["/cro compare", self.REF + "compare.md", "every other leg is read again from its own new evidence"],
+        }
+        for n, wanted in names.items():
+            step = self.step(n)
+            self.assertTrue(step, "step %d is missing" % n)
+            for name in wanted:
+                self.assertIn(name, step, "step %d" % n)
+
+    def test_traffic_leg_names_seo_page_and_seo_google(self):
+        step = self.step(2)
+        self.assertRegex(step, r"claude-seo's `seo-page` on the page's raw HTML, never with claude-seo's render option")
+        self.assertIn("claude-seo's renderer does not block the site's analytics", step)
+        self.assertRegex(step, r"`seo-google` for the page's Search Console data when the user has Search Console access")
+        self.assertRegex(step, r"Without claude-seo, run `search_check\.py`")
+        self.assertRegex(step, r"On a Direct page the search part is skipped")
+
+    def test_diagnose_never_calls_the_site_audit(self):
+        self.assertEqual(self.text.count("seo-audit"), 1)
+        self.assertEqual(self.text.count(self.NEVER_AUDIT), 1)
+        self.assertIn(self.NEVER_AUDIT, self.step(2))
+
+    def test_demand_is_asked_last_and_goes_back_to_research(self):
+        step = self.step(7)
+        self.assertIn("only when every other leg passes and leads still do not buy", step)
+        self.assertRegex(step, r"which goes back to `/cro research`")
+        self.assertRegex(step, r"A free diagnosis does not reach it")
+        self.assertEqual([m.start() for m in re.finditer(r"\*\*Demand: ", self.raw)], [self.raw.index("**Demand: ")])
+        self.assertGreater(self.raw.index("**Demand: "), self.raw.index("**The offer: "))
+
+    def test_it_says_which_legs_were_skipped_and_why(self):
+        step = self.step(8)
+        self.assertTrue(step.startswith("8. Say which legs were skipped and why"))
+        self.assertIn("## Skipped legs", step)
+        self.assertIn("- <leg>: skipped, because <reason>.", step)
+        self.assertIn("A leg is never left out silently.", step)
+        for n, reason in ((2, "Direct page"), (2, "Without claude-seo"), (2, "has Search Console access"), (4, "without a form"),
+                          (4, "skip it with its reason"), (5, "Without the owner"), (7, "does not reach it")):
+            self.assertIn(reason.lower(), self.step(n).lower(), "step %d: %s" % (n, reason))
+        for n in range(2, 8):
+            self.assertRegex(self.step(n), r"(?i)skip", "step %d names what it skips" % n)
+
+    def test_a_test_lead_needs_the_owners_yes(self):
+        step = self.step(5)
+        self.assertIn("form_consent.py", step)
+        self.assertIn("owner's yes", step)
+        self.assertRegex(step, r"Claude Code asks about before it sends")
+        mark = self.raw.index("\n5. ")
+        self.assertNotIn("form_consent.py", self.raw[:mark])
+        self.assertNotIn("form_consent.py", flat(step_of(self.raw, 4)))
+        self.assertIn("stop before its step 6", self.step(4))
+
+    def test_the_internal_report_has_a_section_per_leg(self):
+        step = self.step(9)
+        self.assertIn("<project folder>/Buyer-Path Diagnosis — <Site> — <YYYY-MM-DD>.md", step)
+        names = ["## Traffic and search", "## The page", "## Form and behaviour", "## Follow-up", "## The offer", "## Demand",
+                 "## Skipped legs", "## Leaks in fix order"]
+        at = [step.index(name) for name in names]
+        self.assertEqual(at, sorted(at))
+        self.assertIn("`score.py`'s `line` word for word", step)
+        self.assertRegex(step, r"an earlier leg first where two cost about the same")
+
+    def test_the_client_version_follows_client_version_md(self):
+        step = self.step(10)
+        self.assertIn("<project folder>/Buyer-Path Diagnosis — <Site> — <YYYY-MM-DD> — client.md", step)
+        self.assertIn(self.REF + "client-version.md", step)
+        self.assertIn("the three costliest leaks across the legs, in the order to fix them", step)
+        self.assertIn("no score", step)
+        self.assertIn("Public pages only. No logins, and no form was sent.", step)
+        self.assertRegex(step, r"says where it was seen")
+
+    def test_it_runs_client_check(self):
+        step = self.step(10)
+        self.assertIn("python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/client_check.py <client file>", step)
+        self.assertIn("fix every FAIL", step)
+
+    def test_it_starts_no_subagents(self):
+        self.assertIn(self.NO_SUBAGENTS, self.before)
+        self.assertEqual(self.text.count(self.NO_SUBAGENTS), 1)
+
+    def test_every_path_it_names_exists(self):
+        paths = re.findall(r"\$\{CLAUDE_PLUGIN_ROOT\}/([^\s`'\"<>)]+)", self.raw)
+        paths = [p.rstrip(".,;:") for p in paths]
+        self.assertGreaterEqual(len(paths), 8)
+        for path in paths:
+            self.assertTrue((ROOT / path).is_file(), path)
+        for script in ("doctor.py", "search_check.py", "form_consent.py", "client_check.py", "score.py"):
+            self.assertIn(script, self.raw)
+            self.assertTrue((ROOT / "skills" / "cro" / "scripts" / script).is_file(), script)
+
+    def test_it_names_no_source(self):
+        self.assertTrue(self.raw, "diagnose.md is missing")
+        for word in ("founder-playbook", "skills/diagnose", "obviously-awesome", "100m-leads", "spin-selling", "One-Skill",
+                     "Misdiagnosis"):
+            self.assertNotIn(word, self.raw)
+        bare = re.sub(r"`[^`\n]*`", "", self.raw)
+        for domain in re.findall(r"\b[\w-]+(?:\.[\w-]+)*\.(?:[a-z]{2,})\b", bare):
+            self.assertTrue(domain.endswith(".example"), domain)
+
+    def test_attribution_maps_diagnose_to_its_source(self):
+        text = read("ATTRIBUTION.md")
+        sentence = ("Its diagnostic questions, read in `skills/diagnose`, inform the legs of `skills/cro/references/diagnose.md`, "
+                    "which walks them in the buyer-path order with demand last rather than in the source's order.")
+        row = next((r for r in text.splitlines() if "getagentseal/founder-playbook](" in r), "")
+        self.assertIn(sentence + " The licence notice and the source books follow this section's notes.", flat(row))
+        rows = [r for r in text.splitlines() if r.startswith("| `skills/cro/references/diagnose.md`")]
+        self.assertEqual(len(rows), 1)
+        self.assertIn("`getagentseal/founder-playbook` at `e811e63`, `skills/diagnose`", rows[0])
+        self.assertIn("its five questions only", rows[0])
+        self.assertRegex(flat(rows[0]), r"walked in the buyer-path order with demand last rather than in the source's order")
+        self.assertRegex(flat(rows[0]), r"no term kept word for word")
+        self.assertRegex(flat(rows[0]), r"The legs' commands, references and outputs are the plugin's own\.")
+
+
 if __name__ == "__main__":
     unittest.main()

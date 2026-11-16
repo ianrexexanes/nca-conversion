@@ -243,6 +243,23 @@ class DeckCheckTest(unittest.TestCase):
         self.assertIn("p.header.nav", search)
         self.assertNotIn("HEADER_EXITS", rules(search))
 
+    def test_closer_parts_name_each_missing_part(self):
+        base = read("deck-clean-direct.md")
+        self.assertNotIn("CLOSER_PARTS", rules(base))
+        for part in ("h2", "proof", "cta"):
+            got = details("CLOSER_PARTS", drop_line(base, "p.closer." + part))
+            self.assertEqual(got, ["closer lacks " + part], part)
+
+    def test_closer_bullets_three_to_five(self):
+        base = read("deck-clean-direct.md")
+        for n, fires in ((2, True), (3, False), (5, False), (6, True)):
+            text = drop_line(drop_line(drop_line(base, "p.closer.bullet1"), "p.closer.bullet2"), "p.closer.bullet3")
+            for i in range(1, n + 1):
+                text = add_line(text, "p.closer.bullet%d: Bullet %d of the pump check" % (i, i))
+            self.assertEqual("CLOSER_PARTS" in rules(text), fires, n)
+            if fires:
+                self.assertEqual(details("CLOSER_PARTS", text), ["closer lacks three to five bullets (has %d)" % n])
+
     def test_value_blocks_warn_outside_four_to_eight(self):
         deck = read("deck-clean-direct.md")
         for n, level in ((3, "WARN"), (4, None), (8, None), (9, "WARN")):

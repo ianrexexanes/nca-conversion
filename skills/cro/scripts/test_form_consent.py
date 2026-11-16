@@ -18,7 +18,7 @@ sys.path.insert(0, str(HERE))
 import clarity_export  # noqa: E402
 import cro_runtime  # noqa: E402
 import form_consent  # noqa: E402
-from form_tests import FormServer, Run as run_mod, run_script, start_server  # noqa: E402
+from form_tests import FormServer, Run, run_script, start_server  # noqa: E402
 from guard_tests import SKIP, GuardLeakPathsMixin  # noqa: E402
 
 TODAY = date.today().isoformat()
@@ -105,6 +105,26 @@ class TerminalQuestionTests(unittest.TestCase):
         self.assertIn("form_consent: this sends one real test submission to example.com, through the form on https://example.com/contact.\n", err.getvalue())
         self.assertTrue(err.getvalue().endswith("Type example.com to send it, or press Enter to stop: "), err.getvalue())
 
+    def test_a_missing_standard_input_counts_as_no_terminal(self):
+        class Broken:
+            def isatty(self):
+                raise ValueError("I/O operation on closed file")
+
+        for stdin in (None, Broken()):
+            err = io.StringIO()
+            with mock.patch.object(sys, "stdin", stdin), contextlib.redirect_stderr(err):
+                self.assertIsNone(form_consent.ask_host("example.com", "https://example.com/contact"))
+            self.assertEqual(err.getvalue(), "")
+
+    def test_a_terminal_that_fails_on_the_read_counts_as_nothing_typed(self):
+        for failure in (OSError("hung up"), KeyboardInterrupt()):
+            class Failing(FakeTerminal):
+                def readline(self):
+                    raise failure
+
+            with mock.patch.object(sys, "stdin", Failing(True)), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(form_consent.ask_host("example.com", "https://example.com/contact"), "", failure)
+
 
 @SKIP
 class FormConsentTests(unittest.TestCase):
@@ -162,7 +182,7 @@ class FormConsentTests(unittest.TestCase):
             code = form_consent.main(["%s/%s" % (self.base, page), "--out", folder, *GOOD])
         with FormServer.lock:
             seen = list(FormServer.requests[mark:])
-        return run_mod(code, out.getvalue(), err.getvalue(), seen, folder)
+        return Run(code, out.getvalue(), err.getvalue(), seen, folder)
 
     def assertNothingSent(self, run):
         self.assertEqual(run.code, 3, run.out + run.err)
@@ -224,6 +244,16 @@ class FormConsentTests(unittest.TestCase):
         self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SEND") and "google-analytics.com" in d],
                         run.lines)
         self.assertEqual(run.data["network"]["consented"], 0)
+        self.assertTrue(run.logged("google-analytics.com", "blocked", "host:"), run.log)
+        self.assertEqual(run.posts(), [])
+
+    def test_a_blocked_host_typed_at_the_terminal_is_still_blocked(self):
+        run = self.in_process(FakeTerminal(True, "www.google-analytics.com\n"), "form-analytics.html", form_consent.LOOPBACK)
+        self.assertEqual(run.code, 3, run.err)
+        self.assertIn("Type www.google-analytics.com to send it", run.err)
+        self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SEND") and "google-analytics.com" in d], run.lines)
+        self.assertEqual(run.data["network"]["consented"], 0)
+        self.assertFalse([e for e in run.log if e["outcome"] == "consented"], run.log)
         self.assertTrue(run.logged("google-analytics.com", "blocked", "host:"), run.log)
         self.assertEqual(run.posts(), [])
 

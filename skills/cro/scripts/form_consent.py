@@ -38,13 +38,23 @@ LOOPBACK = ("127.0.0.1", "::1", "localhost")
 
 
 def ask_host(host, url):
-    """The host a person types at the terminal, or None when standard input is not a terminal (nothing is written then)."""
-    if not sys.stdin.isatty():
+    """The host a person types at the terminal, or None when there is no terminal on standard input (nothing is written then).
+    A terminal that fails on the read, or Ctrl-C at the question, counts as nothing typed."""
+    try:
+        if sys.stdin is None or not sys.stdin.isatty():
+            return None
+    except (AttributeError, ValueError, OSError):
         return None
     sys.stderr.write("form_consent: this sends one real test submission to %s, through the form on %s.\n" % (host, url))
     sys.stderr.write("Type %s to send it, or press Enter to stop: " % host)
     sys.stderr.flush()
-    return sys.stdin.readline().strip().lower()
+    try:
+        return sys.stdin.readline().strip().lower()
+    except (OSError, UnicodeError):
+        return ""
+    except KeyboardInterrupt:
+        sys.stderr.write("\n")
+        return ""
 
 
 def parse_args(argv):

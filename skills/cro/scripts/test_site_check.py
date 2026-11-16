@@ -318,6 +318,14 @@ class SiteCheckTests(unittest.TestCase):
         out = self.site({"/index.html": good.replace(' alt="hero picture"', ' alt=""')})[1]
         self.assertNotIn("ALT", rules_in(out), out)  # an empty alt marks a decorative image
 
+    def test_valueless_alt_is_no_alt_fail(self):
+        good = page_html(CLEAN_DECK)
+        page = good.replace("</body>", '<img src="a.png" alt><img src="b.png" alt=""><img src="c.png"></body>')
+        out = self.site({"/index.html": page})[1]
+        alts = [l for l in out.splitlines() if " ALT:" in l]
+        self.assertEqual(len(alts), 1, out)
+        self.assertIn("c.png", alts[0])
+
     def test_forbidden_words_match_whole_words_case_insensitively(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)

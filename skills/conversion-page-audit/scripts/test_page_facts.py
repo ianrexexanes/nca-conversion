@@ -62,6 +62,11 @@ class ExtractFactsTest(unittest.TestCase):
         self.assertIn("", alts, "alt='' means decorative and must be preserved as empty string")
         self.assertIn(None, alts, "a missing alt attribute must be None, not ''")
 
+    def test_valueless_alt_is_decorative(self):
+        html = '<html><body><img src="a.png" alt><img src="b.png" alt=""><img src="c.png"></body></html>'
+        images = extract_facts(html)["images"]
+        self.assertEqual([img["alt"] for img in images], ["", "", None])
+
     def test_lcp_candidates_are_document_order_and_flag_early_lazy_image(self):
         # The fixture's first image in document order (the hero image) carries
         # loading="lazy" -- the classic early-LCP-defect pattern, which IS

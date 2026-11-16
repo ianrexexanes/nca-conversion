@@ -68,14 +68,14 @@ carry weight — not more copy, which is what gets proposed and makes it worse.
 ## Worked example — a hero
 
 ```
-Rank             1 headline · 2 primary button · 3 subhead · 4 proof strip
+Rank             1 headline · 2 primary button · 3 subhead · 4 badge row
 Emphasis         1 element: the button. The headline holds rank by position, not by treatment.
 First screen     headline, button. Subhead if it fits in two lines at the narrow end.
 (narrowest viewport that matters: from analytics — 360 px wide)
 Scan path        headline → button → subhead
 Reads as         <the claim> → <the action> → <who it is for>
 Check            The path states a claim and an action but not who it is for, which is why the
-                 subhead is ranked third rather than fourth. The proof strip is decoration at
+                 subhead is ranked third rather than fourth. The badge row is decoration at
                  rank 4 and is a candidate for removal.
 ```
 

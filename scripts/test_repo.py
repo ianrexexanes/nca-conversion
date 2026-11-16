@@ -1621,6 +1621,12 @@ class WireframeTests(unittest.TestCase):
         self.assertEqual(found, [])
         self.assertIn("paper-refinement-spec.md", read("ATTRIBUTION.md"))
 
+    def test_the_worked_hero_example_does_not_call_the_proof_strip_decoration(self):
+        t = flat(read("skills", "design-handoff", "references", "paper-refinement-spec.md"))
+        example = t[t.index("## Worked example"):]
+        self.assertNotIn("proof strip is decoration", example)
+        self.assertIn("4 badge row", example)
+
     def test_wireframe_reference_names_the_method(self):
         text = flat(read("skills", "cro", "references", "wireframe.md"))
         for part in ("wire_check.py", "--variant", "get_guide", "finish_working_on_nodes", "1440", "390", "a visual per section",

@@ -144,7 +144,7 @@ def _anchors(sheet):
     return "0.2.x" if tuple(int(p) for p in version.split(".")) < (0, 3, 0) else "0.3.0"
 
 
-def score_block(b, a):
+def score_block(b, a, speed_b=None, speed_a=None):
     out = []
     changed = False
     for key in ("mode", "page_role"):
@@ -167,13 +167,19 @@ def score_block(b, a):
     if same:
         for fb, fa in zip(rb["factors"], ra["factors"]):
             head = f"Factor {fb['id']} ({fb['name']}):"
-            if fb["score"] is not None and fa["score"] is not None:
+            if fb["id"] == 10 and fb["score"] is not None and fa["score"] is not None and _source(speed_b) != _source(speed_a):
+                out.append(f"{head} not compared: {_label(speed_b)} against {_label(speed_a)}")
+            elif fb["score"] is not None and fa["score"] is not None:
                 out.append(f"{head} {fb['score']} -> {fa['score']}, {fa['score'] - fb['score']:+d}")
             elif fb["score"] is None and fa["score"] is None:
                 out.append(f"Factor {fb['id']} ({fb['name']}): not scored on either side")
             else:
                 out.append(f"{head} not compared: scored on one side")
     return out
+
+
+def _source(data):
+    return None if data is None else data["source"]
 
 
 def _label(data):
@@ -315,7 +321,7 @@ def facts_block(b, a):
 
 
 def compare(b, a):
-    lines = score_block(b["sheet"], a["sheet"])
+    lines = score_block(b["sheet"], a["sheet"], b["speed"], a["speed"])
     lines += speed_block(b["speed"], a["speed"])
     lines += search_block(b["search"], a["search"])
     lines += facts_block(b["facts"], a["facts"])

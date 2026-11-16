@@ -98,6 +98,18 @@ class CompareTests(Base):
         (none / "speed.json").unlink()
         self.assertIn("Speed: not compared: PageSpeed Insights against no speed.json", self.lines(BEFORE, none))
 
+    def test_factor_10_not_compared_across_speed_sources(self):
+        lines = self.lines(BEFORE, AFTER)
+        self.assertTrue([l for l in lines if l.startswith("Factor 10") and "->" in l])
+        lab = self.variant(AFTER, "after-lab10", **{"speed.json": lambda d: d.update(source="lighthouse-lab", label="lab data")})
+        lines = self.lines(BEFORE, lab)
+        self.assertIn("Factor 10 (Mobile and speed, measured): not compared: PageSpeed Insights against lab data", lines)
+        self.assertFalse([l for l in lines if l.startswith("Factor 10") and "->" in l])
+        self.assertEqual(len([l for l in lines if l.startswith("Factor ") and "->" in l]), 8)
+        none = self.variant(AFTER, "after-nospeed10")
+        (none / "speed.json").unlink()
+        self.assertIn("Factor 10 (Mobile and speed, measured): not compared: PageSpeed Insights against no speed.json", self.lines(BEFORE, none))
+
     def test_anchor_version_change_is_read_not_subtracted(self):
         old = self.variant(BEFORE, "before-old", **{"score.json": lambda d: d.pop("plugin_version")})
         lines = self.lines(old, AFTER)

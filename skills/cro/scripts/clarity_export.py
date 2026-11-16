@@ -49,7 +49,8 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 def loopback_endpoint(url):
     try:
         parts = urllib.parse.urlsplit(url)
-        return parts.scheme in ("http", "https") and parts.hostname in LOOPBACK
+        return (parts.scheme in ("http", "https") and parts.hostname in LOOPBACK
+                and "@" not in parts.netloc and "\\" not in parts.netloc)
     except ValueError:
         return False
 

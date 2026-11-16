@@ -303,9 +303,11 @@ class ValidationTest(ExportCase):
 
     def test_endpoint_override_refuses_a_non_loopback_host(self):
         bad = ("https://example.com/x", "http://127.0.0.1@host.example/x", "http://127.0.0.1.host.example/x",
-               "ftp://127.0.0.1/x", "http://127.0.0.2/x", "http:///x", "127.0.0.1")
+               "ftp://127.0.0.1/x", "http://127.0.0.2/x", "http:///x", "127.0.0.1",
+               "http://evil.example\\@127.0.0.1/x", "http://user@127.0.0.1/x", "http://a@b@127.0.0.1/x", "http://evil.example%2f@127.0.0.1/x")
         for url in bad:
             with self.subTest(url=url), mock.patch.object(clarity_export.cro_runtime, "clarity_token") as token:
+                self.assertFalse(clarity_export.loopback_endpoint(url))
                 code, out, err = self.run_main("--endpoint", url, endpoint=False)
                 self.assertEqual(code, 2)
                 self.assertEqual(out, "")

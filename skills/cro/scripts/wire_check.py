@@ -153,8 +153,8 @@ def frame_variant(deck, ns, asked, main):
 def rendered(deck, ns, v):
     """What the frame must show for variant v, in deck order: (key, kind, text).
 
-    kind is "text", "button" (an <a> or <button> showing the frame's label) or "label" (the label's own key, where an
-    element is optional). Page, meta, other variants' keys and visuals are left out: a visual is read from its section."""
+    kind is "text", "button" (an <a> or <button> showing the frame's label), "label" (the label's own key, where an
+    element is optional) or "nav" (one menu label of header.nav, a list split on semicolons). Page, meta, other variants' keys and visuals are left out: a visual is read from its section."""
     label = deck.label(ns, v)
     rows = []
     for key in deck.order:
@@ -162,7 +162,9 @@ def rendered(deck, ns, v):
         if parts[0] != ns or key in deck.foreign or len(parts) < 3 or parts[1] in ("page", "meta") or parts[-1] == "visual":
             continue
         value = deck.values[key]
-        if parts[1] == "cta":
+        if key == ns + ".header.nav":
+            rows.extend((key, "nav", label.strip()) for label in value.split(";") if label.strip())
+        elif parts[1] == "cta":
             if key == ns + ".cta.button" or key == "%s.cta.hook.%s" % (ns, v):
                 rows.append((key, "label", label if label is not None else value))
             elif parts[2] != "hook":
@@ -259,6 +261,10 @@ def check(deck, frame, ns, v):
         if not found:
             if kind != "label":
                 add("FAIL", key, "MISSING_KEY", "no element carries this key")
+            continue
+        if kind == "nav":  # each label sits in its own link or inside one keyed nav element
+            if not any(squash(text) in shown for _, shown in found):
+                add("FAIL", key, "PARITY", "the menu label %r is in no element with this key" % squash(text))
             continue
         for tag, shown in found:
             if kind != "text" and tag not in BUTTON_TAGS:

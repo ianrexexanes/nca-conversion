@@ -10,6 +10,7 @@ The copy is settled before a frame exists. A frame carries the deck's words and 
 4. Write the frame as HTML, in this format. The checker reads it, and so does the Paper route below.
    - `<main data-deck="<deck file name>" data-ns="<ns>" data-variant="<v>">`, with `data-variant` empty for a deck with one version.
    - One `<section data-section="<ns>.<section>" data-layout="<family>">` for each deck section, in the deck's order.
+   - `<ns>.header.nav` is a list split on semicolons, and each label is its own link carrying the key `<ns>.header.nav` or sits inside one element that does.
    - The `prooftop` element comes before the H1 on a Direct page and after it on a Search page.
    - Every piece of visible text is a leaf element carrying `data-key="<the full deck key>"`, holding the deck's text unchanged. Write nothing visible that has no key: no placeholder words, no extra labels.
    - Every button is an `<a>` or a `<button>` carrying the key it stands for. All of them show the frame's label, which is `<ns>.cta.hook.<v>` when the deck has one for this variant and `<ns>.cta.button` when it does not, including the header button and the hero button. The doubt reducers, `<ns>.cta.fud`, sit under the hero button.

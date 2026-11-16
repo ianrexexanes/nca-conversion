@@ -155,6 +155,21 @@ class WireCheckTest(unittest.TestCase):
         self.assertEqual(code, 1, out)
         self.assertRegex(out, r"(?m)^FAIL p\.\w+ SECTION_ORDER")
 
+    def test_nav_labels_render_one_each(self):
+        deck = self.write(TINY_DECK.replace("p.hero.h1:", "p.header.nav: Pump care; Plans; Help centre\np.hero.h1:", 1), "deck.md")
+        links = "".join('<a href="#%d" data-key="p.header.nav">%s</a>\n' % (n, label) for n, label in enumerate(("Pump care", "Plans", "Help centre")))
+        header = '<section data-section="p.header" data-layout="stacked">\n%s</section>\n' % links
+        frame = TINY_FRAME.replace('<section data-section="p.hero"', header + '<section data-section="p.hero"', 1)
+        frame = frame.replace("-->", "- header: stacked, because the menu stays short.\n-->", 1)
+        self.assertEqual(run(self.write(frame), "--deck", deck), (0, SUMMARY_0 + "\n"))
+        wrapped = frame.replace(links, '<nav data-key="p.header.nav"><a href="#1">Pump care</a> <a href="#2">Plans</a> <a href="#3">Help centre</a></nav>\n')
+        self.assertEqual(run(self.write(wrapped), "--deck", deck), (0, SUMMARY_0 + "\n"))
+        short = self.write(frame.replace('<a href="#1" data-key="p.header.nav">Plans</a>\n', ""))
+        code, out = run(short, "--deck", deck)
+        self.assertEqual(code, 1, out)
+        self.assertIn("FAIL p.header.nav", out)
+        self.assertIn("Plans", out)
+
     def test_variant_frame_ignores_other_variants_keys(self):
         code, out = run(WIRE_A, "--deck", DECK, "--variant", "a")
         self.assertEqual(code, 0)

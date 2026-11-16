@@ -174,6 +174,18 @@ class SiteCheckTests(unittest.TestCase):
         for key in ("p.hero.b.h1", "p.hero.c.h1", "p.cta.hook.b", "p.meta.slug"):
             self.assertNotIn(deck.values[key].lower(), re.sub(r"<title>.*?</title>", "", text), key)
 
+    def test_nav_labels_are_found_one_each(self):
+        text = Path(VARIANTS_DECK).read_text(encoding="utf-8").replace("p.header.logo:", "p.header.nav: Pump care; Plans; Help centre\np.header.logo:", 1)
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        deck = Path(tmp.name) / "deck.md"
+        deck.write_text(text, encoding="utf-8")
+        page = page_html(str(deck), "a").replace("Pump care; Plans; Help centre", "Pump care | Plans | Help centre")
+        code, out = self.site({"/index.html": page}, None, "--deck", str(deck), "--map", "/index.html=p.a")
+        self.assertNotIn("PARITY", out)
+        code, out = self.site({"/index.html": page.replace("Plans", "Offers")}, None, "--deck", str(deck), "--map", "/index.html=p.a")
+        self.assertRegex(out, r"(?m)^FAIL /index\.html PARITY: p\.header\.nav is not in the page text: 'Plans'")
+
     def test_parity_fails_a_changed_word_and_a_missing_button_label(self):
         page = page_html(VARIANTS_DECK, "b")
         code, out = self.site({"/index.html": page.replace("Know which pump fails next", "Know which pump breaks next")}, None,

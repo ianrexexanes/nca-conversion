@@ -1607,6 +1607,10 @@ class WireframeTests(unittest.TestCase):
         text = flat(read("skills", "cro", "references", "wireframe.md"))
         self.assertIn("The `prooftop` element comes before the H1 on a Direct page and after it on a Search page.", text)
 
+    def test_wireframe_reference_reads_the_nav_as_a_list(self):
+        text = flat(read("skills", "cro", "references", "wireframe.md"))
+        self.assertIn("`<ns>.header.nav` is a list split on semicolons, and each label is its own link", text)
+
 
 class DesignTests(unittest.TestCase):
     def setUp(self):

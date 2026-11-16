@@ -855,7 +855,7 @@ class FinalReviewFixesTest(unittest.TestCase):
 
     def test_readme_names_platform_and_python(self):
         text = self.flat(self.read("README.md"))
-        self.assertIn("Built and tested on Linux with bash; needs Python 3.10 or later and Chrome.", text)
+        self.assertIn("Built and tested on Linux with bash; needs Python 3.10 or later, and uses Chrome, or Playwright's bundled Chromium when Chrome is not installed.", text)
 
     def test_readme_says_pagespeed_runs_outside_the_block_list(self):
         text = self.flat(self.read("README.md"))

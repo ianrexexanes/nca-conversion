@@ -2379,5 +2379,17 @@ class ScoreRulePinsTest(unittest.TestCase):
         self.assertIn("Say in the output which of the two was used.", t)
 
 
+class AttributionTextTests(unittest.TestCase):
+    def test_every_cro_reference_has_a_derivation_row(self):
+        section = read("ATTRIBUTION.md").split("## 3. Derivation map", 1)[1]
+        rows = [r for r in section.splitlines() if r.startswith("| `")]
+        tracked = subprocess.run(["git", "ls-files", "skills/cro/references"], cwd=ROOT, capture_output=True,
+                                 text=True, check=True).stdout.split()
+        self.assertGreaterEqual(len(tracked), 20)
+        for path in tracked:
+            hit = [r for r in rows if r.startswith("| `%s`" % path)]
+            self.assertEqual(len(hit), 1, path)
+
+
 if __name__ == "__main__":
     unittest.main()

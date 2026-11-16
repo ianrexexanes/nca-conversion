@@ -1503,6 +1503,12 @@ class DesignRulesTests(unittest.TestCase):
         for part in ("award-chasing", "scroll-jacking", "preloaders", "sliders", "autoplaying background video"):
             self.assertIn(part, self.section(3))
 
+    def test_never_list_says_what_check_detects(self):
+        s = self.section(3)
+        self.assertIn("`/cro check` reports sliders and autoplaying video", s)
+        self.assertIn("design-time rule", s)
+        self.assertNotIn("guard this list", s)
+
     def test_ladder_in_order(self):
         s = self.section(4)
         rungs = [s.find(w) for w in ("WCAG 2.2", "conversion rules", "Impeccable", "Hallmark", "Taste", "Emil")]

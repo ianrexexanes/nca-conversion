@@ -34,7 +34,7 @@ Design earns its place on a conversion page. It makes the page credible, familia
 - sliders, in the hero or anywhere else
 - autoplaying background video
 
-`/cro design` and `/cro check` guard this list, together with the blur test on the main button, contrast, hierarchy and standard navigation.
+`/cro check` reports sliders and autoplaying video; the rest of this list is a design-time rule, which the optional motion review in `/cro check` also reads. `/cro design` and `/cro check` guard the blur test on the main button, contrast, hierarchy and standard navigation.
 
 ## Design skills, by mode
 

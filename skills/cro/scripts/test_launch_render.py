@@ -106,6 +106,11 @@ class LaunchRenderTests(unittest.TestCase):
         self.assertFalse(self.has(rows, "FAIL", "LABEL_FOLD", 1440), out)
         self.assertFalse(self.has(rows, "FAIL", "ONE_TARGET", 1440), out)
 
+    def test_a_page_that_is_not_found_fails_status(self):
+        code, out, rows = self.render("no-such-page.html", 1440)
+        self.assertTrue(self.has(rows, "FAIL", "STATUS", 1440, "HTTP 404"), out)
+        self.assertEqual(code, 1)
+
     def test_every_action_button_shares_one_target(self):
         _c, out, rows = self.render("two-targets.html", 1440, "--deck", str(VARIANTS), "--variant", "c")
         self.assertTrue(self.has(rows, "FAIL", "ONE_TARGET", 1440), out)

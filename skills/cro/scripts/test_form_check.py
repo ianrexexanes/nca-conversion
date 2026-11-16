@@ -13,6 +13,32 @@ from form_tests import FormServer, run_script, start_server  # noqa: E402
 from guard_tests import SKIP, GuardLeakPathsMixin  # noqa: E402
 
 
+class TripwireTests(unittest.TestCase):
+    """form_check.tripwire over stub log entries: when FAIL SENT appears and when it does not."""
+
+    ACTION = "https://forms.example.com/lead"
+
+    def sent(self, *entries, marks=None):
+        rows = [{"url": u, "method": m, "resource_type": r, "outcome": o} for u, m, r, o in entries]
+        recorder = type("Recorder", (), {"entries": rows, "finish": lambda self: rows})()
+        session = type("Session", (), {"recorders": [recorder]})()
+        first = {"issues": []}
+        form_check.tripwire({0: first}, session, {form_check.address(self.ACTION)}, marks or {})
+        return [i for i in first["issues"] if (i["level"], i["rule"]) == ("FAIL", "SENT")]
+
+    def test_a_non_get_that_was_not_blocked_is_a_sent_fail(self):
+        for outcome in ("completed", "continued", "failed", None):
+            self.assertEqual(len(self.sent(("https://forms.example.com/x", "POST", "fetch", outcome))), 1, outcome)
+
+    def test_a_get_to_the_action_address_that_was_not_blocked_is_a_sent_fail(self):
+        self.assertEqual(len(self.sent((self.ACTION + "?a=1", "GET", "document", "completed"))), 1)
+
+    def test_blocked_requests_websockets_and_ordinary_gets_are_not(self):
+        self.assertEqual(self.sent(("https://forms.example.com/x", "POST", "fetch", "blocked"), (self.ACTION, "GET", "document", "blocked"),
+                                   ("wss://forms.example.com/s", "GET", "websocket", None), ("https://forms.example.com/page", "GET", "document", "completed"),
+                                   ("https://forms.example.com/page", "OPTIONS", "fetch", "completed")), [])
+
+
 @SKIP
 class FormCheckTests(unittest.TestCase):
     @classmethod

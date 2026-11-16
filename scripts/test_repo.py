@@ -1851,13 +1851,18 @@ class FormTests(unittest.TestCase):
         self.assertLess(text.index("form_check.py"), text.index("--simulate"))
         self.assertLess(text.index("--simulate"), text.rindex("form_consent.py"))
 
-    def test_it_sends_only_with_the_owners_yes_and_says_claude_code_asks(self):
+    def test_it_sends_only_with_the_owners_yes_and_hands_the_command_to_the_user(self):
         self.assertIn("only with the owner's yes, given for this test", self.text)
-        self.assertIn("Before the command runs, always print the exact command with every value it will send, ask the user for the "
-                      "owner's yes to it in the chat, and run it only on that yes, whatever the permission mode", self.text)
-        self.assertIn("No rule of the plugin pre-approves `form_consent.py`, so Claude Code asks as well in its default mode until "
-                      "the user answers \"don't ask again\", and does not ask in auto mode, with permission prompts off or under an "
-                      "allow rule of the user's own", self.text)
+        step = step_of(self.raw, 7)
+        self.assertIn("Always print the exact command with every value it will send, both folders written out in full, and ask the user "
+                      "for the owner's yes to it in the chat, whatever the permission mode.", step)
+        self.assertIn("On that yes the user runs the command in a terminal of their own; do not run it yourself.", step)
+        self.assertIn("Unless the form sends to the machine's own loopback address, the script prints the host the form sends to and sends "
+                      "only when a person types that host back at the terminal; a run with no terminal prints `SKIPPED ... SEND` with exit 3 "
+                      "and sends nothing.", step)
+        self.assertIn("When the user says it has run, read `<folder>/consent/form.json` for the result.", step)
+        self.assertNotIn("run it only on that yes", step)
+        self.assertNotIn("Claude Code asks as well", step)
         self.assertNotRegex(self.text, r"(?i)before every (real )?send|always asks")
 
     def test_it_says_what_to_tell_the_user_when_the_fill_is_refused(self):
@@ -2266,6 +2271,7 @@ class DiagnoseTests(unittest.TestCase):
         self.assertIn("form_consent.py", step)
         self.assertIn("owner's yes", step)
         self.assertIn("the command is shown and the yes asked in the chat, as `form.md` step 7 says", step)
+        self.assertIn("the user then runs it in a terminal of their own", step)
         self.assertNotRegex(step, r"(?i)asks about before|before every|always asks")
         mark = self.raw.index("\n5. ")
         self.assertNotIn("form_consent.py", self.raw[:mark])
@@ -2343,12 +2349,15 @@ class RouterTests(unittest.TestCase):
     FORM_PARAGRAPH = ("`/nca-conversion:cro form` reads a form without sending it. Its simulated success and simulated error press the submit "
                       "button, but after the plugin's route is installed it replies in place of the form's own address, so nothing reaches the owner. A real "
                       "test submission runs only through `form_consent.py`, and only with the owner's yes for that test. "
-                      "Whatever the permission mode, the model shows you the exact command with every value it will send and "
-                      "waits for your yes in the chat before it runs. Claude Code's own prompt comes on top in its default permission mode "
-                      "until you choose \"don't ask again\", because no `allowed-tools` rule pre-approves the script and "
-                      "`/nca-conversion:cro setup --permissions` prints no rule for it; it does not come in auto mode, with permission "
-                      "prompts off or under an allow rule of your own (see https://code.claude.com/docs/en/permissions and "
-                      "https://code.claude.com/docs/en/permission-modes).")
+                      "The model shows you the exact command with every value it will send and asks for your yes in the chat. "
+                      "You then run the command yourself in a terminal. Unless the form sends to your own machine's loopback address, "
+                      "the script prints the host the form sends to and sends only when you type that host back; without a terminal it sends nothing. "
+                      "That check stops a run that has no terminal. It cannot tell a person from a program that imitates one. "
+                      "Claude Code's own prompt is a further check only where it appears. No `allowed-tools` rule pre-approves the script and "
+                      "`/nca-conversion:cro setup --permissions` prints no rule for it, so in Manual mode (`default` in the settings) Claude Code asks "
+                      "before the command runs, until you choose \"don't ask again\". It does not ask in auto mode, with permission prompts off, "
+                      "or under an allow rule of your own, and Claude Code 2.1.283 and later start in auto mode by default "
+                      "(see https://code.claude.com/docs/en/permissions and https://code.claude.com/docs/en/permission-modes).")
     GUARDED_NEW = ("Rendered checks run only through the plugin's own scripts, which share one guard: `render_check.py`, "
                    "`launch_render.py`, `form_check.py` and `form_consent.py`.")
     GUARDED_OLD = "Rendered checks run only through `render_check.py`."

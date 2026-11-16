@@ -1768,6 +1768,10 @@ class CheckTests(unittest.TestCase):
         self.assertRegex(body, r"heading counts? never fail")
 
 
+    def test_step_10_lists_a_noindex_sent_as_a_header_among_what_the_checks_cannot_see(self):
+        self.assertIn("a noindex sent as an `X-Robots-Tag` header", self.step(10))
+
+
 class FormTests(unittest.TestCase):
     def setUp(self):
         self.raw = read_or_empty("skills", "cro", "references", "form.md")

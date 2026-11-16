@@ -282,6 +282,29 @@ class DeckCheckTest(unittest.TestCase):
         self.assertEqual(details("META", nokw), ["a Search page needs a keyword"])
         self.assertNotIn("META", rules(drop_line(read("deck-clean-direct.md"), "p.page.keyword")))
 
+    def test_each_meta_variant_and_the_default_button_row_fire(self):
+        deck = read("deck-clean-direct.md")
+        for name in ("mode", "role", "traffic", "awareness", "register", "language"):
+            rows = [f[:3] for f in findings(drop_line(deck, "p.page." + name)) if f[2] == "META"]
+            self.assertEqual(rows, [("FAIL", "p.page." + name, "META")], name)
+            self.assertEqual(details("META", drop_line(deck, "p.page." + name)), ["missing page key " + name], name)
+        for name in ("mode", "role", "traffic", "awareness"):
+            bad = with_line(deck, "p.page." + name, "everywhere")
+            self.assertEqual([f[:3] for f in findings(bad) if f[2] == "META"], [("FAIL", "p.page." + name, "META")], name)
+        bad = with_line(deck, "p.page.language", "English please")
+        self.assertEqual(details("META", bad), ["'English please' is not a language code"])
+        nobutton = drop_line(deck, "p.cta.button")
+        self.assertEqual([f[:3] for f in findings(nobutton) if f[2] == "BUTTON_WORDS"],
+                         [("FAIL", "p.cta.button", "BUTTON_WORDS")])
+        self.assertEqual(details("BUTTON_WORDS", nobutton), ["no default button label"])
+
+    def test_planted_deck_rows_by_key_and_rule(self):
+        rows = {f[:3] for f in findings(read("deck-planted.md"), final=True)}
+        for row in (("FAIL", "p.page.traffic", "META"), ("FAIL", "p.page.language", "META"),
+                    ("FAIL", "p.closer.cta", "ONE_ACTION"), ("FAIL", "p.cta.hook.z", "ONE_ACTION"),
+                    ("FAIL", "p.cta.hook.a", "BUTTON_WORDS")):
+            self.assertIn(row, rows)
+
     def test_value_blocks_warn_outside_four_to_eight(self):
         deck = read("deck-clean-direct.md")
         for n, level in ((3, "WARN"), (4, None), (8, None), (9, "WARN")):

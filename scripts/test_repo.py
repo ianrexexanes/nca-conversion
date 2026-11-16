@@ -1841,11 +1841,12 @@ class FormTests(unittest.TestCase):
 
     def test_it_sends_only_with_the_owners_yes_and_says_claude_code_asks(self):
         self.assertIn("only with the owner's yes, given for this test", self.text)
-        self.assertRegex(self.text, r"asks? (you |the user )?before every (real )?send")
-        self.assertRegex(self.text, r"no rule pre-approves `form_consent\.py`|`form_consent\.py` is in no allow rule")
-        self.assertIn("In the default permission mode Claude Code asks before every send", self.text)
-        self.assertIn("With permission prompts off or a broad allow rule of your own nothing asks, so print the exact command "
-                      "with every value it will send, ask the user for the owner's yes again in the chat, and run it only on that yes", self.text)
+        self.assertIn("Before the command runs, always print the exact command with every value it will send, ask the user for the "
+                      "owner's yes to it in the chat, and run it only on that yes, whatever the permission mode", self.text)
+        self.assertIn("No rule of the plugin pre-approves `form_consent.py`, so Claude Code asks as well in its default mode until "
+                      "the user answers \"don't ask again\", and does not ask in auto mode, with permission prompts off or under an "
+                      "allow rule of the user's own", self.text)
+        self.assertNotRegex(self.text, r"(?i)before every (real )?send|always asks")
 
     def test_it_says_what_to_tell_the_user_when_the_fill_is_refused(self):
         self.assertIn("When the form's own validation refuses the fill, the script prints `not sent: the fill does not satisfy "
@@ -1881,9 +1882,8 @@ class FormTests(unittest.TestCase):
 
     def test_the_consent_script_docstring_does_not_say_always_asks(self):
         doc = flat(read("skills/cro/scripts/form_consent.py").split('"""')[1])
-        self.assertIn("Claude Code asks before every run in its default permission mode", doc)
-        self.assertIn("with permission prompts off nothing asks", doc)
-        self.assertNotIn("Claude Code asks before every run: no allow rule", doc)
+        self.assertIn("The yes in the chat comes first, as `form.md` step 7 says", doc)
+        self.assertNotRegex(doc, r"(?i)before every|always asks|nothing asks")
 
     def test_it_points_at_the_form_audit_and_reads_the_thank_you_step(self):
         self.assertIn("form-and-signup-audit.md", self.text)
@@ -2248,9 +2248,8 @@ class DiagnoseTests(unittest.TestCase):
         step = self.step(5)
         self.assertIn("form_consent.py", step)
         self.assertIn("owner's yes", step)
-        self.assertRegex(step, r"Claude Code asks about before it sends")
-        self.assertIn("in its default permission mode, because no rule pre-approves it; with permission prompts off, "
-                      "`form.md` step 7 says what to do instead", step)
+        self.assertIn("the command is shown and the yes asked in the chat, as `form.md` step 7 says", step)
+        self.assertNotRegex(step, r"(?i)asks about before|before every|always asks")
         mark = self.raw.index("\n5. ")
         self.assertNotIn("form_consent.py", self.raw[:mark])
         self.assertNotIn("form_consent.py", flat(step_of(self.raw, 4)))
@@ -2327,10 +2326,12 @@ class RouterTests(unittest.TestCase):
     FORM_PARAGRAPH = ("`/nca-conversion:cro form` reads a form without sending it. Its simulated success and simulated error press the submit "
                       "button, but after the plugin's route is installed it replies in place of the form's own address, so nothing reaches the owner. A real "
                       "test submission runs only through `form_consent.py`, and only with the owner's yes for that test. "
-                      "In the default permission mode Claude Code asks before that script runs, because no `allowed-tools` rule "
-                      "pre-approves it and `/nca-conversion:cro setup --permissions` prints no rule for it. With permission prompts off, or a "
-                      "broad allow rule of your own, nothing asks: the model then prints the exact command with every value it "
-                      "will send and runs it only on your yes in the chat.")
+                      "Whatever the permission mode, the model shows you the exact command with every value it will send and "
+                      "waits for your yes in the chat before it runs. Claude Code's own prompt comes on top in its default permission mode "
+                      "until you choose \"don't ask again\", because no `allowed-tools` rule pre-approves the script and "
+                      "`/nca-conversion:cro setup --permissions` prints no rule for it; it does not come in auto mode, with permission "
+                      "prompts off or under an allow rule of your own (see https://code.claude.com/docs/en/permissions and "
+                      "https://code.claude.com/docs/en/permission-modes).")
     GUARDED_NEW = ("Rendered checks run only through the plugin's own scripts, which share one guard: `render_check.py`, "
                    "`launch_render.py`, `form_check.py` and `form_consent.py`.")
     GUARDED_OLD = "Rendered checks run only through `render_check.py`."

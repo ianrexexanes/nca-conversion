@@ -26,7 +26,7 @@ For an existing site, also ask the one action the page must win, how visitors ar
 
 The user decides whether a keyword can be won, from the volume, difficulty and current results the plugin presents. The plugin never decides.
 
-Name the research step and the command to run, then wait for the result. The kickoff waits and starts no subagents. A page whose research is not done is recorded as "mode pending: keyword research", and no copy is written for it until its keyword is set.
+Name the research step and the command to run, then wait for the result. The kickoff waits and starts no subagents. A page whose research is not done is recorded as "mode pending: keyword research", and no copy is written for it until its keyword is set; the kickoff goes on with the other pages and any phase that needs no copy.
 
 ## The build phases
 

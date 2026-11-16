@@ -1406,6 +1406,15 @@ class PageCommandTests(unittest.TestCase):
             self.assertIn(part, flat(page))
 
 
+class PendingModeTests(unittest.TestCase):
+    def test_page_and_hero_step_1_stop_for_a_mode_pending_page_and_the_kickoff_goes_on(self):
+        rule = "When the brief records the page as `mode pending: keyword research`, write nothing and name `/cro research`."
+        for name in ("page", "hero"):
+            self.assertIn(rule, flat(step_of(read("skills", "cro", "references", name + ".md"), 1)), name)
+        self.assertIn("the kickoff goes on with the other pages and any phase that needs no copy",
+                      flat(read("skills", "cro", "references", "kickoff.md")))
+
+
 class SecondLanguageFlagTests(unittest.TestCase):
     def test_french_and_italian_copy_is_flagged_where_german_copy_is(self):
         flag = "Copy in French or Italian is flagged for the user's own check"

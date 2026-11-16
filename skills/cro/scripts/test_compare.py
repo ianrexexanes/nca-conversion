@@ -120,6 +120,20 @@ class CompareTests(Base):
         newer = self.variant(AFTER, "after-040", **{"score.json": lambda d: d.update(plugin_version="0.5.1")})
         self.assertIn("Factor 3 (Does it work?): 3 -> 5, +2", self.lines(BEFORE, newer))
 
+    def test_anchor_boundary_is_exactly_0_3_0(self):
+        def sheet(name, version):
+            return self.variant(BEFORE, name, **{"score.json": lambda d: d.update(plugin_version=version)})
+        def after(name, version):
+            return self.variant(AFTER, name, **{"score.json": lambda d: d.update(plugin_version=version)})
+        for old, new in (("0.2.1", "0.3.0"), ("0.2.9", "0.3.0"), ("0.2.0", "0.4.0")):
+            lines = self.lines(sheet("b" + old + new, old), after("a" + old + new, new))
+            self.assertIn("Anchors changed in 0.3.0: read these scores side by side, not as a change.", lines, (old, new))
+            self.assertFalse([l for l in lines if l.startswith("Factor ")], (old, new))
+        for old, new in (("0.3.0", "0.3.1"), ("0.3.0", "0.4.0"), ("0.2.0", "0.2.1")):
+            lines = self.lines(sheet("b" + old + new, old), after("a" + old + new, new))
+            self.assertFalse([l for l in lines if l.startswith("Anchors changed")], (old, new))
+            self.assertIn("Factor 3 (Does it work?): 3 -> 5, +2", lines, (old, new))
+
     def test_two_sheets_without_plugin_version_are_compared(self):
         lines = self.lines(OLD_A, OLD_B)
         self.assertEqual(lines[0], "Neither sheet has plugin_version: both read as 0.2.x.")

@@ -1739,6 +1739,16 @@ class CheckTests(unittest.TestCase):
                      "speed_check.py", "launch_render.py"):
             self.assertTrue((ROOT / "skills" / "cro" / "scripts" / name).is_file(), name)
 
+    def step(self, n):
+        return dict(self.steps())[n]
+
+    def test_step_6_passes_the_url_on_a_built_page_and_sets_the_row_result(self):
+        body = self.step(6)
+        self.assertIn("--url", body)
+        self.assertIn("NOT CHECKED", body)
+        self.assertRegex(body, r"MISSING placement.{0,40}FAIL")
+        self.assertRegex(body, r"heading counts? never fail")
+
 
 class FormTests(unittest.TestCase):
     def setUp(self):

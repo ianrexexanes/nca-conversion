@@ -318,6 +318,9 @@ class AuditRulingsTest(unittest.TestCase):
         self.assertIn("Exit 2", step)
         sheet = json.loads(blocks[0])
         self.assertEqual(score.validate(sheet), [])
+        first = sheet["factors"][0]  # a Search H1 with the keyword and no promise stays at the low anchor (score-anchors.md)
+        if "no result" in first["evidence"]:
+            self.assertLessEqual(first["score"], 3)
         self.assertEqual(list(sheet), ["page", "plugin_version", "mode", "page_role", "traffic", "register", "factors"])
         self.assertEqual([f["id"] for f in sheet["factors"]], list(range(1, 11)))
         self.assertTrue(any("not_checked" in f for f in sheet["factors"]))

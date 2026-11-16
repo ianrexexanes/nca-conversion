@@ -23,7 +23,7 @@ This is the procedure `/cro audit <url> [mode] [keyword] [traffic] [page role] [
   "traffic": "search",
   "register": "Consumer / lifestyle",
   "factors": [
-    {"id": 1, "score": 6, "evidence": "H1 'Bike repair in Harbor Lane' names the service and place, no result; desktop and phone alike."},
+    {"id": 1, "score": 3, "evidence": "H1 'Bike repair in Harbor Lane' names the service and place, no result; desktop and phone alike."},
     {"id": 2, "score": 6, "evidence": "First lines speak to commuters in general terms; they match the intent behind the keyword."},
     {"id": 3, "score": 3, "evidence": "Hero is a stock photo of a smiling mechanic; no rating or logo until the third screen."},
     {"id": 4, "score": 7, "evidence": "One green button, 'Book a repair slot', top right and again under the hero."},

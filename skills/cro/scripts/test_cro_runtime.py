@@ -398,6 +398,25 @@ def rendered_scripts(folder: Path) -> list[str]:
                   if not p.name.startswith("test_") and p.name not in NOT_RENDERING and "playwright" in p.read_text(encoding="utf-8"))
 
 
+def close_receivers(source: str) -> list[str]:
+    """The receiver of every .close() call in the source, so a script that closes a context or page before the browser shows up."""
+    return [ast.unparse(n.func.value) for n in ast.walk(ast.parse(source))
+            if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == "close"]
+
+
+class Recording:
+    """A stand-in for a browser, context, page or CDP session: every call is kept as (name, args, kwargs)."""
+
+    def __init__(self, calls, made=None):
+        self.calls, self.made = calls, made or {}
+
+    def __getattr__(self, name):
+        def call(*args, **kwargs):
+            self.calls.append((name, args, kwargs))
+            return Recording(self.calls) if name in self.made else None
+        return call
+
+
 class FakeRoute:
     """A Playwright route that records whether it was continued or aborted."""
 
@@ -425,6 +444,36 @@ class GuardStackTest(unittest.TestCase):
             rec.on_route(r)
         self.assertEqual((first.action, second.action, other.action), ("continue", "abort", "abort"))
         self.assertEqual([e["outcome"] for e in rec.entries if e["method"] == "POST"], ["consented", "blocked", "blocked"])
+
+    def test_guarded_helpers_add_every_layer(self):
+        calls = []
+        context = Recording(calls)
+        browser = type("Browser", (), {"new_context": lambda self, **kw: calls.append(("new_context", (), kw)) or context})()
+        recorder = cro_runtime.Recorder()
+        self.assertIs(cro_runtime.guarded_context(browser, recorder, major=130, width=390, height=800, mobile=True), context)
+        by_name = {}
+        for name, args, kwargs in calls:
+            by_name.setdefault(name, []).append((args, kwargs))
+        self.assertEqual([k.get("service_workers") for _a, k in by_name.get("new_context", [])], ["block"])
+        self.assertEqual(by_name.get("add_init_script"), [((cro_runtime.INIT_SCRIPT,), {})])
+        self.assertEqual(by_name.get("route"), [(("**/*", recorder.on_route), {})])
+        pattern, handler = (by_name.get("route_web_socket") or [((re.compile("^$"), None), {})])[0][0]
+        self.assertEqual((pattern.match("wss://any.example.com/x") is not None, handler), (True, recorder.on_socket))
+        self.assertEqual(sorted(a[0] for a, _k in by_name.get("on", [])), ["request", "requestfailed", "requestfinished", "response"])
+
+        page_calls = []
+        session = Recording(page_calls)
+        page = Recording(page_calls)
+        page_context = type("Context", (), {"new_page": lambda self: page, "new_cdp_session": lambda self, p: session})()
+        self.assertIs(cro_runtime.guarded_page(page_context, recorder), page)
+        sent = [(a[0], a[1] if len(a) > 1 else None) for n, a, _k in page_calls if n == "send"]
+        self.assertEqual(sent, [("Network.enable", None), ("Network.setBlockedURLs", {"urls": cro_runtime.lighthouse_block_patterns()})])
+        self.assertEqual(sorted(a[0] for n, a, _k in page_calls if n == "on"), ["console", "pageerror"])
+
+    def test_only_the_browser_is_ever_closed(self):
+        for name in RENDERED:
+            self.assertEqual(set(close_receivers((HERE / name).read_text(encoding="utf-8"))), {"browser"}, name)
+        self.assertEqual(close_receivers("context.close()\nbrowser.close()"), ["context", "browser"])
 
     def test_no_rendered_script_builds_its_own_browser_or_context(self):
         # Discovered, not listed: a script that renders is any other script that names playwright, so a fifth one is read too.

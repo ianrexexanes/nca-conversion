@@ -15,6 +15,7 @@ SCRIPT = HERE / "launch_render.py"
 VARIANTS = FIXTURES / "deck-variants.md"
 
 from guard_tests import SKIP, GuardLeakPathsMixin  # noqa: E402
+import launch_render  # noqa: E402
 
 LINE = re.compile(r"^(FAIL|WARN|SKIPPED) (\S+)@(\d+) ([A-Z][A-Z0-9_]*): (.*)$")
 
@@ -204,6 +205,36 @@ class LaunchRenderTests(unittest.TestCase):
         self.assertEqual(done.stdout.strip().splitlines()[-1], "launch_render: 0 FAIL, 0 WARN", done.stdout)
         self.assertEqual([v["width"] for v in data["pages"][0]["views"]], [375, 390, 820, 1440])
         self.assertEqual(data["widths"], [375, 390, 820, 1440])
+
+
+class LaunchRenderThresholdTests(unittest.TestCase):
+    """The measured limits, on synthetic facts with no browser: each one at its edge."""
+
+    def targets(self, size):
+        one = {"name": "button#a", "x": 0, "y": 0, "w": size, "h": size, "parent": -1, "inline": False}
+        two = dict(one, name="button#b", x=size - 4)  # a neighbour overlapping it, so the spacing exception does not apply
+        return launch_render.target_findings([one, two])
+
+    def test_target_boundaries_24_and_44(self):
+        self.assertEqual({r[0] for r in self.targets(23.99)}, {"FAIL"})
+        self.assertEqual({r[0] for r in self.targets(24)}, {"WARN"})
+        self.assertEqual({r[0] for r in self.targets(43.99)}, {"WARN"})
+        self.assertEqual(self.targets(44), [])
+
+    def contrast_rows(self, colour, large):
+        facts = {"scroll": {"scroll_width": 100, "client_width": 100}, "body_text": [], "h1": [{"name": "h1", "size": 40}], "images_without_alt": [],
+                 "viewport": {"w": 390, "h": 800}, "candidates": [], "targets": [], "contrast_skipped": [], "has_nav": True, "autoplay": [],
+                 "sliders": [], "body_element": {"color": "rgb(34, 34, 34)", "size": 18},
+                 "contrast": [{"name": "p", "fg": colour, "bg": "#ffffff", "large": large}]}
+        args = type("Args", (), {"label": None, "action_color": None, "landing": False})()
+        return [r for r in launch_render.analyse(facts, args, 1440, 390, "") if r[1] == "CONTRAST"]
+
+    def test_large_text_needs_three_to_one(self):
+        self.assertEqual(len(self.contrast_rows("#777777", False)), 1)  # 4.48:1 small text is under 4.5
+        self.assertEqual(self.contrast_rows("#767676", False), [])  # 4.54:1
+        self.assertEqual(self.contrast_rows("#777777", True), [])  # the same grey is enough at large size
+        self.assertEqual(self.contrast_rows("#929292", True), [])  # 3.11:1
+        self.assertEqual(len(self.contrast_rows("#959595", True)), 1)  # 2.995:1 large text is under 3
 
 
 @SKIP

@@ -125,6 +125,7 @@ class FollowTests(unittest.TestCase):
                 self.assertRegex(out, r"(?m)^FAIL %s/r1 REDIRECT_STATUS: .*%s" % (self.base, re.escape(hint)))
             else:
                 self.assertNotIn("REDIRECT_STATUS", out)
+                self.assertEqual(set(re.findall(r"(?m)^FAIL \S+ (\w+)", out)), {"REDIRECT_HTTPS"}, out)
                 self.assertNotIn(hint, out)
 
     def test_bad_cases_exit_2(self):

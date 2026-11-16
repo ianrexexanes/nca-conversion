@@ -27,7 +27,7 @@ LAYOUT_RULES = {
     "faq": ("accordion", "stacked"),
     "closer": ("cta-band", "form-split"),
 }
-NOTES_LINE = re.compile(r"^\s*-\s*([^:\n]+?)\s*:\s*([^,\n]*?)\s*(?:,|$)")
+NOTES_LINE = re.compile(r"^\s*-\s*([^:\n]+?)\s*:\s*([\w-]+)")
 NO_VISUAL = ("header", "faq")  # the sections that need no data-visual
 BUTTON_TAGS = ("a", "button")
 VOID = frozenset({"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"})

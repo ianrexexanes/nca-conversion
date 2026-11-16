@@ -230,7 +230,8 @@ class _Collector(HTMLParser):
         elif tag == "img":
             self.images.append({
                 "src": attrs.get("src"),
-                "alt": "" if "alt" in attrs and attrs["alt"] is None else attrs.get("alt"),  # None = attribute absent; "" = decorative, also a bare alt
+                # attrs["alt"] is None for a bare alt: decorative, like alt=""; an absent attribute stays None
+                "alt": "" if "alt" in attrs and attrs["alt"] is None else attrs.get("alt"),
                 "loading": attrs.get("loading"),
                 "fetchpriority": attrs.get("fetchpriority"),
             })

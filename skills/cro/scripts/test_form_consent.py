@@ -109,7 +109,7 @@ class FormConsentTests(unittest.TestCase):
 
     def test_consent_does_not_press_when_the_fill_breaks_a_pattern(self):
         run = self.consent("form-code-pattern.html")
-        self.assertNotEqual(run.code, 0, run.err)
+        self.assertEqual(run.code, 3, run.err)
         self.assertEqual(run.posts(), [])
         self.assertIn("not sent: the fill does not satisfy code (", run.out)
         self.assertEqual(run.data["network"]["consented"], 0)

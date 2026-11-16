@@ -247,6 +247,10 @@ class WireCheckTest(unittest.TestCase):
         self.assertRegex(out, r"(?m)^WARN \S+ NOTES: no comment after </main>")
         self.assertTrue(out.endswith("wire_check: 0 FAIL, 1 WARN\n"), out)
 
+    def test_a_notes_line_without_a_comma_names_its_family(self):
+        framed = self.write(replace_once(read(WIRE_A), r"(?m)^- faq: .*\n", "- faq: accordion.\n"))
+        self.assertEqual(run(framed, "--deck", DECK, "--variant", "a"), (0, SUMMARY_0 + "\n"))
+
     def test_ruling_lines_are_not_section_notes(self):
         ruling = ("- Impeccable eyebrow ban: the line above the H1 stays, because the visitor asks who the page is for; mode search.\n"
                   "- Hallmark Floor rule on eyebrows: stacked, because the answer comes first; mode direct.\n")

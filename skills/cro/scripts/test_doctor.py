@@ -142,6 +142,13 @@ class HallmarkRenderTierTest(unittest.TestCase):
         self.script.write_text("// stand-in\n", encoding="utf-8")
         self.project = Path(self.tmp.name, "project")
         self.project.mkdir()
+        real = Path.is_file
+        inside = Path(self.tmp.name).resolve()
+        # the walk up from a root stops at the temp folder: a node_modules in /tmp or above it must not decide the test
+        patched = mock.patch.object(Path, "is_file", autospec=True,
+                                    side_effect=lambda path: real(path) and (inside in path.resolve().parents or path.resolve() == inside))
+        patched.start()
+        self.addCleanup(patched.stop)
 
     def _row(self, roots):
         with mock.patch.object(doctor.Path, "home", return_value=self.home):

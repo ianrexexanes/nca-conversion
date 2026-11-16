@@ -372,6 +372,8 @@ class AuditRulingsTest(unittest.TestCase):
         for label in ("**Keyword:**", "| Placement |", "[one row per placement", "**Headings (<headings_scope>):**", "**Body:**"):
             self.assertIn("\n\n" + label, block)
         self.assertIn("**Headings (<headings_scope>):**", audit_step(12))
+        self.assertIn("| Title | [found / missing / not applicable / not checked] |", block)
+        self.assertIn("\n\n**Apparent target:** [only when the keyword is not confirmed:", block)
 
 
 CRO = ROOT / "skills/cro/SKILL.md"

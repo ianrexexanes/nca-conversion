@@ -45,9 +45,11 @@ date: <YYYY-MM-DD>
 
 **Keyword:** [keyword] · **Variants:** [variants, or "none"] · **Confirmed:** [yes / no]
 
+**Apparent target:** [only when the keyword is not confirmed: the topic the title and H1 share, or "no shared topic"]
+
 | Placement | Status | What the page has |
 | --- | --- | --- |
-| Title | [found / missing / not applicable] | [text] |
+| Title | [found / missing / not applicable / not checked] | [text] |
 
 [one row per placement, in this order: Title, Meta description, URL, H1, First sentence, H2]
 

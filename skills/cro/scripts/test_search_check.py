@@ -282,6 +282,10 @@ class RulingsTest(unittest.TestCase):
         self.assertNotEqual(result["placements"]["first_sentence"]["status"], "found")
         self.assertIsNone(search_check.first_sentence_after_h1(html))
 
+    def test_a_footer_heading_after_the_h1_does_not_end_the_text(self):
+        html = '<h1>Bike</h1><footer><h2>Contact</h2></footer><p>Body text.</p>'
+        self.assertEqual(search_check.first_sentence_after_h1(html), "Body text.")
+
     def test_the_first_sentence_follows_the_first_h1_outside_the_footer(self):
         html = ('<title>T</title><footer><h1>Brand</h1><p>Footer words.</p></footer>'
                 '<h1>Payroll software</h1><p>We make payroll software. More.</p>')

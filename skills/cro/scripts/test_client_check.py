@@ -81,6 +81,18 @@ class ClientCheckTests(unittest.TestCase):
             with self.subTest(line=line):
                 code, out = run(line + "\n")
                 self.assertEqual(code, 0); self.assertIn("WARN score-count", out)
+    def test_a_factor_row_scored_out_of_ten_fails_and_the_ordinary_cases_stay(self):
+        for cell in ["7/10", "7 / 10", "7 out of 10", "7 von 10", "0/10"]:
+            with self.subTest(cell=cell):
+                code, out = run("| 1. Headline | %s | x |\n" % cell)
+                self.assertEqual(code, 1); self.assertIn("FAIL score", out)
+        code, out = run("| 1. Fix the hero | two hours | x |\n")
+        self.assertEqual(code, 0); self.assertNotIn("score", out)
+        code, out = run("PageSpeed Insights scores the home page 55 out of 100 on a phone.\n")
+        self.assertEqual(code, 0); self.assertNotIn("score", out)
+        code, out = run("I would give it 6 out of 10.\n")
+        self.assertEqual(code, 0); self.assertIn("WARN score-count", out)
+
     def test_numbered_table_without_a_score_cell_passes(self):
         code, out = run("| 1 | Rewrite the headline | this week |\n")
         self.assertEqual(code, 0); self.assertIn("client_check: 0 FAIL", out)

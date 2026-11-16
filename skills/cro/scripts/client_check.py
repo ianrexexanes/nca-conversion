@@ -10,7 +10,7 @@ import sys
 
 # (level, rule, regular expressions used as written, literal terms matched as whole words)
 RULES = [
-    ("FAIL", "score", [r"\b\d{1,3}\s*/\s*100\b", r"^\s*\|\s*(?:10|[1-9])\.\s+[^|]+\|\s*(?:10|\d|not checked)\s*\|", r"\bFactor\s+\d", r"\bScore\s*:\s*\d"],
+    ("FAIL", "score", [r"\b\d{1,3}\s*/\s*100\b", r"^\s*\|\s*(?:10|[1-9])\.\s+[^|]+\|\s*(?:(?:10|\d)(?:\s*/\s*10|\s+(?:out of|von)\s+10)?|not checked)\s*\|", r"\bFactor\s+\d", r"\bScore\s*:\s*\d"],
      ["Conversion Score", "Conversion-Score", "factors that could be checked"]),
     ("WARN", "score-count", [r"\b\d{1,2}\s*(?:/|out of|von)\s*10\b"], []),
     ("FAIL", "ai-name", [], ["Claude", "Anthropic", "ChatGPT", "OpenAI", "GPT", "Gemini", "Copilot", "LLM", "Perplexity", "Mistral", "Llama", "DeepSeek", "Grok",

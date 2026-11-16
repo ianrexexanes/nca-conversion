@@ -309,6 +309,20 @@ class SiteCheckTests(unittest.TestCase):
         out = self.site({"/index.html": marked}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")[1]
         self.assertNotIn("PARITY", out)
 
+    def test_input_value_and_logo_alt_count_for_parity(self):
+        deck = deck_check.parse_deck(Path(CLEAN_DECK).read_text(encoding="utf-8"))
+        label, logo = deck.values["p.cta.button"], deck.values["p.header.logo"]
+        page = page_html(CLEAN_DECK)
+        logo_img = page.replace("<p>%s</p>" % logo, '<img src="/logo.svg" alt="%s">' % logo, 1)
+        button_input = logo_img.replace('<a href="#form">%s</a>' % label, '<input type="submit" value="%s">' % label, 1)
+        self.assertNotEqual(page, logo_img)
+        self.assertNotEqual(logo_img, button_input)
+        out = self.site({"/index.html": button_input}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")[1]
+        self.assertNotIn("PARITY", out)
+        typed = page.replace("<p>%s</p>" % logo, '<input type="text" value="%s">' % logo, 1)
+        out = self.site({"/index.html": typed}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")[1]
+        self.assertRegex(out, r"(?m)^FAIL /index\.html PARITY: p\.header\.logo")  # a typed-in field's value is not shown text
+
     def test_sitemap_index_is_followed_one_level(self):
         files = {"sitemap.xml": None, "sitemap-index.xml": sitemap_index([ORIGIN + "/sitemap-pages.xml"]),
                  "sitemap-pages.xml": urlset([ORIGIN + "/"]),

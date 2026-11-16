@@ -83,6 +83,7 @@ class _SiteFacts(HTMLParser):
         self.canonical = None
         self.robots = []
         self.jsonld = []
+        self.attr_text = []  # what a visitor sees that is not a text node: button values and image alt text
         self._ld = None
 
     def handle_starttag(self, tag, attrs):
@@ -94,6 +95,10 @@ class _SiteFacts(HTMLParser):
             self.robots.append((a.get("content") or "").lower())
         elif tag == "script" and (a.get("type") or "").lower() == "application/ld+json":
             self._ld = []
+        elif tag == "img" and a.get("alt"):
+            self.attr_text.append(a["alt"])
+        elif tag == "input" and (a.get("type") or "").lower() in ("submit", "button", "reset") and a.get("value"):
+            self.attr_text.append(a["value"])
 
     def handle_data(self, data):
         if self._ld is not None:
@@ -117,7 +122,7 @@ class Page:
         site.feed(html)
         site.close()
         self.site = site
-        self.text = page_text(html)
+        self.text = " ".join([page_text(html)] + site.attr_text)
         self.squashed = squash(self.text)
         self.compact = "".join(self.text.split())  # no whitespace at all: inline markup beside punctuation adds spaces
 

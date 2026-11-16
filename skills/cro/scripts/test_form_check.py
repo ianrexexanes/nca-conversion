@@ -175,6 +175,13 @@ class FormCheckTests(unittest.TestCase):
         self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SIMULATE") and "/api/lead" in d], run.lines)
         self.assertEqual(run.posts(), [])
 
+    def test_simulate_on_a_form_whose_press_sends_nothing_is_skipped(self):
+        run = self.run_page("form-nosend.html", "--simulate", "success")
+        self.assertEqual(run.code, 0, run.err)
+        self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SIMULATE") and "the press sent nothing" in d], run.lines)
+        self.assertEqual(run.paths().count("/lead"), 0)
+        self.assertEqual(run.posts(), [])
+
     def test_simulate_needs_one_form(self):
         run = self.run_page("form-two.html", "--simulate", "success")
         self.assertEqual(run.code, 3, run.err)

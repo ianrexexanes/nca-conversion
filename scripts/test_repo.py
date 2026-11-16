@@ -902,7 +902,7 @@ class PublicWordingTests(unittest.TestCase):
         files = subprocess.run(["git", "-C", str(ROOT), "ls-files"], capture_output=True, text=True, check=True).stdout.split("\n")
         hits = []
         for name in files:
-            if not name or not (name == "README.md" or (name.startswith("skills/") and name.endswith((".md", ".py")))):
+            if not name or not (name in ("README.md", "ATTRIBUTION.md") or (name.startswith("skills/") and name.endswith((".md", ".py")))):
                 continue
             path = ROOT / name
             if not path.is_file():
@@ -917,7 +917,7 @@ class PublicWordingTests(unittest.TestCase):
         files = subprocess.run(["git", "-C", str(ROOT), "ls-files"], capture_output=True, text=True, check=True).stdout.split("\n")
         hits = []
         for name in files:
-            if not name or not (name == "README.md" or (name.startswith("skills/") and name.endswith((".md", ".py")))):
+            if not name or not (name in ("README.md", "ATTRIBUTION.md") or (name.startswith("skills/") and name.endswith((".md", ".py")))):
                 continue
             path = ROOT / name
             if not path.is_file():

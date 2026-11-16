@@ -20,7 +20,8 @@ before you start finding things.
    the report trustworthy, and it changes how you weigh your own findings, not just how you word
    them.
 2. **Gather facts.** Run
-   `python3 ${CLAUDE_PLUGIN_ROOT}/skills/conversion-page-audit/scripts/page_facts.py <url>`. It
+   `python3 ${CLAUDE_PLUGIN_ROOT}/skills/conversion-page-audit/scripts/page_facts.py <url> --out <dir>/facts.json`,
+   with `<dir>` the audit data folder. It prints one summary line and saves the data; read `<dir>/facts.json`. It
    returns twelve keys parsed from static markup only: `url`, `title`, `meta_description`, `headings`,
    `links`, `has_footer`, `ctas`, `forms`, `schema_types`, `images`, `lcp_candidates`, `notes`. Treat `notes`
    as an unordered set and match entries by their content, never by position — the array's order

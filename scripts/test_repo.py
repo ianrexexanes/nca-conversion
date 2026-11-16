@@ -735,6 +735,9 @@ class AuditSlice2Tests(unittest.TestCase):
         self.assertIn("--out <dir>/facts.json", s)
         self.assertIn("After the run, read `<dir>/facts.json`", s)
         self.assertIn("prints one summary line", s)
+        v1 = flat((ROOT / "skills/conversion-page-audit/SKILL.md").read_text(encoding="utf-8"))
+        self.assertIn("page_facts.py <url> --out <dir>/facts.json", v1)
+        self.assertIn("read `<dir>/facts.json`", v1)
 
     def test_audit_names_the_form_and_test_references(self):
         self.assertIn("form-and-signup-audit.md", flat(audit_step(8)))

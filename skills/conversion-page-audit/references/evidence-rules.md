@@ -11,7 +11,7 @@ section is the one that makes the report honest.
 ### Verify rendered, not fetched — and never from a document
 
 Claims about a live page sit on three rungs and only the top one settles anything. A page rendered
-in a real browser is evidence. Fetched HTML is weaker evidence: it shows what the server sent, not
+by the plugin's scripts is evidence. Fetched HTML is weaker evidence: it shows what the server sent, not
 what a visitor sees, and it cannot see white-on-white text, a block collapsed by CSS, content
 injected by script after load, or an element the layout pushes off screen. A project document,
 ticket, status banner or CMS note describing the page is not evidence at all — it is a claim about
@@ -32,7 +32,7 @@ question, because a document that answers the question is the thing that stops y
 `curl -sL "$URL" -o /tmp/page.html` gives you the served markup; search that for the exact string
 the claim depends on, not for a paraphrase of it. When the claim is about anything a visitor
 perceives — visibility, contrast, stacking order, what a photograph shows, whether an element is on
-screen at all — markup cannot settle it and you escalate to a real browser and look. When a
+screen at all — markup cannot settle it and you escalate to the plugin's rendered capture and look. When a
 document and a live fetch disagree, the fetch wins, the document gets corrected, and the fetch date
 goes beside the finding so the next reader knows how old your claim is too.
 
@@ -52,7 +52,7 @@ a capture flags itself as unreliable. The audit shipped a recommendation to buil
 already existed.
 
 Before reporting anything as blank or missing from a capture, scroll the whole page and capture
-again, or force the reveal before capturing. In a browser automation tool, scroll to the bottom in
+again, or force the reveal before capturing. Where the user's own page is open, scroll to the bottom in
 steps with a wait between them, or evaluate a style override that neutralises the library's initial
 state — setting `opacity: 1` and clearing the transform on the animated selector class is the
 general form. Then cross-check against the DOM: if the text you expected is in the markup and
@@ -74,12 +74,11 @@ state. This one is dangerous on two counts: the negative is technically accurate
 it was taken and wrong about the question that was asked, and "analytics missing" is a credible
 enough finding that nobody goes back to re-check it.
 
-Interact with the banner first, then measure. Load the page, click the accept control, and only
-then read the network log and the DOM — in a browser automation tool that is a click on the accept
-button followed by a network-request dump; by hand it is DevTools with the Network tab filtered on
-the vendor domain, cleared, and the page reloaded after consent. Test the reject path as well when
-the question is whether consent mode is wired correctly. If you did not or could not accept
-consent, the finding is "could not check", not "not installed".
+The plugin's guarded capture cannot accept a banner and nothing in it is clicked, so a tag that a consent
+banner holds back goes to Could not check with that reason, not to not installed. Rendered evidence comes
+only from the plugin's scripts, with analytics blocked, and no browser tool is run on a page that is not
+the user's own. The user may accept the banner on their own page and read the Network tab filtered on the
+vendor domain; report that as their word.
 
 ### Pass `grep -a` when searching fetched HTML
 
@@ -243,7 +242,7 @@ containing the word "logo"; the 21 came from an internal document. Nobody was ca
 number came from a method that inspected part of the set, and confidence does not distinguish that
 from a method that inspected all of it.
 
-Enumerate from the rendered DOM in a real browser, never by eye and never with a filter in the
+Enumerate from the rendered DOM, never by eye and never with a filter in the
 first pass. Resist the regex: a pattern like `<img[^>]*>` over fetched markup is not the candidate
 set and will quietly return a fraction of it. HTML tag names are case-insensitive, so an
 upper-case tag is missed without `-i`; `grep` is line-oriented and cannot match a tag whose

@@ -2409,5 +2409,16 @@ class AttributionTextTests(unittest.TestCase):
             self.assertEqual(len(hit), 1, path)
 
 
+class EvidenceRulesTextTests(unittest.TestCase):
+    def test_evidence_rules_use_no_browser_tool_and_click_no_banner(self):
+        text = flat(read("skills/conversion-page-audit/references/evidence-rules.md"))
+        for gone in ("browser automation tool", "click the accept control", "real browser"):
+            self.assertNotIn(gone, text)
+        self.assertIn("The plugin's guarded capture cannot accept a banner and nothing in it is clicked, so a tag that a consent "
+                      "banner holds back goes to Could not check with that reason, not to not installed.", text)
+        self.assertIn("Rendered evidence comes only from the plugin's scripts, with analytics blocked, and no browser tool is run "
+                      "on a page that is not the user's own.", text)
+
+
 if __name__ == "__main__":
     unittest.main()

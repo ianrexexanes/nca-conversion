@@ -438,6 +438,16 @@ class SiteCheckTests(unittest.TestCase):
         code, out = self.site({"/index.html": page_html(CLEAN_DECK)}, None, "--forbid", str(Path(tmp.name) / "none.txt"))
         self.assertEqual(code, 2, out)
 
+    def test_visible_text_path_that_is_a_file_exits_2_without_a_traceback(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        blocker = Path(tmp.name) / "text"
+        blocker.write_text("a file, not a folder", encoding="utf-8")
+        code, out = self.site({"/index.html": page_html(CLEAN_DECK)}, None, "--visible-text", str(blocker))
+        self.assertEqual(code, 2, out)
+        self.assertNotIn("Traceback", out)
+        self.assertIn("cannot write", out)
+
     def test_visible_text_written_per_page(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)

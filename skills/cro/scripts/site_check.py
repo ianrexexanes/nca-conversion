@@ -512,7 +512,11 @@ def main(argv=None):
     if pages_list is not None:
         check_noindex(pages_list, pages, add)
     if args.visible_text:
-        write_visible_text(args.visible_text, pages)
+        try:
+            write_visible_text(args.visible_text, pages)
+        except OSError as error:
+            print("site_check: cannot write %s: %s" % (args.visible_text, error.strerror or error), file=sys.stderr)
+            return 2
     return finish("site_check", rows)
 
 

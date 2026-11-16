@@ -38,7 +38,6 @@ DROP_MARKS = dict.fromkeys(map(ord, "\u00ad\u200b\u200c\u200d\u2060\ufeff"), Non
 LANGUAGE_HOME = re.compile(r"/[a-z]{2}(-[a-z]{2})?/?", re.I)
 BLOCKS = {"p", "div", "section", "article", "aside", "header", "main", "ul", "ol", "li", "blockquote", "figure",
           "table", "tr", "td", "th", "form", "br", "hr"} | HEADINGS
-LABEL_TAGS = {"a", "button"}  # a link or button label is never part of the first sentence
 SENTENCE_END = re.compile(r"[.!?](?=\s|$)")
 
 
@@ -75,11 +74,15 @@ class _Text(HTMLParser):
         self.h1_index = None
         self.h1_state = "none"  # none, inside, after, done
         self.after = []
-        self.after_open = True  # a block boundary after the first text closes the first sentence
+        self.after_open = True  # the first block with text of its own closes the first sentence
+        self.block = []  # text of the block being read after the h1
+        self.block_own = False  # it holds text outside any link or button
 
     def _block_edge(self, tag):
-        if tag in BLOCKS and self.h1_state == "after" and any(text.strip() for text in self.after):
-            self.after_open = False
+        if tag in BLOCKS and self.h1_state == "after" and self.after_open:
+            if self.block_own:
+                self.after, self.after_open = self.block, False
+            self.block, self.block_own = [], False
 
     def handle_starttag(self, tag, attrs):
         self._block_edge(tag)
@@ -118,8 +121,9 @@ class _Text(HTMLParser):
         if (self.footer.inside and not self.keep_footer) or any(tag in self.skip for tag in self.stack):
             return
         self.nodes.append(data)
-        if self.h1_state == "after" and self.after_open and not LABEL_TAGS & set(self.stack):
-            self.after.append(data)
+        if self.h1_state == "after" and self.after_open and "button" not in self.stack:
+            self.block.append(data)
+            self.block_own = self.block_own or (bool(data.strip()) and "a" not in self.stack)
 
 
 def _parse(html, skip, keep_footer=False):
@@ -139,7 +143,8 @@ def page_text(html: str) -> str:
 
 
 def first_sentence_after_h1(html: str):
-    text = " ".join(" ".join(_parse(html, SKIP).after).split())
+    parser = _parse(html, SKIP)
+    text = " ".join(" ".join(parser.after or (parser.block if parser.block_own else [])).split())
     if not text:
         return None
     end = SENTENCE_END.search(text)

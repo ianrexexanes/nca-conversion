@@ -282,6 +282,25 @@ class RulingsTest(unittest.TestCase):
         self.assertNotEqual(result["placements"]["first_sentence"]["status"], "found")
         self.assertIsNone(search_check.first_sentence_after_h1(html))
 
+    def test_the_first_sentence_keeps_the_links_inside_its_own_block(self):
+        cases = [
+            ("<p>Family workshop</p><a href='/book'>Book bike repair now</a><p>We fix things.</p>", "Family workshop", "missing"),
+            ("<p>Family workshop.</p><a href='/book'>Book bike repair now</a>", "Family workshop.", "missing"),
+            ("<p>We do <a href=\"/bike-repair\">bike repair</a> the same day.</p><a href='/book'>Book now</a>",
+             "We do bike repair the same day.", "found"),
+            ("<a class=\"btn\" href='/book'>Book bike repair now</a><p>Family workshop since 1990.</p>",
+             "Family workshop since 1990.", "missing"),
+            ("<p><a class=\"btn\" href='/book'>Book bike repair now</a></p><p>Family workshop since 1990.</p>",
+             "Family workshop since 1990.", "missing"),
+            ("<p>Fast <strong>bike repair</strong> for commuters</p><button>Call us</button>",
+             "Fast bike repair for commuters", "found"),
+        ]
+        for body, sentence, status in cases:
+            html = "<title>T</title><h1>Welcome to Harbor Lane</h1>" + body
+            with self.subTest(body=body):
+                self.assertEqual(search_check.first_sentence_after_h1(html), sentence)
+                self.assertEqual(check_html(html)["placements"]["first_sentence"]["status"], status)
+
     def test_a_footer_heading_after_the_h1_does_not_end_the_text(self):
         html = '<h1>Bike</h1><footer><h2>Contact</h2></footer><p>Body text.</p>'
         self.assertEqual(search_check.first_sentence_after_h1(html), "Body text.")
@@ -298,7 +317,7 @@ class RulingsTest(unittest.TestCase):
             self.assertEqual(result["placements"]["first_sentence"]["status"], "missing")
         self.assertEqual(search_check.first_sentence_after_h1(lede % ""), "Family workshop")
         inline = "<h1>H</h1><div>We fix <a href='/b'>bike repair</a> fast <button>Book</button></div>"
-        self.assertEqual(search_check.first_sentence_after_h1(inline), "We fix fast")
+        self.assertEqual(search_check.first_sentence_after_h1(inline), "We fix bike repair fast")
 
     def test_role_contentinfo_text_is_not_a_body_use(self):
         html = '<title>T</title><h1>H</h1><p>Hello.</p><div role="contentinfo"><p>payroll software</p></div>'

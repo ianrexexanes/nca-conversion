@@ -143,6 +143,14 @@ class WireCheckTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("FAIL p.pain VISUAL", out)
 
+    def test_none_visual_needs_no_figure(self):
+        deck = TINY_DECK.replace("```\n\n## Register", "p.pain.h2: Pumps fail without a warning\np.pain.visual: none, the section reads better as plain text\n```\n\n## Register", 1)
+        section = '<section data-section="p.pain" data-layout="stacked">\n<h2 data-key="p.pain.h2">Pumps fail without a warning</h2>\n</section>\n'
+        frame = TINY_FRAME.replace("</main>", section + "</main>", 1).replace("-->", "- pain: stacked, because the problem reads best as a short line.\n-->", 1)
+        self.assertEqual(run(self.write(frame), "--deck", self.write(deck, "deck.md")), (0, SUMMARY_0 + "\n"))
+        kept = self.write(deck.replace("none, the section reads better as plain text", "A pump with a cracked seal"), "deck.md")
+        self.assertIn("FAIL p.pain VISUAL", run(self.write(frame), "--deck", kept)[1])
+
     def test_header_and_faq_need_no_visual(self):
         self.assertNotIn("data-visual", "".join(re.findall(r'<section data-section="p\.(?:header|faq)".*?</section>', read(WIRE_A), re.S)))
         self.assertEqual(run(WIRE_A, "--deck", DECK, "--variant", "a")[0], 0)

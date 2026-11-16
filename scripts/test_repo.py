@@ -1599,6 +1599,10 @@ class WireframeTests(unittest.TestCase):
                      "one frame per variant", "design-rules.md", "directional cue", "carousel", "deck_check.py", "--final"):
             self.assertIn(part, text)
 
+    def test_wireframe_reference_says_a_none_visual_carries_no_figure(self):
+        text = flat(read("skills", "cro", "references", "wireframe.md"))
+        self.assertIn("A section whose visual line in the deck starts with `none` carries no figure.", text)
+
 
 class DesignTests(unittest.TestCase):
     def setUp(self):

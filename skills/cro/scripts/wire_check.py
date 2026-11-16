@@ -232,9 +232,10 @@ def check(deck, frame, ns, v):
             add("FAIL", name, "LAYOUT", "no layout row for the section %r" % short)
         elif layout not in LAYOUT_RULES[short]:
             add("FAIL", name, "LAYOUT", "%r is not for the %s section; it may use %s" % (layout, short, ", ".join(LAYOUT_RULES[short])))
-        if short not in NO_VISUAL and not section["visuals"]:
-            add("FAIL", name, "VISUAL", "the section has no data-visual")
         want = visual_key(deck, ns, short, v)
+        plain = re.match(r"none\b", deck.values.get(want, ""), re.I)  # the deck's visual is `none, <reason>`: no figure
+        if short not in NO_VISUAL and not plain and not section["visuals"]:
+            add("FAIL", name, "VISUAL", "the section has no data-visual")
         for key, text, owner in frame.visuals:
             if owner is not section:
                 continue

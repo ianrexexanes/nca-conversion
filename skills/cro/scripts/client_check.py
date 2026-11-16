@@ -24,6 +24,7 @@ RULES = [
     ("WARN", "tool-word", [r"\bheadless\b"], []),
     ("FAIL", "person", [], ["Hormozi", "David Ogilvy", "Eugene Schwartz", "April Dunford", "Rory Sutherland", "Byron Sharp",
                           "Seth Godin"]),
+    ("WARN", "person-word", [], ["Ogilvy", "Schwartz", "Dunford", "Sutherland", "Godin"]),
     ("WARN", "ai-word", [r"\bAI\b", r"\bKI\b"], []),
     ("WARN", "citation", [r"\[\d+\]", r"https?://"], ["according to", "study", "studies", "research", "survey", "et al",
                                                    "laut", "gemäss", "gemäß", "Studie", "Studien", "Umfrage", "Umfragen",

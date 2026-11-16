@@ -67,6 +67,16 @@ class ClientCheckTests(unittest.TestCase):
     def test_fails_on_hormozi(self):
         code, out = run("This follows Hormozi's value equation.\n")
         self.assertEqual(code, 1); self.assertIn("FAIL person", out)
+    def test_a_surname_alone_warns_and_a_full_name_still_fails(self):
+        for name in ["Ogilvy", "Schwartz", "Dunford", "Sutherland", "Godin"]:
+            with self.subTest(name=name):
+                code, out = run("As %s argued, the headline should carry the offer.\n" % name)
+                self.assertEqual(code, 0); self.assertEqual(out.count("WARN person-word"), 1, out)
+        code, out = run("A sharp headline carries the offer.\n")
+        self.assertEqual(code, 0); self.assertNotIn("person-word", out)
+        code, out = run("As David Ogilvy argued, the headline should carry the offer.\n")
+        self.assertEqual(code, 1); self.assertIn("FAIL person", out)
+
     def test_fails_on_the_other_panel_names(self):
         for name in ["David Ogilvy", "Eugene Schwartz", "April Dunford", "Rory Sutherland", "Byron Sharp", "Seth Godin"]:
             with self.subTest(name=name):

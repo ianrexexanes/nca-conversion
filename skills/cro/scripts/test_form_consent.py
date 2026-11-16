@@ -207,6 +207,13 @@ class FormConsentTests(unittest.TestCase):
         self.assertEqual(run.data["network"]["consented"], 1)
         self.assertEqual(sum(1 for e in run.log if e["outcome"] == "consented" and e["url"].endswith("/lead")), 1)
 
+    def test_a_form_with_no_email_field_skips_the_send_and_names_the_address(self):
+        run = self.consent("form-no-email.html")
+        self.assertEqual(run.code, 3, (run.err, run.lines))
+        self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SEND") and "carried the address" in d], run.lines)
+        self.assertEqual(run.data["network"]["consented"], 0)
+        self.assertEqual(run.posts(), [])
+
     def test_a_307_after_the_consented_post_is_a_fail(self):
         run = self.consent("form-307.html")
         self.assertEqual(run.code, 1, (run.err, run.lines))

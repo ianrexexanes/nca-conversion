@@ -59,6 +59,15 @@ class ClientCheckTests(unittest.TestCase):
             with self.subTest(name=name):
                 code, out = run("As %s teaches, the page should say so.\n" % name)
                 self.assertEqual(code, 1); self.assertIn("FAIL person", out)
+    def test_fails_on_factor_scores_and_tables(self):
+        for line in ["| 3 | Headline | weak |", "Factor 4 needs work.", "Score: 6", "Your Conversion-Score is high."]:
+            with self.subTest(line=line):
+                code, out = run(line + "\n")
+                self.assertEqual(code, 1); self.assertIn("FAIL score", out)
+        for line in ["I would give it 6 out of 10.", "It is a 6/10.", "Ich gebe 6 von 10."]:
+            with self.subTest(line=line):
+                code, out = run(line + "\n")
+                self.assertEqual(code, 0); self.assertIn("WARN score-count", out)
     def test_passes_measured_pagespeed_fact(self):
         code, out = run("Google's PageSpeed Insights, run on October 13, 2026, "
                         "scores the home page 55 out of 100 on a phone.\n")

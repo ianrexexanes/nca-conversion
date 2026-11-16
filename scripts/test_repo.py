@@ -1603,6 +1603,10 @@ class WireframeTests(unittest.TestCase):
         text = flat(read("skills", "cro", "references", "wireframe.md"))
         self.assertIn("A section whose visual line in the deck starts with `none` carries no figure.", text)
 
+    def test_wireframe_reference_places_prooftop_by_mode(self):
+        text = flat(read("skills", "cro", "references", "wireframe.md"))
+        self.assertIn("The `prooftop` element comes before the H1 on a Direct page and after it on a Search page.", text)
+
 
 class DesignTests(unittest.TestCase):
     def setUp(self):

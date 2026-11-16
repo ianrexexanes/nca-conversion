@@ -136,6 +136,18 @@ class WireCheckTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("FAIL p.hero.zzz NOT_IN_DECK", out)
 
+    def test_prooftop_position_follows_the_mode(self):
+        top = re.search(element("p.hero.prooftop"), read(WIRE_A)).group(0)
+        below = self.write(read(WIRE_A).replace(top, "", 1).replace("</h1>\n", "</h1>\n" + top, 1))
+        search = self.write(read(DECK).replace("p.page.mode: direct", "p.page.mode: search", 1), "deck.md")
+        code, out = run(below, "--deck", DECK, "--variant", "a")  # direct: the line comes before the H1
+        self.assertEqual(code, 0, out)
+        self.assertIn("WARN p.hero.prooftop PROOFTOP_POSITION", out)
+        self.assertEqual(run(below, "--deck", search, "--variant", "a"), (0, SUMMARY_0 + "\n"))  # search: after the H1
+        self.assertIn("WARN p.hero.prooftop PROOFTOP_POSITION", run(WIRE_A, "--deck", search, "--variant", "a")[1])
+        bare = self.write(read(DECK).replace("p.hero.prooftop:", "p.hero.proofline:", 1), "deck.md")  # no prooftop key in the deck: no row
+        self.assertNotIn("PROOFTOP_POSITION", run(below, "--deck", bare, "--variant", "a")[1])
+
     def test_variant_frame_ignores_other_variants_keys(self):
         code, out = run(WIRE_A, "--deck", DECK, "--variant", "a")
         self.assertEqual(code, 0)

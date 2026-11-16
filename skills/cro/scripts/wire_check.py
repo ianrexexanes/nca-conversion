@@ -60,6 +60,7 @@ class Frame(HTMLParser):
         self.keyed = []  # (key, tag, text) per data-key element
         self.visuals = []  # (visual key, text, owning section dict or None) per data-visual element
         self.loose = []  # (section dict, text) for visible text inside a section and outside every key and visual
+        self.order = []  # the data-key values in the order their elements open
         self.notes = None  # the comments after the last </main>, one string each; None while no </main> has closed
         self.stack = []
 
@@ -69,6 +70,8 @@ class Frame(HTMLParser):
             self.main = attrs
         if tag == "br":
             self.handle_data(" ")
+        if "data-key" in attrs:
+            self.order.append(attrs["data-key"])
         if tag in VOID:
             if "data-key" in attrs:
                 self.keyed.append((attrs["data-key"], tag, ""))
@@ -262,6 +265,12 @@ def check(deck, frame, ns, v):
             add("FAIL", key, "NOT_IN_DECK", "no key of this name in the deck: copy the deck never approved")
         elif key not in shown and parts[0] == ns and len(parts) > 2 and parts[1] not in ("page", "meta") and parts[-1] != "visual":
             add("WARN", key, "FOREIGN_KEY", "this key is another variant's, or the shared slot this variant replaces")
+    top, h1 = (hero_key(ns, v, slot) if hero_key(ns, v, slot) in deck.values else "%s.hero.%s" % (ns, slot) for slot in ("prooftop", "h1"))
+    mode = deck.values.get(ns + ".page.mode", "")
+    if top in deck.values and top in frame.order and h1 in frame.order and mode in ("direct", "search"):
+        before = frame.order.index(top) < frame.order.index(h1)
+        if before != (mode == "direct"):
+            add("WARN", top, "PROOFTOP_POSITION", "on a %s page prooftop comes %s the H1" % (mode, "before" if mode == "direct" else "after"))
     for section, text in frame.loose:
         add("WARN", section["name"], "EXTRA_TEXT", "text outside every key: %s" % text[:60])
     return out

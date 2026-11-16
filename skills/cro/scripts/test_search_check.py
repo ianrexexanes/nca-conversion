@@ -287,6 +287,15 @@ class RulingsTest(unittest.TestCase):
                 '<h1>Payroll software</h1><p>We make payroll software. More.</p>')
         self.assertEqual(search_check.first_sentence_after_h1(html), "We make payroll software.")
 
+    def test_the_first_sentence_ends_with_its_block_and_never_holds_a_button_label(self):
+        lede = "<h1>Welcome to Harbor Lane</h1><p>Family workshop%s</p><a href='/book'>Book bike repair now</a><p>We fix things.</p>"
+        for stop in ("", "."):
+            result = check_html("<title>T</title>" + lede % stop)
+            self.assertEqual(result["placements"]["first_sentence"]["status"], "missing")
+        self.assertEqual(search_check.first_sentence_after_h1(lede % ""), "Family workshop")
+        inline = "<h1>H</h1><div>We fix <a href='/b'>bike repair</a> fast <button>Book</button></div>"
+        self.assertEqual(search_check.first_sentence_after_h1(inline), "We fix fast")
+
     def test_role_contentinfo_text_is_not_a_body_use(self):
         html = '<title>T</title><h1>H</h1><p>Hello.</p><div role="contentinfo"><p>payroll software</p></div>'
         self.assertEqual(check_html(html, keyword="payroll software")["body_uses"]["exact"], 0)

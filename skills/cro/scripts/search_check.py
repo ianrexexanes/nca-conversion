@@ -36,6 +36,9 @@ STOP_WORDS = {
 SPACE_MARKS = dict.fromkeys(map(ord, "-\u2010\u2011\u2012–—_/«»‹›"), " ")
 DROP_MARKS = dict.fromkeys(map(ord, "\u00ad\u200b\u200c\u200d\u2060\ufeff"), None)
 LANGUAGE_HOME = re.compile(r"/[a-z]{2}(-[a-z]{2})?/?", re.I)
+BLOCKS = {"p", "div", "section", "article", "aside", "header", "main", "ul", "ol", "li", "blockquote", "figure",
+          "table", "tr", "td", "th", "form", "br", "hr"} | HEADINGS
+LABEL_TAGS = {"a", "button"}  # a link or button label is never part of the first sentence
 SENTENCE_END = re.compile(r"[.!?](?=\s|$)")
 
 
@@ -72,8 +75,14 @@ class _Text(HTMLParser):
         self.h1_index = None
         self.h1_state = "none"  # none, inside, after, done
         self.after = []
+        self.after_open = True  # a block boundary after the first text closes the first sentence
+
+    def _block_edge(self, tag):
+        if tag in BLOCKS and self.h1_state == "after" and any(text.strip() for text in self.after):
+            self.after_open = False
 
     def handle_starttag(self, tag, attrs):
+        self._block_edge(tag)
         self.footer.start(tag, dict(attrs))
         if self.footer.inside and not self.keep_footer:
             if tag not in VOID:
@@ -89,12 +98,14 @@ class _Text(HTMLParser):
         self.stack.append(tag)
 
     def handle_startendtag(self, tag, attrs):
+        self._block_edge(tag)
         self.footer.start(tag, dict(attrs))
         self.footer.end(tag)
         if self.h1_state == "after" and tag in HEADINGS and not self.footer.inside:
             self.h1_state = "done"
 
     def handle_endtag(self, tag):
+        self._block_edge(tag)
         self.footer.end(tag)
         if tag not in self.stack:
             return
@@ -107,7 +118,7 @@ class _Text(HTMLParser):
         if (self.footer.inside and not self.keep_footer) or any(tag in self.skip for tag in self.stack):
             return
         self.nodes.append(data)
-        if self.h1_state == "after":
+        if self.h1_state == "after" and self.after_open and not LABEL_TAGS & set(self.stack):
             self.after.append(data)
 
 

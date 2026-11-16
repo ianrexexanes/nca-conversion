@@ -107,7 +107,7 @@ META_VALUES = {
     "awareness": ("cold", "warm"),
 }
 HERO_SLOT = re.compile(r"h1|sub|answer|benefit\d+|prooftop|strip|visual|cta")
-GENERIC_LANGUAGES =("en", "de", "fr", "it")
+GENERIC_LANGUAGES = ("en", "de", "fr", "it")
 TIME_WORDS = frozenset({"now", "today", "jetzt", "heute", "maintenant", "aujourd'hui", "ora", "oggi", "subito"})
 GENERIC_LABELS = frozenset({
     # English
@@ -234,7 +234,7 @@ def check_namespace(deck, ns, part, final, add):
             if len(parts) > 4 or not HERO_SLOT.fullmatch(slot):
                 add("WARN", k, "UNKNOWN_KEY", "%r is not a hero slot of the grammar" % ".".join(parts[2:]))
     variants = deck.variants(ns)
-    button =values.get(ns + ".cta.button")
+    button = values.get(ns + ".cta.button")
     # ONE_ACTION
     for k in keys:
         parts = k.split(".")

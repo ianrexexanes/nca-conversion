@@ -438,5 +438,25 @@ class GuardStackTest(unittest.TestCase):
         self.assertEqual(guard_bypasses(clean_calls + "browser.close()\n", "render_check.py"), [])
         self.assertTrue(guard_bypasses(clean, "render_check.py"))
 
+    def test_the_browser_probe_falls_back_to_the_bundled_chromium(self):
+        import contextlib
+        import guard_tests
+
+        def fake(chrome_works, bundled_works):
+            class Chromium:
+                def launch(self, channel=None, headless=True):
+                    if not (chrome_works if channel == "chrome" else bundled_works):
+                        raise RuntimeError("no such browser")
+                    return type("Browser", (), {"close": lambda self: None})()
+
+            @contextlib.contextmanager
+            def playwright():
+                yield type("Playwright", (), {"chromium": Chromium()})()
+            return playwright
+
+        self.assertTrue(guard_tests._browser_ok(fake(False, True)))
+        self.assertTrue(guard_tests._browser_ok(fake(True, False)))
+        self.assertFalse(guard_tests._browser_ok(fake(False, False)))
+
     def test_host_rules_wraps_the_rule_list(self):
         self.assertEqual(cro_runtime.host_rules(), "--host-resolver-rules=" + cro_runtime.host_rule_list())

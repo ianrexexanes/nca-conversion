@@ -14,12 +14,18 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 
-def _browser_ok():
+def _browser_ok(sync_playwright=None):
     try:
-        from playwright.sync_api import sync_playwright
+        if sync_playwright is None:
+            from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
-            p.chromium.launch(channel="chrome", headless=True).close()
-        return True
+            for options in ({"channel": "chrome"}, {}):  # Chrome, then the bundled Chromium, as cro_runtime.guarded_launch does
+                try:
+                    p.chromium.launch(headless=True, **options).close()
+                    return True
+                except Exception:
+                    continue
+        return False
     except Exception:
         return False
 

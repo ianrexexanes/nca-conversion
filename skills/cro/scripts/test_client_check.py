@@ -104,7 +104,26 @@ class RulingsTest(unittest.TestCase):
     def test_excerpt_is_the_trimmed_line_cut_to_100_characters(self):
         line = "Claude " + "word " * 40
         code, out = run("   " + line + "  \n")
-        self.assertEqual(out.splitlines()[0], "FAIL ai-name: line 1: " + line.strip()[:100])
+        self.assertEqual(out.splitlines()[0], "FAIL ai-name: line 1, col 4: " + line.strip()[:100] + "…")
+
+    def test_long_line_row_shows_the_match(self):
+        line = "Home About " + "menu item " * 90 + "Playwright " + "menu item " * 20
+        self.assertGreater(len(line), 1000)
+        col = line.index("Playwright") + 1
+        self.assertGreater(col, 900)
+        code, out = run(line + "\n")
+        row = out.splitlines()[0]
+        self.assertTrue(row.startswith("FAIL tool-name: line 1, col %d: …" % col), row)
+        self.assertTrue(row.endswith("…"), row)
+        self.assertIn("Playwright", row)
+        self.assertLessEqual(len(row.split(": ", 2)[2].strip("…")), 100)
+
+    def test_short_line_row_is_unchanged(self):
+        line = "x " * 44 + "Playwright"  # 98 characters
+        code, out = run(line + "\n")
+        self.assertEqual(out.splitlines()[0], "FAIL tool-name: line 1: " + line)
+        line = "x " * 45 + "Playwright   "  # 100 characters once trimmed
+        self.assertEqual(run(line + "\n")[1].splitlines()[0], "FAIL tool-name: line 1: " + line.strip())
 
     def test_utf8_text_and_crlf_line_ends(self):
         code, out = run("Für Käufer.\r\n\r\nKäufer lasen es mit ChatGPT.\r\n")

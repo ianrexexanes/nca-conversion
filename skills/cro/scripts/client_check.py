@@ -42,6 +42,24 @@ def compile_rule(patterns, terms):
 COMPILED = [(level, rule, compile_rule(patterns, terms)) for level, rule, patterns, terms in RULES]
 
 
+WIDTH = 100
+
+
+def row_for(level, rule, number, line, match):
+    """The row text: the trimmed line when it fits in WIDTH characters, else its column (1-based) and an excerpt of at most
+    WIDTH characters around the match, with an ellipsis where it was cut."""
+    text = line.strip()
+    if len(text) <= WIDTH:
+        return "%s %s: line %d: %s" % (level, rule, number, text)
+    lead = len(line) - len(line.lstrip())
+    at = max(0, match.start() - lead)
+    before = max(0, (WIDTH - (match.end() - match.start())) // 2)
+    start = max(0, min(at - before, len(text) - WIDTH))
+    end = min(len(text), start + WIDTH)
+    return "%s %s: line %d, col %d: %s%s%s" % (level, rule, number, match.start() + 1, "…" if start else "", text[start:end],
+                                              "…" if end < len(text) else "")
+
+
 def check(text):
     lines = text.split("\n")
     if lines and lines[-1] == "":
@@ -49,8 +67,9 @@ def check(text):
     rows = []
     for number, line in enumerate(lines, 1):
         for level, rule, pattern in COMPILED:
-            if pattern.search(line):
-                rows.append((level, "%s %s: line %d: %s" % (level, rule, number, line.strip()[:100])))
+            found = pattern.search(line)
+            if found:
+                rows.append((level, row_for(level, rule, number, line, found)))
     return rows
 
 

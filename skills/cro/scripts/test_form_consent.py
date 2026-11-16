@@ -1,6 +1,8 @@
 import contextlib
 import io
 import json
+import os
+import pty
 import subprocess
 import sys
 import tempfile
@@ -13,8 +15,10 @@ HERE = Path(__file__).resolve().parent
 SCRIPT = HERE / "form_consent.py"
 sys.path.insert(0, str(HERE))
 
+import clarity_export  # noqa: E402
 import cro_runtime  # noqa: E402
-from form_tests import FormServer, run_script, start_server  # noqa: E402
+import form_consent  # noqa: E402
+from form_tests import FormServer, Run as run_mod, run_script, start_server  # noqa: E402
 from guard_tests import SKIP, GuardLeakPathsMixin  # noqa: E402
 
 TODAY = date.today().isoformat()
@@ -63,6 +67,45 @@ class BadInputTests(unittest.TestCase):
                 self.assertIn("form_consent", done.stderr)
 
 
+class FakeTerminal:
+    """Standard input for an in-process run: isatty() and readline() are the test's to set."""
+
+    def __init__(self, tty, answer=""):
+        self.tty, self.answer = tty, answer
+
+    def isatty(self):
+        return self.tty
+
+    def readline(self):
+        return self.answer
+
+
+class TerminalQuestionTests(unittest.TestCase):
+    def test_loopback_is_the_three_hosts_the_plugin_already_names(self):
+        self.assertEqual(form_consent.LOOPBACK, clarity_export.LOOPBACK)
+        self.assertEqual(sorted(form_consent.LOOPBACK), ["127.0.0.1", "::1", "localhost"])
+
+    def test_the_terminal_question_is_not_put_without_a_terminal(self):
+        err = io.StringIO()
+        with mock.patch.object(sys, "stdin", FakeTerminal(False, "example.com\n")), contextlib.redirect_stderr(err):
+            answer = form_consent.ask_host("example.com", "https://example.com/contact")
+        self.assertIsNone(answer)
+        self.assertEqual(err.getvalue(), "")
+
+    def test_the_terminal_question_reads_the_typed_host_from_a_real_terminal(self):
+        master, slave = pty.openpty()
+        self.addCleanup(lambda: os.close(master))
+        stdin = os.fdopen(slave, "r")
+        self.addCleanup(stdin.close)
+        os.write(master, b"EXAMPLE.com \n")
+        err = io.StringIO()
+        with mock.patch.object(sys, "stdin", stdin), contextlib.redirect_stderr(err):
+            answer = form_consent.ask_host("example.com", "https://example.com/contact")
+        self.assertEqual(answer, "example.com")
+        self.assertIn("form_consent: this sends one real test submission to example.com, through the form on https://example.com/contact.\n", err.getvalue())
+        self.assertTrue(err.getvalue().endswith("Type example.com to send it, or press Enter to stop: "), err.getvalue())
+
+
 @SKIP
 class FormConsentTests(unittest.TestCase):
     @classmethod
@@ -99,6 +142,7 @@ class FormConsentTests(unittest.TestCase):
         self.assertEqual(run.data["network"]["consented"], 1)
         self.assertEqual(sum(1 for e in run.log if e["outcome"] == "consented"), 1)
         self.assertEqual(run.out.strip().splitlines()[-1], "form_consent: 0 FAIL, 0 WARN")
+        self.assertNotIn("Type ", run.err)  # a loopback host is not asked
         self.assertIsInstance(run.form["submit"]["time_ms"], int)
         self.assertEqual(run.form["submit"]["state"], "changed")
         self.assertIn("Thanks", run.form["submit"]["status_text"])
@@ -106,6 +150,47 @@ class FormConsentTests(unittest.TestCase):
         for _m, _p, agent, _b in run.seen:
             self.assertIn("Chrome/", agent)
             self.assertNotIn("Headless", agent)
+
+    def in_process(self, terminal, page="form-lead.html", loopback=()):
+        """form_consent.main in this process, with the server's own host counted as a real one and standard input a FakeTerminal."""
+        folder = tempfile.mkdtemp(dir=self.tmp.name)
+        with FormServer.lock:
+            mark = len(FormServer.requests)
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch.object(form_consent, "LOOPBACK", loopback), mock.patch.object(sys, "stdin", terminal), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = form_consent.main(["%s/%s" % (self.base, page), "--out", folder, *GOOD])
+        with FormServer.lock:
+            seen = list(FormServer.requests[mark:])
+        return run_mod(code, out.getvalue(), err.getvalue(), seen, folder)
+
+    def assertNothingSent(self, run):
+        self.assertEqual(run.code, 3, run.out + run.err)
+        self.assertEqual(run.posts(), [])
+        self.assertFalse([e for e in run.log if e["outcome"] == "consented"], run.log)
+        self.assertIn("SKIPPED", run.out)
+
+    def test_a_real_host_with_no_terminal_sends_nothing(self):
+        run = self.in_process(FakeTerminal(False, "127.0.0.1\n"))
+        self.assertNothingSent(run)
+        self.assertIn("needs a person at a terminal", run.out)
+        self.assertNotIn("Type ", run.err)
+
+    def test_a_real_host_with_another_host_typed_sends_nothing(self):
+        run = self.in_process(FakeTerminal(True, "example.org\n"))
+        self.assertNothingSent(run)
+        self.assertIn("was not", run.out)
+
+    def test_a_real_host_with_nothing_typed_sends_nothing(self):
+        for answer in ("\n", ""):
+            run = self.in_process(FakeTerminal(True, answer))
+            self.assertNothingSent(run)
+
+    def test_a_real_host_with_its_host_typed_sends_once(self):
+        run = self.in_process(FakeTerminal(True, " 127.0.0.1 \n"))
+        self.assertEqual(run.code, 0, run.out + run.err)
+        self.assertEqual([p for _m, p in run.posts()], ["/lead"])
+        self.assertIn("Type 127.0.0.1 to send it", run.err)
 
     def test_consent_does_not_press_when_the_fill_breaks_a_pattern(self):
         run = self.consent("form-code-pattern.html")
@@ -133,7 +218,8 @@ class FormConsentTests(unittest.TestCase):
         self.assertEqual(filled["message"], LINE)
 
     def test_blocked_action_host_is_never_consented(self):
-        run = self.consent("form-analytics.html")
+        # In this process, with the analytics host counted as loopback only so the terminal question is not put: this test is about the guard's block.
+        run = self.in_process(FakeTerminal(False), "form-analytics.html", ("www.google-analytics.com",))
         self.assertEqual(run.code, 3, run.err)
         self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SEND") and "google-analytics.com" in d],
                         run.lines)

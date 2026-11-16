@@ -1,6 +1,6 @@
 """Send one real, labelled test submission through a form, once, with the owner's yes. The only script in the plugin that sends.
 
-Run by the plugin's venv python, and only after the owner has said yes for this test:
+Run by the owner in a terminal, with the plugin's venv python, and only after the owner has said yes for this test:
     form_consent.py URL --out DIR --owner NAME --date YYYY-MM-DD --email ADDRESS [--form CSS] [--timeout 45]
 
 Before any browser opens it exits 2 when --owner is empty, --date is not a real date or not today's local date, or --email
@@ -11,7 +11,7 @@ consented by <owner>, <date>" in the other text fields), and only then sets the 
 presses submit once, timing the press to the thank-you state. The guard lets exactly one non-GET request leave, to that host; a
 second is aborted. Afterwards the consented request must be to the form's own action (or the pressed control's formaction), and no
 non-GET request may show as completed, which is what a 307 or 308 redirect hop looks like; either is a FAIL SEND, exit 1. A form
-that sends anywhere else, or by GET, is SKIPPED and exit 3, with nothing sent. So is a form whose own validation refuses the fill. The yes in the chat comes first, as `form.md` step 7 says; Claude Code's own prompt is a second check that appears in some setups only.
+that sends anywhere else, or by GET, is SKIPPED and exit 3, with nothing sent. So is a form whose own validation refuses the fill. The yes in the chat comes first, as `form.md` step 7 says. Then, unless the action host is loopback (127.0.0.1, ::1 or localhost), the script asks at the terminal before it opens the consent: it prints the action host and goes on only when that host is typed back on standard input. With no terminal on standard input, or any other answer, the form is SKIPPED and exit 3, with nothing sent. No flag, variable or file answers for the terminal.
 Exit 0 when the send went through, 1 on a FAIL, 2 on bad input, 3 when nothing was sent. The browser is closed last, with
 browser.close() alone.
 """
@@ -34,6 +34,17 @@ DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 NON_GET = ("GET", "HEAD", "OPTIONS")
 WAIT_MS = 30000
 GIVE_UP_MS = 2000
+LOOPBACK = ("127.0.0.1", "::1", "localhost")
+
+
+def ask_host(host, url):
+    """The host a person types at the terminal, or None when standard input is not a terminal (nothing is written then)."""
+    if not sys.stdin.isatty():
+        return None
+    sys.stderr.write("form_consent: this sends one real test submission to %s, through the form on %s.\n" % (host, url))
+    sys.stderr.write("Type %s to send it, or press Enter to stop: " % host)
+    sys.stderr.flush()
+    return sys.stdin.readline().strip().lower()
 
 
 def parse_args(argv):
@@ -114,6 +125,13 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
             print("not sent: the fill does not satisfy %s (%s)" % (p["field"], p["message"]))
         add_issue(entry, "SKIPPED", "SEND", "the fill does not satisfy %s; nothing was sent" % ", ".join(p["field"] for p in problems))
         return False
+    if host not in LOOPBACK:
+        typed = ask_host(host, args.url)
+        if typed != host:
+            why = ("a send to %s needs a person at a terminal: run this command yourself in a terminal and type the host when asked; nothing was sent" % host
+                   if typed is None else "the host typed at the terminal was not %s; nothing was sent" % host)
+            add_issue(entry, "SKIPPED", "SEND", why)
+            return False
     sender.allow_post_marker = args.email  # only a request that carries the typed address can take the send
     sender.allow_post_host = host  # open the consent now, for the press alone
     mark = len(sender.entries)

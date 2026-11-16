@@ -1895,6 +1895,11 @@ class FormTests(unittest.TestCase):
     def test_the_consent_script_docstring_does_not_say_always_asks(self):
         doc = flat(read("skills/cro/scripts/form_consent.py").split('"""')[1])
         self.assertIn("The yes in the chat comes first, as `form.md` step 7 says", doc)
+        self.assertIn("Run by the owner in a terminal, with the plugin's venv python, and only after the owner has said yes for this test:", doc)
+        self.assertIn("Then, unless the action host is loopback (127.0.0.1, ::1 or localhost), the script asks at the terminal before it opens "
+                      "the consent: it prints the action host and goes on only when that host is typed back on standard input.", doc)
+        self.assertIn("With no terminal on standard input, or any other answer, the form is SKIPPED and exit 3, with nothing sent. "
+                      "No flag, variable or file answers for the terminal.", doc)
         self.assertNotRegex(doc, r"(?i)before every|always asks|nothing asks")
 
     def test_it_points_at_the_form_audit_and_reads_the_thank_you_step(self):

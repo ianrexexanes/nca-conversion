@@ -294,6 +294,8 @@ class RulingsTest(unittest.TestCase):
              "Family workshop since 1990.", "missing"),
             ("<p>Fast <strong>bike repair</strong> for commuters</p><button>Call us</button>",
              "Fast bike repair for commuters", "found"),
+            ("<p>Family workshop<br>since 1990 for bike repair.</p>",
+             "Family workshop since 1990 for bike repair.", "found"),
         ]
         for body, sentence, status in cases:
             html = "<title>T</title><h1>Welcome to Harbor Lane</h1>" + body

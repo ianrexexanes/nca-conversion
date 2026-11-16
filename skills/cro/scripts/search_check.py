@@ -37,7 +37,7 @@ SPACE_MARKS = dict.fromkeys(map(ord, "-\u2010\u2011\u2012–—_/«»‹›"), "
 DROP_MARKS = dict.fromkeys(map(ord, "\u00ad\u200b\u200c\u200d\u2060\ufeff"), None)
 LANGUAGE_HOME = re.compile(r"/[a-z]{2}(-[a-z]{2})?/?", re.I)
 BLOCKS = {"p", "div", "section", "article", "aside", "header", "main", "ul", "ol", "li", "blockquote", "figure",
-          "table", "tr", "td", "th", "form", "br", "hr"} | HEADINGS
+          "table", "tr", "td", "th", "form", "hr"} | HEADINGS
 SENTENCE_END = re.compile(r"[.!?](?=\s|$)")
 
 

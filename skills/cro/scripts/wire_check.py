@@ -246,6 +246,13 @@ def check(deck, frame, ns, v):
                 add("FAIL", name, "VISUAL", "the figure names %s; this frame's visual is %s" % (key, want))
             elif text and key in deck.values and text != squash(deck.values[key]):
                 add("FAIL", key, "PARITY", differs(text, squash(deck.values[key])))
+    wanted = list(dict.fromkeys("%s.%s" % (ns, k.split(".")[1]) for k in deck.order
+                                if k.split(".")[0] == ns and k not in deck.foreign and len(k.split(".")) > 2 and k.split(".")[1] in SECTIONS))
+    drawn = [s["name"] for s in frame.sections if s["name"] in wanted]
+    for name, should in zip(drawn, [n for n in wanted if n in drawn]):
+        if name != should:
+            add("FAIL", name, "SECTION_ORDER", "the deck puts %s here, not %s" % (should, name))
+            break
     check_notes(frame, add)
     for key, kind, text in rendered(deck, ns, v):
         found = [(tag, shown) for k, tag, shown in frame.keyed if k == key]

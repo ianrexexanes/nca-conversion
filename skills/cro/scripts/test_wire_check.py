@@ -148,6 +148,13 @@ class WireCheckTest(unittest.TestCase):
         bare = self.write(read(DECK).replace("p.hero.prooftop:", "p.hero.proofline:", 1), "deck.md")  # no prooftop key in the deck: no row
         self.assertNotIn("PROOFTOP_POSITION", run(below, "--deck", bare, "--variant", "a")[1])
 
+    def test_frame_sections_out_of_order_fail(self):
+        lines = read(WIRE_A).splitlines(keepends=True)
+        swapped = lines[:29] + lines[34:41] + lines[29:34] + lines[41:]  # the proof section ahead of the pain section
+        code, out = run(self.write("".join(swapped)), "--deck", DECK, "--variant", "a")
+        self.assertEqual(code, 1, out)
+        self.assertRegex(out, r"(?m)^FAIL p\.\w+ SECTION_ORDER")
+
     def test_variant_frame_ignores_other_variants_keys(self):
         code, out = run(WIRE_A, "--deck", DECK, "--variant", "a")
         self.assertEqual(code, 0)

@@ -267,6 +267,18 @@ class DeckCheckTest(unittest.TestCase):
         self.assertIn("PAIN_ORDER", fails(with_line(direct, "p.page.awareness", "warm")))
         self.assertIn("PAIN_ORDER", fails(with_line(search, "p.page.awareness", "cold")))
 
+    def test_sections_out_of_order_fail(self):
+        text = read("deck-variants.md")
+        late = re.findall(r"(?m)^p\.(?:closer|faq)\..*\n", text)
+        moved = text
+        for line in late:
+            moved = moved.replace(line, "", 1)
+        moved = moved.replace("p.header.logo:", "".join(late) + "p.header.logo:", 1)
+        self.assertNotIn("SECTION_ORDER", rules(text, final=True))
+        self.assertEqual(level_of("SECTION_ORDER", moved, final=True), "WARN")
+        direct = read("deck-clean-direct.md")  # proof before pain is the warm order, which PAIN_ORDER judges, not this rule
+        self.assertNotIn("SECTION_ORDER", rules(with_line(direct, "p.page.awareness", "warm"), final=True))
+
     def test_header_exits_on_a_landing_page_only(self):
         self.assertIn("HEADER_EXITS", fails(add_line(read("deck-clean-direct.md"), "p.header.nav: Home; Services; Contact")))
         search = read("deck-clean-search.md")

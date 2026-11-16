@@ -130,7 +130,7 @@ STOCK = re.compile(r"\bstock\b", re.I)
 NOTE_LINE = re.compile(r"^- [^:]+: .+, because .+\.$")
 NOTE_NONE = "- None: the register changed no rule."
 PAGE_ONLY = ("BUTTON_GAP", "CLOSER_PARTS", "VISUAL_MISSING", "PAIN_ORDER", "HEADER_EXITS", "VALUE_BLOCKS", "FAQ_PAIRS",
-             "SECTION_MISSING")
+             "SECTION_MISSING", "SECTION_ORDER")
 
 
 def _symbol_only(token):
@@ -332,6 +332,11 @@ def check_namespace(deck, ns, part, final, add):
             lacks.append("three to five bullets (has %d)" % len(bullets))
         if lacks:
             add("FAIL", ns + ".closer", "CLOSER_PARTS", "closer lacks " + ", ".join(lacks))
+        # section order: the grammar's, with pain and proof sharing one place (PAIN_ORDER judges those two)
+        rank = [SECTIONS.index("pain" if s == "proof" else s) for s in sections]
+        late = next((s for s, r, after in zip(sections[1:], rank[1:], rank) if r < after), None)
+        if late:
+            add("WARN", "%s.%s" % (ns, late), "SECTION_ORDER", "%s comes after a section the grammar places later" % late)
         # pain and proof order
         awareness = pagev("awareness")
         if "pain" in sections and "proof" in sections and awareness in ("cold", "warm"):

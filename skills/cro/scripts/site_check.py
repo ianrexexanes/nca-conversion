@@ -297,9 +297,11 @@ def load_sitemap(dist, add):
 
 
 def robots_allows(text, path):
-    """Whether Googlebot may fetch `path` under robots.txt: the longest matching rule wins and Allow wins a tie."""
+    """Whether Googlebot may fetch `path` under robots.txt: the longest matching rule wins and Allow wins a tie.
+    Group rules follow https://developers.google.com/search/docs/crawling-indexing/robots/robots_txt : a group that names
+    Googlebot wins over the * group even with no rules, groups naming the same agent combine, and a BOM is ignored."""
     groups, agents, rules, fresh = [], [], [], True
-    for raw in text.splitlines():
+    for raw in text.lstrip("\ufeff").splitlines():
         line = raw.split("#", 1)[0].strip()
         field, _, value = line.partition(":")
         field, value = field.strip().lower(), value.strip()
@@ -313,7 +315,8 @@ def robots_allows(text, path):
             fresh = False
             if value:
                 rules.append((field == "allow", value))
-    chosen = next((r for a, r in groups if "googlebot" in a), None) or next((r for a, r in groups if "*" in a), [])
+    named = [r for a, r in groups if "googlebot" in a] or [r for a, r in groups if "*" in a]
+    chosen = [rule for r in named for rule in r]
     best = (-1, True)
     for allow, pattern in chosen:
         body = re.escape(pattern.rstrip("$")).replace(r"\*", ".*") + ("$" if pattern.endswith("$") else "")

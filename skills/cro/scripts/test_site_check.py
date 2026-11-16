@@ -290,6 +290,17 @@ class SiteCheckTests(unittest.TestCase):
         longest = "User-agent: *\nDisallow: /\nAllow: /$\n"
         out = self.site({"/index.html": page_html(CLEAN_DECK)}, {"robots.txt": longest})[1]
         self.assertNotIn("ROBOTS", rules_in(out), out)
+        # a Googlebot group with no rules lets Googlebot fetch everything, whatever the * group says
+        empty_group = "User-agent: *\nDisallow: /\n\nUser-agent: Googlebot\n"
+        out = self.site({"/index.html": page_html(CLEAN_DECK)}, {"robots.txt": empty_group})[1]
+        self.assertNotIn("ROBOTS", rules_in(out), out)
+        # groups naming the same agent combine, and a named group never takes the * group's rules
+        split = "User-agent: Googlebot\nAllow: /private/\n\nUser-agent: *\nAllow: /\n\nUser-agent: Googlebot\nDisallow: /\n"
+        out = self.site({"/index.html": page_html(CLEAN_DECK)}, {"robots.txt": split})[1]
+        self.assertRegex(out, r"(?m)^FAIL /index\.html ROBOTS: ")
+        # a byte order mark at the start of the file is ignored
+        out = self.site({"/index.html": page_html(CLEAN_DECK)}, {"robots.txt": "\ufeffUser-agent: *\nDisallow: /\n"})[1]
+        self.assertRegex(out, r"(?m)^FAIL /index\.html ROBOTS: ")
 
     def test_sitemap_index_is_followed_one_level(self):
         files = {"sitemap.xml": None, "sitemap-index.xml": sitemap_index([ORIGIN + "/sitemap-pages.xml"]),

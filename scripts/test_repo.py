@@ -1,3 +1,4 @@
+import fnmatch
 import json
 import re
 import subprocess
@@ -2184,6 +2185,25 @@ class RouterTests(unittest.TestCase):
         rules = json.loads(done.stdout[:done.stdout.rindex("}") + 1])["permissions"]["allow"]
         self.assertNotIn("form_consent", done.stdout)
         self.assertEqual(len(rules), len(entries))
+
+    def test_no_skill_pre_approves_the_consent_script(self):
+        # Every SKILL.md in the repo, by the script's name and by any rule, wildcard or bare Bash, that would also cover it.
+        run = "${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/form_consent.py https://example.com --owner Someone --date 2026-01-01 --email a@example.com"
+        commands = ["python3 " + run, "python " + run, "${CLAUDE_PLUGIN_DATA}/venv/bin/python " + run]
+        found = 0
+        for skill in sorted((ROOT / "skills").glob("*/SKILL.md")):
+            fm, _body = frontmatter_and_body(skill)
+            line = re.search(r"^allowed-tools:\s*(.+)$", fm, re.M)
+            if not line:
+                continue
+            found += 1
+            self.assertNotIn("form_consent", line.group(1), skill.parent.name)
+            self.assertFalse(re.search(r"(^|\s)Bash(\s|$)", line.group(1)), "a bare Bash rule allows every command: " + skill.parent.name)
+            for entry in re.findall(r"Bash\(([^)]*)\)", line.group(1)):
+                pattern = entry.replace(":*", " *")
+                for command in commands:
+                    self.assertFalse(fnmatch.fnmatchcase(command, pattern), "%s: Bash(%s) covers the consent script" % (skill.parent.name, entry))
+        self.assertGreaterEqual(found, 2)
 
     def test_router_has_no_not_built_yet_bullet(self):
         fm, body = frontmatter_and_body(CRO)

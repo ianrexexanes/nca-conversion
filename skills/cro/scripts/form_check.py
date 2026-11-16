@@ -146,11 +146,11 @@ return [...document.querySelectorAll('form')].map((form, i) => {
   controls.forEach((c) => { const a = resolve(c.getAttribute('formaction')); if (a && !actions.includes(a)) actions.push(a); });
   let matches = true;
   if (css) matches = form.matches(css) || !!form.closest(css);
-  return {i, action, actions, has_method: form.hasAttribute('method'), method: (form.getAttribute('method') || 'get').toLowerCase(), matches, fields, field_count: count, captcha, targets,
+  return {i, action, actions, has_method: form.hasAttribute('method'), method: form.method, matches, fields, field_count: count, captcha, targets,
           regions: regionsOf(form), thank_you: thank,
           submit: {found: !!button, text: button ? clean(button.innerText || button.value || button.getAttribute('aria-label')) : null,
                    formaction: button ? resolve(button.getAttribute('formaction')) : null,
-                   formmethod: button ? (button.getAttribute('formmethod') || '').toLowerCase() || null : null}};
+                   formmethod: button && button.hasAttribute('formmethod') ? button.formMethod : null}};
 });
 }"""
 SNAPSHOT = "(i) => {" + HELPERS + r"""

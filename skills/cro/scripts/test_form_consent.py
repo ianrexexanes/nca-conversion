@@ -179,6 +179,15 @@ class FormConsentTests(unittest.TestCase):
         self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SEND") and "GET" in d], run.lines)
         self.assertEqual(run.data["network"]["consented"], 0)
 
+    def test_a_form_with_an_invalid_method_value_is_refused_as_get(self):
+        # The browser reads method="psot", method="post " and formmethod="put" as GET, so each is refused like a GET form.
+        for page in ("form-method-typo.html", "form-method-space.html", "form-formmethod-put.html"):
+            run = self.consent(page)
+            self.assertEqual(run.code, 3, (page, run.err))
+            self.assertEqual([p for p in run.paths() if p.startswith("/lead")], [], page)
+            self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SEND") and "GET" in d], (page, run.lines))
+            self.assertEqual(run.data["network"]["consented"], 0, page)
+
     def test_a_307_after_the_consented_post_is_a_fail(self):
         run = self.consent("form-307.html")
         self.assertEqual(run.code, 1, (run.err, run.lines))

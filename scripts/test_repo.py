@@ -1763,6 +1763,20 @@ class FormTests(unittest.TestCase):
         self.assertIn("only with the owner's yes, given for this test", self.text)
         self.assertRegex(self.text, r"asks? (you |the user )?before every (real )?send")
         self.assertRegex(self.text, r"no rule pre-approves `form_consent\.py`|`form_consent\.py` is in no allow rule")
+        self.assertIn("In the default permission mode Claude Code asks before every send", self.text)
+        self.assertIn("With permission prompts off or a broad allow rule of your own nothing asks, so print the exact command "
+                      "with every value it will send, ask the user for the owner's yes again in the chat, and run it only on that yes", self.text)
+
+    def test_it_says_the_send_needs_a_request_that_carries_the_typed_address(self):
+        self.assertIn("The one send goes only to a request whose body carries the address given in `--email`. When no request to "
+                      "the form's host carries it, such as a form with no email field or one that sends the address in another "
+                      "shape, it prints `SKIPPED ... SEND` with exit 3 and sends nothing.", self.text)
+
+    def test_the_consent_script_docstring_does_not_say_always_asks(self):
+        doc = flat(read("skills/cro/scripts/form_consent.py").split('"""')[1])
+        self.assertIn("Claude Code asks before every run in its default permission mode", doc)
+        self.assertIn("with permission prompts off nothing asks", doc)
+        self.assertNotIn("Claude Code asks before every run: no allow rule", doc)
 
     def test_it_points_at_the_form_audit_and_reads_the_thank_you_step(self):
         self.assertIn("form-and-signup-audit.md", self.text)
@@ -2116,6 +2130,8 @@ class DiagnoseTests(unittest.TestCase):
         self.assertIn("form_consent.py", step)
         self.assertIn("owner's yes", step)
         self.assertRegex(step, r"Claude Code asks about before it sends")
+        self.assertIn("in its default permission mode, because no rule pre-approves it; with permission prompts off, "
+                      "`form.md` step 7 says what to do instead", step)
         mark = self.raw.index("\n5. ")
         self.assertNotIn("form_consent.py", self.raw[:mark])
         self.assertNotIn("form_consent.py", flat(step_of(self.raw, 4)))
@@ -2192,8 +2208,10 @@ class RouterTests(unittest.TestCase):
     FORM_PARAGRAPH = ("`/cro form` reads a form without sending it. Its simulated success and simulated error press the submit "
                       "button, but the plugin replies in place of the form's own address, so nothing reaches the owner. A real "
                       "test submission runs only through `form_consent.py`, and only with the owner's yes for that test. "
-                      "Claude Code always asks before that script runs, because no `allowed-tools` rule pre-approves it and "
-                      "`/cro setup --permissions` prints no rule for it.")
+                      "In the default permission mode Claude Code asks before that script runs, because no `allowed-tools` rule "
+                      "pre-approves it and `/cro setup --permissions` prints no rule for it. With permission prompts off, or a "
+                      "broad allow rule of your own, nothing asks: the model then prints the exact command with every value it "
+                      "will send and runs it only on your yes in the chat.")
     GUARDED_NEW = ("Rendered checks run only through the plugin's own scripts, which share one guard: `render_check.py`, "
                    "`launch_render.py`, `form_check.py` and `form_consent.py`.")
     GUARDED_OLD = "Rendered checks run only through `render_check.py`."

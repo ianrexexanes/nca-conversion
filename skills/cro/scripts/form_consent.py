@@ -11,7 +11,7 @@ consented by <owner>, <date>" in the other text fields), and only then sets the 
 presses submit once, timing the press to the thank-you state. The guard lets exactly one non-GET request leave, to that host; a
 second is aborted. Afterwards the consented request must be to the form's own action (or the pressed control's formaction), and no
 non-GET request may show as completed, which is what a 307 or 308 redirect hop looks like; either is a FAIL SEND, exit 1. A form
-that sends anywhere else, or by GET, is SKIPPED and exit 3, with nothing sent. So is a form whose own validation refuses the fill. Claude Code asks before every run: no allow rule covers this script.
+that sends anywhere else, or by GET, is SKIPPED and exit 3, with nothing sent. So is a form whose own validation refuses the fill. Claude Code asks before every run in its default permission mode: no allow rule covers this script; with permission prompts off nothing asks.
 Exit 0 when the send went through, 1 on a FAIL, 2 on bad input, 3 when nothing was sent. The browser is closed last, with
 browser.close() alone.
 """

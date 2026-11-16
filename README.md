@@ -57,7 +57,7 @@ The block list errs toward blocking. A few rules match on the path alone, on any
 
 ### The form test and the consent script
 
-`/cro form` reads a form without sending it. Its simulated success and simulated error press the submit button, but the plugin replies in place of the form's own address, so nothing reaches the owner. A real test submission runs only through `form_consent.py`, and only with the owner's yes for that test. Claude Code always asks before that script runs, because no `allowed-tools` rule pre-approves it and `/cro setup --permissions` prints no rule for it.
+`/cro form` reads a form without sending it. Its simulated success and simulated error press the submit button, but the plugin replies in place of the form's own address, so nothing reaches the owner. A real test submission runs only through `form_consent.py`, and only with the owner's yes for that test. In the default permission mode Claude Code asks before that script runs, because no `allowed-tools` rule pre-approves it and `/cro setup --permissions` prints no rule for it. With permission prompts off, or a broad allow rule of your own, nothing asks: the model then prints the exact command with every value it will send and runs it only on your yes in the chat.
 
 ### Script permissions last one turn
 

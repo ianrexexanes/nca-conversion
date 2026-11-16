@@ -15,7 +15,7 @@ copy for different brands rather than one house voice.
 
 ## Version 2: the front door
 
-Version 2 adds an eighth skill, `cro`, in front of the seven. Type `/nca-conversion:cro` and it either starts a project kickoff or sends you to the right skill. It starts no subagents.
+Version 2 adds an eighth skill, `cro`, in front of the seven. Type `/nca-conversion:cro` and it either starts a project kickoff or sends you to the right skill. It starts no subagents. A bare `/cro` can run the `cro` of another plugin, so every command in this README is written in full.
 
 | Command | Goes to | Status |
 | --- | --- | --- |
@@ -37,11 +37,11 @@ Version 2 adds an eighth skill, `cro`, in front of the seven. Type `/nca-convers
 | `compare` | `references/compare.md` | ready |
 | `diagnose` | `references/diagnose.md` | ready |
 
-`/cro page` and `/cro hero` write a copy deck, a file named "Copy Deck" with the page name and the date, in your project folder. `/cro vsl` writes the hero video script from that deck. `skills/cro/scripts/deck_check.py` checks a deck against the plugin's rules and prints FAIL and WARN lines.
+`/nca-conversion:cro page` and `/nca-conversion:cro hero` write a copy deck, a file named "Copy Deck" with the page name and the date, in your project folder. `/nca-conversion:cro vsl` writes the hero video script from that deck. `skills/cro/scripts/deck_check.py` checks a deck against the plugin's rules and prints FAIL and WARN lines.
 
 ### Setup and the PageSpeed key
 
-`/cro setup` builds a small Python environment with a browser for the rendered checks. `/cro doctor` changes nothing and reports what is installed and what is missing.
+`/nca-conversion:cro setup` builds a small Python environment with a browser for the rendered checks. `/nca-conversion:cro doctor` changes nothing and reports what is installed and what is missing.
 
 Built and tested on Linux with bash; needs Python 3.10 or later and Chrome.
 
@@ -57,11 +57,11 @@ The block list errs toward blocking. A few rules match on the path alone, on any
 
 ### The form test and the consent script
 
-`/cro form` reads a form without sending it. Its simulated success and simulated error press the submit button, but the plugin replies in place of the form's own address, so nothing reaches the owner. A real test submission runs only through `form_consent.py`, and only with the owner's yes for that test. In the default permission mode Claude Code asks before that script runs, because no `allowed-tools` rule pre-approves it and `/cro setup --permissions` prints no rule for it. With permission prompts off, or a broad allow rule of your own, nothing asks: the model then prints the exact command with every value it will send and runs it only on your yes in the chat.
+`/nca-conversion:cro form` reads a form without sending it. Its simulated success and simulated error press the submit button, but the plugin replies in place of the form's own address, so nothing reaches the owner. A real test submission runs only through `form_consent.py`, and only with the owner's yes for that test. In the default permission mode Claude Code asks before that script runs, because no `allowed-tools` rule pre-approves it and `/nca-conversion:cro setup --permissions` prints no rule for it. With permission prompts off, or a broad allow rule of your own, nothing asks: the model then prints the exact command with every value it will send and runs it only on your yes in the chat.
 
 ### Script permissions last one turn
 
-The `cro` skill pre-approves its own scripts through `allowed-tools`, and that approval lasts only for the turn that invokes the skill (see "Pre-approve tools for a skill" at https://code.claude.com/docs/en/skills). When the audit has to ask for the mode, keyword or traffic first, its scripts run in the next turn, and Claude Code asks before each one. To avoid that, give those answers in the command, for example `/nca-conversion:cro audit https://example.com/ mode: Direct; traffic: ads; page role: landing page`. To stop those questions, run `/cro setup --permissions`: it prints allow rules for the plugin's scripts, which you merge into the `permissions.allow` list of `.claude/settings.local.json` in your project. The rules name the installed version's folder, so run it again after each `claude plugin update`.
+The `cro` skill pre-approves its own scripts through `allowed-tools`, and that approval lasts only for the turn that invokes the skill (see "Pre-approve tools for a skill" at https://code.claude.com/docs/en/skills). When the audit has to ask for the mode, keyword or traffic first, its scripts run in the next turn, and Claude Code asks before each one. To avoid that, give those answers in the command, for example `/nca-conversion:cro audit https://example.com/ mode: Direct; traffic: ads; page role: landing page`. To stop those questions, run `/nca-conversion:cro setup --permissions`: it prints allow rules for the plugin's scripts, which you merge into the `permissions.allow` list of `.claude/settings.local.json` in your project. The rules name the installed version's folder, so run it again after each `claude plugin update`.
 
 ### Two modes
 

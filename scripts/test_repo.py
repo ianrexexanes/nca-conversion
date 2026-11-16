@@ -594,11 +594,14 @@ class CroRulingsTest(unittest.TestCase):
         section = text[start:text.index("\n## ", start + 1)]
         self.assertIn(self.TABLE, section)
         flat = " ".join(section.split())
-        for part in ("/nca-conversion:cro", "/cro setup", "/cro doctor", "PageSpeed", "~/.config/nca-conversion/pagespeed.key",
+        for part in ("/nca-conversion:cro", "/nca-conversion:cro setup", "/nca-conversion:cro doctor", "PageSpeed", "~/.config/nca-conversion/pagespeed.key",
                      "GET, HEAD and OPTIONS", "Chrome user agent", "blocked request", "Search page", "Direct page",
                      "outside the score", "never picks a keyword"):
             self.assertIn(part, flat)
         self.assertRegex(flat, r"(?i)no form")
+        said = "A bare `/cro` can run the `cro` of another plugin, so every command in this README is written in full."
+        self.assertIn(said, flat)
+        self.assertNotRegex(" ".join(text.split()).replace(said, ""), r"(?<![:\w])/cro\b")
         self.assertNotIn(chr(0x2014), section); self.assertNotIn(chr(0x2013), section)
 
     def test_readme_lists_four_commands_ready_and_the_permissions_command(self):
@@ -610,7 +613,7 @@ class CroRulingsTest(unittest.TestCase):
             self.assertTrue(row.endswith("| ready |"), row)
         sub = section[section.index("### Script permissions last one turn"):]
         sub = " ".join(sub[:sub.index("\n### ", 5)].split())
-        for part in ("/cro setup --permissions", ".claude/settings.local.json"):
+        for part in ("/nca-conversion:cro setup --permissions", ".claude/settings.local.json"):
             self.assertIn(part, sub)
 
     def test_readme_listing_sentence(self):
@@ -2215,11 +2218,11 @@ class RouterTests(unittest.TestCase):
     SPACE_PARAGRAPH = ("A rule matches a command only when the command names the plugin's folder exactly as the rule writes it. "
                        "If that folder's path holds a space, the commands have to quote it, so the rules do not match and "
                        "Claude Code keeps asking before each script.")
-    FORM_PARAGRAPH = ("`/cro form` reads a form without sending it. Its simulated success and simulated error press the submit "
+    FORM_PARAGRAPH = ("`/nca-conversion:cro form` reads a form without sending it. Its simulated success and simulated error press the submit "
                       "button, but the plugin replies in place of the form's own address, so nothing reaches the owner. A real "
                       "test submission runs only through `form_consent.py`, and only with the owner's yes for that test. "
                       "In the default permission mode Claude Code asks before that script runs, because no `allowed-tools` rule "
-                      "pre-approves it and `/cro setup --permissions` prints no rule for it. With permission prompts off, or a "
+                      "pre-approves it and `/nca-conversion:cro setup --permissions` prints no rule for it. With permission prompts off, or a "
                       "broad allow rule of your own, nothing asks: the model then prints the exact command with every value it "
                       "will send and runs it only on your yes in the chat.")
     GUARDED_NEW = ("Rendered checks run only through the plugin's own scripts, which share one guard: `render_check.py`, "

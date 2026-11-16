@@ -393,9 +393,10 @@ NOT_RENDERING = ("cro_runtime.py", "setup.py", "doctor.py", "guard_tests.py", "f
 
 
 def rendered_scripts(folder: Path) -> list[str]:
-    """Every script in the folder that names playwright, apart from the tests and the files that only hold or smoke-test the guard."""
+    """Every script in the folder that names playwright, apart from the tests and, in cro's own folder only, the files that only hold or smoke-test the guard."""
+    exempt = NOT_RENDERING if folder.parent.name == "cro" else ()
     return sorted(p.name for p in folder.glob("*.py")
-                  if not p.name.startswith("test_") and p.name not in NOT_RENDERING and "playwright" in p.read_text(encoding="utf-8"))
+                  if not p.name.startswith("test_") and p.name not in exempt and "playwright" in p.read_text(encoding="utf-8"))
 
 
 def rendered_in_skills(skills: Path) -> list[str]:
@@ -507,6 +508,9 @@ class GuardStackTest(unittest.TestCase):
                 (Path(tmp) / skill / "scripts").mkdir(parents=True)
                 (Path(tmp) / skill / "scripts" / name).write_text("import playwright\n", encoding="utf-8")
             self.assertEqual(rendered_in_skills(Path(tmp)), ["audit/shot.py", "cro/render_check.py"])
+            for skill, name in (("cro", "setup.py"), ("audit", "setup.py"), ("audit", "test_shot.py")):  # the exempt names hold in cro only
+                (Path(tmp) / skill / "scripts" / name).write_text("import playwright\n", encoding="utf-8")
+            self.assertEqual(rendered_in_skills(Path(tmp)), ["audit/setup.py", "audit/shot.py", "cro/render_check.py"])
 
     def test_bypass_check_catches_every_way_around_the_guard(self):
         clean_calls = ("browser = cro_runtime.guarded_launch(p)\n"

@@ -1399,6 +1399,18 @@ class PageCommandTests(unittest.TestCase):
             self.assertIn(part, flat(page))
 
 
+class SecondLanguageFlagTests(unittest.TestCase):
+    def test_french_and_italian_copy_is_flagged_where_german_copy_is(self):
+        flag = "Copy in French or Italian is flagged for the user's own check"
+        for name in ("hero", "page", "vsl"):
+            text = flat(read("skills", "cro", "references", name + ".md"))
+            self.assertIn("German copy is flagged for the user's own check", text, name)
+            self.assertIn(flag, text, name)
+        text = flat(read("skills", "cro", "references", "client-version.md"))
+        self.assertIn("German text goes to the user for their own check before it is sent", text)
+        self.assertIn("French or Italian text goes the same way", text)
+
+
 class VslTests(unittest.TestCase):
     def test_vsl_output_headings_in_order(self):
         heads = [l for l in output_format(vsl).splitlines() if l.startswith("## ")]

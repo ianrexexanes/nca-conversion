@@ -364,7 +364,7 @@ class BlankValuesAndHostlessUrlsTest(unittest.TestCase):
 
 
 BYPASS_CALLS = ("launch", "launch_persistent_context", "connect", "connect_over_cdp", "new_context", "new_page",
-                "new_cdp_session", "route_web_socket", "add_init_script")
+                "new_cdp_session", "route_web_socket", "add_init_script", "unroute", "unroute_all", "route_from_har")
 GUARDED = ("guarded_launch", "guarded_context", "guarded_page")
 
 
@@ -396,6 +396,11 @@ def rendered_scripts(folder: Path) -> list[str]:
     """Every script in the folder that names playwright, apart from the tests and the files that only hold or smoke-test the guard."""
     return sorted(p.name for p in folder.glob("*.py")
                   if not p.name.startswith("test_") and p.name not in NOT_RENDERING and "playwright" in p.read_text(encoding="utf-8"))
+
+
+def rendered_in_skills(skills: Path) -> list[str]:
+    """rendered_scripts over every skills/*/scripts folder, each name as <skill>/<name>."""
+    return sorted("%s/%s" % (d.parent.name, n) for d in skills.glob("*/scripts") for n in rendered_scripts(d))
 
 
 def close_receivers(source: str) -> list[str]:
@@ -477,7 +482,7 @@ class GuardStackTest(unittest.TestCase):
 
     def test_no_rendered_script_builds_its_own_browser_or_context(self):
         # Discovered, not listed: a script that renders is any other script that names playwright, so a fifth one is read too.
-        self.assertEqual(rendered_scripts(HERE), sorted(RENDERED), "a rendered script appeared, vanished or was renamed")
+        self.assertEqual(rendered_in_skills(HERE.parent.parent), sorted("cro/" + n for n in RENDERED), "a rendered script appeared, vanished or was renamed")
         for name in RENDERED:
             text = (HERE / name).read_text(encoding="utf-8")  # a missing one raises
             allowed = text.replace("page.context.route(", "") if name == "form_check.py" else text  # its action-address route, see guard_bypasses
@@ -497,6 +502,11 @@ class GuardStackTest(unittest.TestCase):
             self.assertIn("fifth_check.py", rendered_scripts(Path(tmp)))
             (Path(tmp) / "form_consent.py").unlink()
             self.assertNotIn("form_consent.py", rendered_scripts(Path(tmp)))
+        with tempfile.TemporaryDirectory() as tmp:  # a rendering script in another skill's folder is found too
+            for skill, name in (("cro", "render_check.py"), ("audit", "shot.py")):
+                (Path(tmp) / skill / "scripts").mkdir(parents=True)
+                (Path(tmp) / skill / "scripts" / name).write_text("import playwright\n", encoding="utf-8")
+            self.assertEqual(rendered_in_skills(Path(tmp)), ["audit/shot.py", "cro/render_check.py"])
 
     def test_bypass_check_catches_every_way_around_the_guard(self):
         clean_calls = ("browser = cro_runtime.guarded_launch(p)\n"
@@ -514,6 +524,9 @@ class GuardStackTest(unittest.TestCase):
             "add_init_script": "ctx.add_init_script(s)",
             "context.route": 'context.route("**/*", h)',
             "page.route outside form_check": 'page.route("**/*", h)',
+            "unroute": 'page.unroute("**/*")',
+            "unroute_all": "ctx.unroute_all()",
+            "route_from_har": 'ctx.route_from_har("a.har")',
         }
         for label, line in planted.items():
             self.assertTrue(guard_bypasses(clean_calls + line + "\n", "render_check.py"), label)

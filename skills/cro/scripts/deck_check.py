@@ -106,7 +106,8 @@ META_VALUES = {
     "traffic": ("cold-outreach", "ads", "search", "email", "mixed"),
     "awareness": ("cold", "warm"),
 }
-GENERIC_LANGUAGES = ("en", "de", "fr", "it")
+HERO_SLOT = re.compile(r"h1|sub|answer|benefit\d+|prooftop|strip|visual|cta")
+GENERIC_LANGUAGES =("en", "de", "fr", "it")
 TIME_WORDS = frozenset({"now", "today", "jetzt", "heute", "maintenant", "aujourd'hui", "ora", "oggi", "subito"})
 GENERIC_LABELS = frozenset({
     # English
@@ -222,8 +223,18 @@ def check_namespace(deck, ns, part, final, add):
         parts = k.split(".")
         if len(parts) > 2 and parts[1] in SECTIONS and parts[1] not in sections:
             sections.append(parts[1])
+    for k in keys:
+        parts = k.split(".")
+        if len(parts) < 3 or parts[1] in ("page", "meta", "cta"):
+            continue
+        if parts[1] not in SECTIONS:
+            add("WARN", k, "UNKNOWN_KEY", "%r is not a section of the grammar" % parts[1])
+        elif parts[1] == "hero":
+            slot = parts[3] if len(parts) == 4 and len(parts[2]) == 1 else parts[2]
+            if len(parts) > 4 or not HERO_SLOT.fullmatch(slot):
+                add("WARN", k, "UNKNOWN_KEY", "%r is not a hero slot of the grammar" % ".".join(parts[2:]))
     variants = deck.variants(ns)
-    button = values.get(ns + ".cta.button")
+    button =values.get(ns + ".cta.button")
     # ONE_ACTION
     for k in keys:
         parts = k.split(".")

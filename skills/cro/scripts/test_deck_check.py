@@ -112,6 +112,14 @@ def run(*args):
     return done.returncode, done.stdout, done.stderr
 
 
+def run_final(text):
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        path = Path(d) / "deck.md"
+        path.write_text(text, encoding="utf-8")
+        return run(str(path), "--final")[0]
+
+
 class DeckCheckTest(unittest.TestCase):
     def test_parse_keys_namespace_and_duplicates(self):
         d = deck_check.parse_deck("## p: Page\n```copy\np.page.mode: direct\nq.page.role: landing\np.page.mode: search\n```\n")
@@ -182,6 +190,19 @@ class DeckCheckTest(unittest.TestCase):
             self.assertEqual(fails(text), set(), lang)
         for lang in ("en", "de-CH", "fr", "it-CH"):
             self.assertIsNone(level_of("BUTTON_GENERIC", with_line(read("deck-clean-direct.md"), "p.page.language", lang)), lang)
+
+    def test_unknown_section_and_hero_slot_warn(self):
+        deck = read("deck-variants.md")
+        for line, key in (("p.banner.h2: A section the grammar lacks", "p.banner.h2"),
+                          ("p.hero.eyebrow: Planned maintenance", "p.hero.eyebrow"),
+                          ("p.hero.a.eyebrow: Planned maintenance", "p.hero.a.eyebrow")):
+            text = add_line(deck, line)
+            got = [f[:3] for f in findings(text, final=True) if f[2] == "UNKNOWN_KEY"]
+            self.assertEqual(got, [("WARN", key, "UNKNOWN_KEY")], key)
+            self.assertEqual(fails(text, final=True), set(), key)
+            self.assertEqual(run_final(text), 0, key)
+        for name in ("deck-clean-direct.md", "deck-clean-search.md", "deck-variants.md"):
+            self.assertNotIn("UNKNOWN_KEY", rules(read(name), final=True), name)
 
     def test_a_symbol_is_not_a_word(self):
         self.assertIsNone(level_of("BUTTON_WORDS", with_button("Book my free pump check →")))

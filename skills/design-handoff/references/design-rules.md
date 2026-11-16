@@ -1,6 +1,6 @@
 # The design rules
 
-These are the rules a wireframe and a design are checked against. `/cro wireframe` and `/cro design` apply them, `/cro check` measures what it can of them on the built page, and the launch gate reads the same file. Those commands point here and do not restate it.
+These are the rules a wireframe and a design are checked against. `/cro wireframe` and `/cro design` apply them, `/cro check` measures what it can of them on the built page. Those commands point here and do not restate it.
 
 A Search page is one whose visitors arrive from organic search for a keyword. A Direct page is one whose visitors the owner sends: paid ads, cold outreach, email. This is not the analytics channel of the same name, which means typed addresses and bookmarks.
 
@@ -34,7 +34,7 @@ Design earns its place on a conversion page. It makes the page credible, familia
 - sliders, in the hero or anywhere else
 - autoplaying background video
 
-`/cro check` reports sliders and autoplaying video; the rest of this list is a design-time rule, which the optional motion review in `/cro check` also reads. `/cro design` and `/cro check` guard the blur test on the main button, contrast, hierarchy and standard navigation.
+`/cro check` reports sliders and autoplaying video; the rest of this list is a design-time rule, which the optional motion review in `/cro check` also reads. `/cro design` guards the blur test on the main button, contrast, hierarchy and standard navigation.
 
 ## Design skills, by mode
 

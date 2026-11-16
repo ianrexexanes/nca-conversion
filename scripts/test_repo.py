@@ -1531,6 +1531,13 @@ class DesignRulesTests(unittest.TestCase):
         parts = re.split(r"^## .*$", self.text, flags=re.M)
         return flat(parts[n]) if len(parts) > n else ""
 
+    def test_it_says_only_what_the_launch_gate_and_check_really_read(self):
+        text = flat(self.text)
+        self.assertNotIn("the launch gate reads the same file", text)
+        self.assertIn("`/cro check` measures what it can of them on the built page. Those commands point here", text)
+        self.assertIn("`/cro design` guards the blur test on the main button", text)
+        self.assertNotIn("`/cro design` and `/cro check` guard the blur test", text)
+
     def test_headings_in_order(self):
         self.assertEqual([l.strip() for l in self.text.splitlines() if l.startswith("## ")], self.HEADS)
 

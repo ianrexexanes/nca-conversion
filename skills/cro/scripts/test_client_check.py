@@ -36,6 +36,11 @@ class ClientCheckTests(unittest.TestCase):
             with self.subTest(name=name):
                 code, out = run("I read it with %s.\n" % name)
                 self.assertEqual(code, 1); self.assertIn("FAIL ai-name", out)
+    def test_fails_on_the_helper_tool_names(self):
+        for name in ["UI/UX Pro Max", "NotebookLM", "DataForSEO"]:
+            with self.subTest(name=name):
+                code, out = run("We used %s for this.\n" % name)
+                self.assertEqual(code, 1); self.assertIn("FAIL tool-name", out)
     def test_headless_cms_warns_headless_browser_fails(self):
         code, out = run("We recommend a headless CMS.\n")
         self.assertEqual(code, 0); self.assertIn("WARN tool-word: line 1", out); self.assertIn("client_check: 0 FAIL, 1 WARN", out)

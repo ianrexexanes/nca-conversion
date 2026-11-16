@@ -20,7 +20,7 @@ RULES = [
      ["Playwright", "Puppeteer", "Selenium", "page_facts", "render_check",
       "speed_check", "client_check", "score.py", "nca-conversion", "Claude Code",
       "search_check", "search.json", "site_check", "deck_check", "launch_render", "form_check",
-      "redirect_check", "asset_text_check", "wire_check", "design_check"]),
+      "redirect_check", "asset_text_check", "wire_check", "design_check", "UI/UX Pro Max", "NotebookLM", "DataForSEO"]),
     ("WARN", "tool-word", [r"\bheadless\b"], []),
     ("FAIL", "person", [], ["Hormozi", "David Ogilvy", "Eugene Schwartz", "April Dunford", "Rory Sutherland", "Byron Sharp",
                           "Seth Godin"]),

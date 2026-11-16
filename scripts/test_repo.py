@@ -530,7 +530,7 @@ class CroRulingsTest(unittest.TestCase):
             ("`diagnose`", "`references/diagnose.md`", "ready")]
     TABLE = "\n".join(["| Command | Goes to | Status |", "| --- | --- | --- |"] + [f"| {a} | {b} | {c} |" for a, b, c in ROWS]) + "\n"
     PHASES = "\n".join([
-        "| Phase | Command | Slice 3 status |", "| --- | --- | --- |",
+        "| Phase | Command | Status |", "| --- | --- | --- |",
         "| 0. Decide | `/cro` with no command (this kickoff); `/cro diagnose <url>` for a prospect's site | ready |",
         "| 1. Research | `/cro research`; `/cro data` when the site has GA4 or Clarity | ready; a Search project opens it with keyword research |",
         "| 2. Brief and offer | `/cro offer` | ready (v1 skill) |",

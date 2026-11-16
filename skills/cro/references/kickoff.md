@@ -32,7 +32,7 @@ Name the research step and the command to run, then wait for the result. The kic
 
 If your project has its own build SOP, follow its phases. The plugin does not depend on any one SOP file. These are the plugin's own phases and the command each one maps to.
 
-| Phase | Command | Slice 3 status |
+| Phase | Command | Status |
 | --- | --- | --- |
 | 0. Decide | `/cro` with no command (this kickoff); `/cro diagnose <url>` for a prospect's site | ready |
 | 1. Research | `/cro research`; `/cro data` when the site has GA4 or Clarity | ready; a Search project opens it with keyword research |

@@ -222,6 +222,14 @@ class AuditTextTests(unittest.TestCase):
             self.assertNotIn("mcp__", t, p.name)
             self.assertNotIn("Playwright MCP", t, p.name)
 
+    def test_manual_eval_runs_cro_audit_and_names_the_branch_it_can_earn(self):
+        t = flat(EVAL.read_text(encoding="utf-8"))
+        self.assertIn("Run `/nca-conversion:cro audit` against", t)
+        self.assertNotIn("Run `nca-conversion:conversion-page-audit` against", t)
+        self.assertIn("`/cro audit` can earn only the Could not check branch of (b)", t)
+        self.assertIn("launch_render.py", t)
+        self.assertIn("Read the score sheet's `not_checked` reasons", t)
+
     def test_audit_text_uses_the_exact_script_invocations(self):
         t = AUDIT.read_text(encoding="utf-8")
         for s in INVOCATIONS:   # the six strings from the skeleton, verbatim

@@ -118,16 +118,19 @@ eval is trusted again.
 
 ## Running the eval by hand
 
-1. Run `nca-conversion:conversion-page-audit` against `evals/manual/fixtures/planted.html` as the
+1. Run `/nca-conversion:cro audit` against `evals/manual/fixtures/planted.html` as the
    page to audit. Give the skill the file path directly (it is a local fixture, not a live URL) —
    if the skill insists on a URL, serve it locally (`python3 -m http.server` from the fixture
    directory) and point it at `http://localhost:<port>/planted.html`.
 2. Optionally run it twice: once with a static-only capability (markup read only, no rendering
    tool available) and once with a real rendered capture (`render_check.py`, run by the venv's Python), to test
    the "if a rendered capture ran" branch of assertion (b) below.
+   `/cro audit` can earn only the Could not check branch of (b): its `render.json` holds the lede text
+   but no colour, and it does not run `launch_render.py`. Fix now needs a screenshot read or that script's CONTRAST row.
 3. Read the finished report's four sections, using the exact headings from
    `skills/conversion-page-audit/references/report-template.md`: **Fix now**,
    **Test, don't guess**, **Not a problem**, **Could not check**.
+   Read the score sheet's `not_checked` reasons beside it.
 
 ## Assertions — placement, not just detection
 

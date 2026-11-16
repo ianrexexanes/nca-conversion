@@ -120,6 +120,15 @@ class AssetTextCheckTests(unittest.TestCase):
         self.assertEqual(run()[0], 2)
         self.assertEqual(run("--dir", str(root), "--forbid", str(Path(tmp) / "absent.txt"))[0], 2)
 
+    def test_an_unreadable_image_exits_2_without_a_traceback(self):
+        tmp, root = self.folder({"a.png": png()})
+        (root / "a.png").chmod(0)
+        self.addCleanup((root / "a.png").chmod, 0o644)
+        code, out = run("--dir", str(root))
+        self.assertEqual(code, 2, out)
+        self.assertNotIn("Traceback", out)
+        self.assertTrue(out.startswith("asset_text_check: "), out)
+
 
 if __name__ == "__main__":
     unittest.main()

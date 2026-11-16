@@ -141,7 +141,11 @@ def main(argv=None):
     rows = []
     for path in files:
         key = path.relative_to(root).as_posix()
-        text = " ".join(carried_text(path.read_bytes()))
+        try:
+            text = " ".join(carried_text(path.read_bytes()))
+        except OSError as error:
+            print("asset_text_check: cannot read %s: %s" % (path, error.strerror or error), file=sys.stderr)
+            return 2
         for found in sorted({m.group(0) for m in PLACEHOLDER.finditer(text)}):
             rows.append(("FAIL", key, "ASSET_TEXT", "the image's metadata holds %r" % found))
         for found in sorted({m.group(0).lower() for m in pattern.finditer(text)}) if pattern else []:

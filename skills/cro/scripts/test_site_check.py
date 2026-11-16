@@ -332,6 +332,17 @@ class SiteCheckTests(unittest.TestCase):
         self.assertRegex(out, r"(?m)^FAIL /index\.html PARITY: p\.\w+\.cta ")
         self.assertEqual(code, 1, out)
 
+    def test_an_unreadable_page_file_exits_2_without_a_traceback(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        dist = write_site(Path(tmp.name) / "dist", {"/index.html": page_html(CLEAN_DECK)})
+        (dist / "index.html").chmod(0)
+        self.addCleanup((dist / "index.html").chmod, 0o644)
+        code, out = run("--dist", str(dist))
+        self.assertEqual(code, 2, out)
+        self.assertNotIn("Traceback", out)
+        self.assertTrue(out.startswith("site_check: "), out)
+
     def test_sitemap_index_is_followed_one_level(self):
         files = {"sitemap.xml": None, "sitemap-index.xml": sitemap_index([ORIGIN + "/sitemap-pages.xml"]),
                  "sitemap-pages.xml": urlset([ORIGIN + "/"]),

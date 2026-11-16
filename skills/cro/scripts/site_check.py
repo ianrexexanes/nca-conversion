@@ -451,7 +451,10 @@ def load_pages(args):
         if not dist.is_dir():
             raise BadInput("%s is not a folder" % args.dist)
         for file in sorted(dist.rglob("*.html")):
-            pages.append(Page("/" + file.relative_to(dist).as_posix(), decode_body(file.read_bytes(), None)))
+            try:
+                pages.append(Page("/" + file.relative_to(dist).as_posix(), decode_body(file.read_bytes(), None)))
+            except OSError as error:
+                raise BadInput("cannot read %s: %s" % (file, error.strerror or error))
         if not pages:
             raise BadInput("no .html file under %s" % args.dist)
     else:

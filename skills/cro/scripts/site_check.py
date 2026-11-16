@@ -218,10 +218,14 @@ def page_rows(page, deck, mapped, forbid, add, internal_link):
         ns, v = mapped[url]
         rows = rendered(deck, ns, v)
         has_button = any(kind == "button" for _, kind, _ in rows)
+        wanted = {}
         for key, kind, value in rows:
             if kind == "label" and has_button:
                 continue  # every button shows the label, and each button is checked on its own row
-            if squash(value) not in page.squashed and "".join(value.split()) not in page.compact:
+            have = max(page.squashed.count(squash(value)), page.compact.count("".join(value.split())))
+            if kind == "button":  # each button row needs an occurrence of its own, not a share of one
+                wanted[squash(value)] = wanted.get(squash(value), 0) + 1
+            if have < (wanted[squash(value)] if kind == "button" else 1):
                 add("FAIL", url, "PARITY", "%s is not in the page text: %r" % (key, shorten(squash(value))))
         want = deck_faq(deck, ns)
         got, found, broken = faq_entities(page)

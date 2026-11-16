@@ -323,6 +323,15 @@ class SiteCheckTests(unittest.TestCase):
         out = self.site({"/index.html": typed}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")[1]
         self.assertRegex(out, r"(?m)^FAIL /index\.html PARITY: p\.header\.logo")  # a typed-in field's value is not shown text
 
+    def test_a_button_that_does_not_show_the_label_fails_parity(self):
+        label = deck_check.parse_deck(Path(CLEAN_DECK).read_text(encoding="utf-8")).values["p.cta.button"]
+        page = page_html(CLEAN_DECK)
+        wrong = page.replace('<a href="#form">%s</a>' % label, '<a href="#form">Submit</a>', 2)  # the form shows the label once more
+        self.assertNotEqual(page, wrong)
+        code, out = self.site({"/index.html": wrong}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")
+        self.assertRegex(out, r"(?m)^FAIL /index\.html PARITY: p\.\w+\.cta ")
+        self.assertEqual(code, 1, out)
+
     def test_sitemap_index_is_followed_one_level(self):
         files = {"sitemap.xml": None, "sitemap-index.xml": sitemap_index([ORIGIN + "/sitemap-pages.xml"]),
                  "sitemap-pages.xml": urlset([ORIGIN + "/"]),
@@ -404,10 +413,12 @@ class SiteCheckTests(unittest.TestCase):
         label = deck.values["p.cta.button"]
         page = page_html(CLEAN_DECK)
         head, nav, rest = re.split(r"(?s)(<nav>.*?</nav>)", page, maxsplit=1)
-        only_in_nav = head + nav + rest.replace(">%s<" % label, ">Elsewhere<")
-        self.assertEqual(only_in_nav.count(label), nav.count(label))
-        code, out = self.site({"/index.html": only_in_nav}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")
+        one_short = head + nav + rest.replace(">%s<" % label, ">Elsewhere<", 1)  # the nav button is one of the ten
+        code, out = self.site({"/index.html": one_short}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")
         self.assertNotIn("PARITY", out)  # a button inside <nav> counts
+        nav_gone = head + nav.replace(">%s<" % label, ">Elsewhere<") + rest.replace(">%s<" % label, ">Elsewhere<", 1)
+        code, out = self.site({"/index.html": nav_gone}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")
+        self.assertIn("PARITY", out)  # without the nav button the other nine are one short
         nowhere = head + nav.replace(">%s<" % label, ">Elsewhere<") + rest.replace(">%s<" % label, ">Elsewhere<")
         code, out = self.site({"/index.html": nowhere}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")
         self.assertRegex(out, r"(?m)^FAIL /index\.html PARITY: p\.header\.cta")

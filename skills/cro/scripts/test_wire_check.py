@@ -273,6 +273,12 @@ class WireCheckTest(unittest.TestCase):
         framed = self.write(replace_once(read(WIRE_A), r'(data-section="p\.pain") data-layout="[^"]*"', r"\1"))
         self.assertIn("FAIL p.pain LAYOUT", run(framed, "--deck", DECK, "--variant", "a")[1])
 
+    def test_a_section_with_no_layout_row_fails(self):
+        framed = self.write(replace_once(read(WIRE_A), r'data-section="p\.pain"', 'data-section="p.mystery"'))
+        code, out = run(framed, "--deck", DECK, "--variant", "a")
+        self.assertEqual(code, 1)
+        self.assertIn("FAIL p.mystery LAYOUT: no layout row for the section 'mystery'", out)
+
     def test_cta_as_plain_text_fails(self):
         framed = self.write(replace_once(read(WIRE_A), r'<a href="#form" data-key="p\.proof\.cta">([^<]*)</a>',
                                          r'<span data-key="p.proof.cta">\1</span>'))
@@ -354,7 +360,7 @@ class WireCheckTest(unittest.TestCase):
         self.bad(WIRE_A, "--deck", str(FIXTURES / "no-such-deck.md"), "--variant", "a")
         self.bad(self.write("<p>no main here</p>"), "--deck", DECK, "--variant", "a")
 
-    def test_the_planted_fixture_trips_every_rule(self):
+    def test_the_planted_fixture_trips_the_rules_it_plants(self):
         code, out = run(WIRE_PLANTED, "--deck", DECK, "--variant", "a")
         self.assertEqual(code, 1)
         for line in ("FAIL p.hero.a.h1 PARITY", "FAIL p.pain.h2 MISSING_KEY", "FAIL p.pain VISUAL", "FAIL p.proof LAYOUT",

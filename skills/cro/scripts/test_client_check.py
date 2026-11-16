@@ -19,6 +19,9 @@ class ClientCheckTests(unittest.TestCase):
     def test_fails_on_score_terms(self):
         code, out = run("Your Conversion Score is 64/100.\n")
         self.assertEqual(code, 1); self.assertIn("FAIL score", out)
+    def test_fails_on_a_three_digit_score(self):
+        code, out = run("The page earned 100/100 on the review.\n")
+        self.assertEqual(code, 1); self.assertIn("FAIL score", out)
     def test_fails_on_ai_names(self):
         code, out = run("I read it with Claude and ChatGPT.\n")
         self.assertEqual(code, 1); self.assertIn("FAIL ai-name", out)

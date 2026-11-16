@@ -55,6 +55,17 @@ class RuleTest(unittest.TestCase):
     def test_action_visible_fails_action_under_3_on_the_background(self):
         self.assertEqual(rule_levels(PLANTED)["ACTION_VISIBLE"], "FAIL")
 
+    def test_action_visible_edge_sits_at_three_to_one(self):
+        def levels(action):
+            text = ('{"colors": {"text": "#333333", "background": "#ffffff", "action": "%s", "action_text": "#000000"},'
+                    ' "type": {"h1_px": 52, "body_px": 16}}' % action)
+            with tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "t.json"
+                path.write_text(text, encoding="utf-8")
+                return rule_levels(path)
+        self.assertEqual(levels("#959595").get("ACTION_VISIBLE"), "FAIL")
+        self.assertNotIn("ACTION_VISIBLE", levels("#949494"))
+
     def test_action_isolated_warns_when_another_token_equals_the_action(self):
         self.assertEqual(rule_levels(PLANTED)["ACTION_ISOLATED"], "WARN")
         self.assertNotIn("ACTION_ISOLATED", rule_levels(CLEAN))

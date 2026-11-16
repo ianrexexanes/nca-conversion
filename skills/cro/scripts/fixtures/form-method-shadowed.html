@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form fixture</title>
+<link rel="stylesheet" href="/form-base.css">
+<script src="/gtm.js?id=GTM-FIXTURE"></script>
+<script>navigator.sendBeacon("/g/collect?v=2&tid=G-FIXTURE", "x");</script>
+</head><body><main><h1>Book a pump check</h1>
+<form id="lead"  action="/lead">
+<label for="f-name">Your name</label><input id="f-name" name="name" type="text" required autocomplete="name"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" required autocomplete="email" inputmode="email"><label for="f-msg">What should we look at?</label><textarea id="f-msg" name="message"></textarea><label for="f-reach">Preferred contact</label><select id="f-reach" name="method"><option value="phone">Phone</option><option value="email">Email</option></select>
+<button type="submit">Send request</button>
+<p role="status" aria-live="polite"></p>
+</form>
+</main><script src="/form-send.js"></script></body></html>

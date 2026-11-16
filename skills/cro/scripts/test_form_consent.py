@@ -188,6 +188,17 @@ class FormConsentTests(unittest.TestCase):
             self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SEND") and "GET" in d], (page, run.lines))
             self.assertEqual(run.data["network"]["consented"], 0, page)
 
+    def test_a_field_named_method_does_not_hide_the_forms_method(self):
+        # A control called method takes the place of form.method, so the gate must read the real value.
+        run = self.consent("form-method-shadowed.html")
+        self.assertEqual(run.code, 3, run.err)
+        self.assertEqual([p for p in run.paths() if p.startswith("/lead")], [])
+        self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SEND") and "GET" in d], run.lines)
+        self.assertEqual(run.data["network"]["consented"], 0)
+        run = self.consent("form-method-shadowed-post.html")
+        self.assertEqual(run.code, 0, (run.err, run.lines))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead"])
+
     def test_a_tracking_post_fired_by_the_click_does_not_take_the_single_send(self):
         run = self.consent("form-clickhook.html")
         self.assertEqual(run.code, 0, (run.err, run.lines))

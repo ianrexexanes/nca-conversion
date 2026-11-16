@@ -1646,6 +1646,12 @@ class WireframeTests(unittest.TestCase):
                      "one frame per variant", "design-rules.md", "directional cue", "carousel", "deck_check.py", "--final"):
             self.assertIn(part, text)
 
+    def test_wireframe_reference_runs_wire_check_again_after_the_notes_block(self):
+        raw = read("skills", "cro", "references", "wireframe.md")
+        step8 = flat(re.search(r"^8\. (.*(?:\n(?!\d+\. |\n).*)*)", raw, re.M).group(1))
+        self.assertIn("wire_check.py", step8)
+        self.assertRegex(step8, r"again.{0,80}notes|notes.{0,80}again")
+
     def test_wireframe_reference_says_a_none_visual_carries_no_figure(self):
         text = flat(read("skills", "cro", "references", "wireframe.md"))
         self.assertIn("A section whose visual line in the deck starts with `none` carries no figure.", text)

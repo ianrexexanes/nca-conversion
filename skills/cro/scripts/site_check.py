@@ -238,7 +238,7 @@ def page_rows(page, deck, mapped, forbid, add, internal_link):
             add("FAIL", url, "FAQ_SCHEMA", "the FAQPage has %d question and answer pairs and the deck %d; they first differ at pair %d"
                 % (len(got), len(want), at + 1))
         for n, (q, a) in enumerate(want, 1):
-            if q not in page.squashed or a not in page.squashed:
+            if any(t not in page.squashed and "".join(t.split()) not in page.compact for t in (q, a)):
                 add("FAIL", url, "FAQ_SCHEMA", "pair %d of the deck is not in the page text" % n)
     seen = set()
     for link in facts["links"]:

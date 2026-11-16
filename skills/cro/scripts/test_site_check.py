@@ -309,6 +309,16 @@ class SiteCheckTests(unittest.TestCase):
         out = self.site({"/index.html": marked}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")[1]
         self.assertNotIn("PARITY", out)
 
+    def test_inline_markup_beside_a_comma_in_a_faq_answer_still_counts_as_on_the_page(self):
+        page = page_html(CLEAN_DECK)
+        marked = page.replace("<p>A fixed yearly fee per pump, quoted", "<p>A fixed yearly fee per <b>pump</b>, quoted", 1)
+        self.assertNotEqual(marked, page)
+        out = self.site({"/index.html": marked}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")[1]
+        self.assertNotRegex(out, r"(?m)^FAIL /index\.html FAQ_SCHEMA: .*page text")
+        gone = page.replace("<p>A fixed yearly fee per pump, quoted in writing after the report.</p>", "")
+        out = self.site({"/index.html": gone}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")[1]
+        self.assertRegex(out, r"(?m)^FAIL /index\.html FAQ_SCHEMA: .*page text")
+
     def test_input_value_and_logo_alt_count_for_parity(self):
         deck = deck_check.parse_deck(Path(CLEAN_DECK).read_text(encoding="utf-8"))
         label, logo = deck.values["p.cta.button"], deck.values["p.header.logo"]

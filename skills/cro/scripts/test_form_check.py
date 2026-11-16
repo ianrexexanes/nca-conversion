@@ -63,6 +63,13 @@ class FormCheckTests(unittest.TestCase):
             self.assertTrue(run.logged("/blank-get", "blocked", "form:"), (flags, run.log))
             self.assertNotIn("SENT", [r for _l, _f, r, _d in run.lines])
 
+    def test_a_popup_request_to_the_action_address_is_aborted_too(self):
+        # the page saved window.open before the press, so the press's own neutralising does not reach it; the popup is a second page
+        run = self.run_page("form-popup.html")
+        self.assertEqual(run.code, 0, run.err)
+        self.assertEqual([(m, p) for m, p, _a, _b in run.seen if p.startswith("/lead")], [])
+        self.assertTrue(run.logged("/lead", "blocked", "form:action"), run.log)
+
     def test_fetch_post_without_action_is_blocked(self):
         run = self.run_page("form-fetch.html")
         self.assertEqual(run.code, 0, run.err)

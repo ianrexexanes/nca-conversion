@@ -397,7 +397,7 @@ def action_handler(recorder, targets, simulate):
 def install_action_route(page, recorder, infos, simulate):
     targets = {a for a in (address(u) for info in infos for u in info["actions"]) if a}
     if targets:
-        page.route(lambda url: address(url) in targets, action_handler(recorder, targets, simulate))
+        page.context.route(lambda url: address(url) in targets, action_handler(recorder, targets, simulate))  # the context, so a popup is covered too
     return targets
 
 

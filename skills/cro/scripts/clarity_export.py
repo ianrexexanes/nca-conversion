@@ -66,6 +66,7 @@ def budget_key(label, token_file, project):
         where = cro_runtime.CLARITY_ENV
     else:
         where = str(cro_runtime.CLARITY_FILE)
+    label = "file" if label == "file-loose-permissions" else label
     return hashlib.sha256(f"{label}:{where}:{project}".encode()).hexdigest()[:16]
 
 

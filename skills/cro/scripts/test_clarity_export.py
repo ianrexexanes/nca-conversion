@@ -232,6 +232,16 @@ class BudgetTest(ExportCase):
         self.run_main()
         self.assertEqual(list(self.budget()), [self.key("file", str(self.default_file))])
 
+    def test_a_default_file_token_keeps_one_budget_when_its_permissions_change(self):
+        del os.environ[cro_runtime.CLARITY_ENV]
+        self.default_file.write_text(TOKEN)
+        os.chmod(self.default_file, 0o600)
+        self.run_main()
+        os.chmod(self.default_file, 0o644)
+        self.run_main()
+        self.assertEqual(list(self.budget()), [self.key("file", str(self.default_file))])
+        self.assertEqual(list(self.budget().values())[0]["count"], 2)
+
     def test_an_unreadable_budget_file_is_read_as_empty(self):
         self.data.mkdir()
         (self.data / "clarity-budget.json").write_text("[not an object")

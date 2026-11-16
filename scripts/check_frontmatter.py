@@ -2,7 +2,7 @@
 """Guard: every SKILL.md carries only the six frontmatter keys the Agent Skills spec allows.
 
 Outside Claude Code (claude.ai uploads, the Skills API, package_skill.py) any other
-key is a hard failure, not a silent ignore. This catches it at commit time instead.
+key is a hard failure, not a silent ignore. This catches it when the repo test suite runs.
 """
 import os
 import re

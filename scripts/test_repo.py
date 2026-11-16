@@ -33,6 +33,11 @@ class RepoStructureTest(unittest.TestCase):
     def test_frontmatter_guard_passes(self):
         self.assertEqual(check_frontmatter.main(str(ROOT)), 0)
 
+    def test_frontmatter_guard_docstring_names_what_runs_it(self):
+        doc = " ".join(check_frontmatter.__doc__.split())
+        self.assertNotIn("at commit time", doc)
+        self.assertIn("when the repo test suite runs", doc)
+
 
 class SetupReferenceTest(unittest.TestCase):
     def test_setup_reference_names_both_commands_and_the_key_file(self):

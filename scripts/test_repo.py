@@ -1314,6 +1314,10 @@ class ResearchTests(unittest.TestCase):
         self.assertIn("After the run, read `<dir>/facts.json`", s)
         self.assertIn("prints one summary line", s)
 
+    def test_research_names_the_buyers_path_to_the_page_in_step_6_and_the_personas_section(self):
+        self.assertIn("the buyer's path to the page", flat(step_of(read("skills", "cro", "references", "research.md"), 6)))
+        self.assertIn("the path each one takes to the page", flat(section(template, "Personas")))
+
     def test_brief_template_has_the_new_parts_and_one_proof_section(self):
         for head in ("## Page modes and keywords", "## Traffic and awareness", "## Proof available", "## Visual inventory"):
             self.assertIn(head, template)

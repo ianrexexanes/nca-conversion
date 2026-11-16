@@ -95,7 +95,7 @@ but has not yet budgeted for an enterprise planning suite.
 ## Personas
 
 **Establishes:** who inside the ICP actually reads the page, in what role, and who else has to
-sign off. A committee sale needs every seat in the room named, not just the champion.
+sign off. A committee sale needs every seat in the room named, not just the champion. Name the path each one takes to the page.
 
 **Failure mode of leaving it thin:** a page written for the champion alone stalls in procurement,
 because nobody wrote anything the approver needed. This is the single most common cause of a page

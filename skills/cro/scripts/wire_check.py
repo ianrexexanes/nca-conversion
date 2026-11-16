@@ -262,8 +262,10 @@ def check(deck, frame, ns, v):
             if kind != "label":
                 add("FAIL", key, "MISSING_KEY", "no element carries this key")
             continue
-        if kind == "nav":  # each label sits in its own link or inside one keyed nav element
-            if not any(squash(text) in shown for _, shown in found):
+        if kind == "nav":  # each label is one keyed element's whole text, or one keyed element shows the whole menu in order
+            menu = [squash(m) for m in deck.values[key].split(";") if m.strip()]
+            whole = re.compile(r"[\W_]*".join(re.escape(m) for m in menu))  # only spaces and punctuation between the labels
+            if not any(shown == squash(text) or whole.fullmatch(shown) for _, shown in found):
                 add("FAIL", key, "PARITY", "the menu label %r is in no element with this key" % squash(text))
             continue
         for tag, shown in found:

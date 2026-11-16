@@ -170,6 +170,31 @@ class WireCheckTest(unittest.TestCase):
         self.assertIn("FAIL p.header.nav", out)
         self.assertIn("Plans", out)
 
+    def test_a_menu_label_is_matched_whole_not_as_a_part_of_another(self):
+        def parity(menu, header_body):
+            deck = self.write(TINY_DECK.replace("p.hero.h1:", "p.header.nav: %s\np.hero.h1:" % menu, 1), "deck.md")
+            header = '<section data-section="p.header" data-layout="stacked">\n%s</section>\n' % header_body
+            frame = TINY_FRAME.replace('<section data-section="p.hero"', header + '<section data-section="p.hero"', 1)
+            frame = frame.replace("-->", "- header: stacked, because the menu stays short.\n-->", 1)
+            code, out = run(self.write(frame), "--deck", deck)
+            return code, [line for line in out.splitlines() if line.startswith("FAIL p.header.nav PARITY")]
+        link = lambda text: '<a href="#x" data-key="p.header.nav">%s</a>\n' % text
+        both = "Pricing; Pricing plans"
+        self.assertEqual(parity(both, link("Pricing") + link("Pricing plans")), (0, []))
+        code, rows = parity(both, link("Pricing plans"))
+        self.assertEqual(code, 1)
+        self.assertEqual([r for r in rows if "'Pricing'" in r], rows)
+        self.assertEqual(len(rows), 1, rows)
+        nav = lambda text: '<nav data-key="p.header.nav">%s</nav>\n' % text
+        self.assertEqual(parity(both, nav('<a href="#1">Pricing</a> <a href="#2">Pricing plans</a>')), (0, []))
+        code, rows = parity(both, nav('<a href="#2">Pricing plans</a>'))
+        self.assertEqual((code, len(rows)), (1, 1), rows)
+        three = "Services; About; Contact"
+        self.assertEqual(parity(three, nav("Services | About | Contact")), (0, []))
+        code, rows = parity(three, nav("Services About us Contact"))
+        self.assertEqual(code, 1)
+        self.assertTrue(rows)
+
     def test_variant_frame_ignores_other_variants_keys(self):
         code, out = run(WIRE_A, "--deck", DECK, "--variant", "a")
         self.assertEqual(code, 0)

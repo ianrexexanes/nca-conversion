@@ -125,6 +125,30 @@ class PermissionsTest(unittest.TestCase):
             self.assertTrue(json.loads(body)["permissions"]["allow"])
             self.assertEqual(os.listdir(tmp), [])
 
+    def test_permissions_use_the_plugin_root_as_given(self):
+        link = self.tmp / "link"
+        link.symlink_to(self.root, target_is_directory=True)
+        done = run_setup(["--permissions", "--plugin-root", str(link), "--data-dir", str(self.tmp / "data")])
+        self.assertEqual(done.returncode, 0, done.stderr)
+        rules = json.loads(done.stdout[:done.stdout.rindex("}") + 1])["permissions"]["allow"]
+        self.assertEqual(len(rules), len(allowed_tools_entries()))
+        for rule in rules:
+            self.assertIn(str(link), rule)
+            self.assertNotIn(str(self.root.resolve()), rule)
+
+    def test_permissions_keep_a_spaced_root_as_given(self):
+        spaced = self.tmp / "sp ace" / "plug"
+        (spaced / "skills" / "cro").mkdir(parents=True)
+        shutil.copy(REAL_SKILL_MD, spaced / "skills" / "cro" / "SKILL.md")
+        done = run_setup(["--permissions", "--plugin-root", str(spaced), "--data-dir", str(self.tmp / "data")])
+        self.assertEqual(done.returncode, 0, done.stderr)
+        rules = json.loads(done.stdout[:done.stdout.rindex("}") + 1])["permissions"]["allow"]
+        self.assertEqual(len(rules), len(allowed_tools_entries()))
+        for rule in rules:
+            self.assertIn(str(spaced) + "/", rule)
+            self.assertNotIn('"', rule)
+            self.assertNotIn("'", rule)
+
 
 if __name__ == "__main__":
     unittest.main()

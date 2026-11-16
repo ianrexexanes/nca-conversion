@@ -32,16 +32,16 @@ Name the research step and the command to run, then wait for the result. The kic
 
 If your project has its own build SOP, follow its phases. The plugin does not depend on any one SOP file. These are the plugin's own phases and the command each one maps to.
 
-| Phase | Command | Slice 2 status |
+| Phase | Command | Slice 3 status |
 | --- | --- | --- |
-| 0. Decide | `/cro` with no command (this kickoff) | ready |
-| 1. Research | `/cro research` | ready; a Search project opens it with keyword research |
+| 0. Decide | `/cro` with no command (this kickoff); `/cro diagnose <url>` for a prospect's site | ready |
+| 1. Research | `/cro research`; `/cro data` when the site has GA4 or Clarity | ready; a Search project opens it with keyword research |
 | 2. Brief and offer | `/cro offer` | ready (v1 skill) |
 | 3. Copy | `/cro page`, `/cro hero`, `/cro vsl` | ready |
-| 4. Wireframe | `/cro wireframe` | v1 engine until slice 3 |
-| 5. Style guide | `/cro design` | not built yet, slice 3 |
-| 6. Design | `/cro design` | not built yet, slice 3 |
+| 4. Wireframe | `/cro wireframe` | ready |
+| 5. Style guide | `/cro design` | ready |
+| 6. Design | `/cro design` | ready |
 | 7. Build | none | outside the plugin |
-| 8. Pre-launch | `/cro check` | not built yet, slice 3 |
+| 8. Pre-launch | `/cro check`, `/cro form` | ready |
 | 9. Launch | none | outside the plugin |
-| 10. After launch | `/cro audit` again | ready: quote both score lines for before and after |
+| 10. After launch | `/cro audit` again, then `/cro compare` | ready |

@@ -53,19 +53,19 @@ PERMISSIONS_NOTE = ("Merge these rules into the permissions.allow list of .claud
                     "Run /cro setup --permissions again after each claude plugin update.")
 
 
-def root_pattern(plugin_root: Path) -> str:
+def root_pattern(plugin_root) -> str:
     """The plugin root as it goes into a permission rule: unchanged, version folder included.
 
     A `*` in place of the version folder would survive `claude plugin update`, but Claude Code reads `*` as any
     text, `..` included, so the rule would approve any Python file reached through it. Measured 2026-11-07 on
     Claude Code 2.1.319 (https://code.claude.com/docs/en/permissions, "Wildcard patterns").
     """
-    return str(plugin_root)
+    return plugin_root if isinstance(plugin_root, str) else str(plugin_root)
 
 
-def permission_rules(plugin_root: Path, data_dir: Path) -> list[str]:
+def permission_rules(plugin_root, data_dir: Path) -> list[str]:
     """One Bash(...) rule per entry of the cro skill's allowed-tools, with the plugin variables filled in."""
-    text = (plugin_root / "skills" / "cro" / "SKILL.md").read_text(encoding="utf-8")
+    text = (Path(plugin_root) / "skills" / "cro" / "SKILL.md").read_text(encoding="utf-8")
     line = next(l for l in text.splitlines() if l.startswith("allowed-tools:"))
     value = line[len("allowed-tools:"):].strip()
     entries = value.replace(") Bash(", ")\n Bash(").split("\n")
@@ -79,9 +79,12 @@ def main(argv=None) -> int:
     parser.add_argument("--dry-run", action="store_true", help="print the commands and run none")
     parser.add_argument("--permissions", action="store_true",
                         help="print the permission rules to merge into settings.local.json; writes nothing")
+    parser.add_argument("--plugin-root", type=str, default=None,
+                        help="with --permissions: the plugin folder exactly as the commands will write it (a rule "
+                             "matches the command text literally); the default is this script's own folder, resolved")
     args = parser.parse_args(argv)
     if args.permissions:
-        plugin_root = Path(__file__).resolve().parents[3]
+        plugin_root = args.plugin_root if args.plugin_root is not None else Path(__file__).resolve().parents[3]
         rules = permission_rules(plugin_root, args.data_dir)
         print(json.dumps({"permissions": {"allow": rules}}, indent=2))
         print(PERMISSIONS_NOTE)

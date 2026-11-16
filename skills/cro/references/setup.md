@@ -40,10 +40,12 @@ Exit 0 when the first four are `OK`, else 1.
 A skill's `allowed-tools` grant lasts for the turn that invokes it; it clears when you send your next message, so a later turn asks again before each script runs. `/cro setup --permissions` runs this line in place of the setup line above. It prints the rules for your install and changes nothing:
 
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/setup.py --permissions --data-dir ${CLAUDE_PLUGIN_DATA}
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/setup.py --permissions --plugin-root ${CLAUDE_PLUGIN_ROOT} --data-dir ${CLAUDE_PLUGIN_DATA}
 ```
 
 Merge the printed rules into the `permissions.allow` list of `.claude/settings.local.json` in your project, keeping the rules already there. The rules name the version folder of the installed plugin, so after each `claude plugin update` run `/cro setup --permissions` again and replace the old rules with the new ones.
+
+A rule matches a command only when the command names the plugin's folder exactly as the rule writes it. If that folder's path holds a space, the commands have to quote it, so the rules do not match and Claude Code keeps asking before each script.
 
 ## The PageSpeed key
 

@@ -408,7 +408,7 @@ class CroSkillTests(unittest.TestCase):
         text, fm, body, name, desc = cro_parts()
         self.assertLess(len(body.split()), 500)
 
-    def test_cro_command_table_matches_slice_2(self):
+    def test_cro_command_table_matches_slice_3(self):
         text, fm, body, name, desc = cro_parts()
         words = table_words(body)
         self.assertEqual(words, ["(none)", "audit", "setup", "doctor", "offer", "sweep", "research",
@@ -438,9 +438,11 @@ class CroSkillTests(unittest.TestCase):
         # the path after ${CLAUDE_PLUGIN_ROOT}/ exists
         for rule in rules:
             self.assertTrue((ROOT / rule.split("${CLAUDE_PLUGIN_ROOT}/", 1)[1]).is_file(), rule)
-        # the scripts named are exactly setup, doctor, page_facts, render_check, speed_check, score, search_check, client_check, deck_check
+        # the scripts named are exactly slice 2's nine plus slice 3's nine; form_consent.py is in none
         self.assertEqual(sorted(Path(rule).stem for rule in rules),
-                         sorted(["setup", "doctor", "page_facts", "render_check", "speed_check", "score", "search_check", "client_check", "deck_check"]))
+                         sorted(["setup", "doctor", "page_facts", "render_check", "speed_check", "score", "search_check", "client_check", "deck_check",
+                                 "wire_check", "design_check", "site_check", "asset_text_check", "redirect_check", "clarity_export",
+                                 "compare", "launch_render", "form_check"]))
 
     def test_listing_estimate_within_ceiling(self):
         # sum of len(name)+len(description) over every skills/*/SKILL.md, times 1140/3047, is <= 1350:
@@ -485,7 +487,13 @@ class CroRulingsTest(unittest.TestCase):
             "Bash(${CLAUDE_PLUGIN_DATA}/venv/bin/python ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/render_check.py *)",
             ROOT_RULE + "cro/scripts/speed_check.py *)", ROOT_RULE + "cro/scripts/score.py *)",
             ROOT_RULE + "cro/scripts/search_check.py *)", ROOT_RULE + "cro/scripts/client_check.py *)",
-            ROOT_RULE + "cro/scripts/deck_check.py *)"]) + "\n"
+            ROOT_RULE + "cro/scripts/deck_check.py *)",
+            ROOT_RULE + "cro/scripts/wire_check.py *)", ROOT_RULE + "cro/scripts/design_check.py *)",
+            ROOT_RULE + "cro/scripts/site_check.py *)", ROOT_RULE + "cro/scripts/asset_text_check.py *)",
+            ROOT_RULE + "cro/scripts/redirect_check.py *)", ROOT_RULE + "cro/scripts/clarity_export.py *)",
+            ROOT_RULE + "cro/scripts/compare.py *)",
+            "Bash(${CLAUDE_PLUGIN_DATA}/venv/bin/python ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/launch_render.py *)",
+            "Bash(${CLAUDE_PLUGIN_DATA}/venv/bin/python ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/form_check.py *)"]) + "\n"
         "metadata:\n"
         "  version: " + VERSION + "\n")
     ROWS = [("(none)", "`references/kickoff.md`", "ready"), ("`audit <url>`", "`references/audit.md`", "ready"),
@@ -494,25 +502,25 @@ class CroRulingsTest(unittest.TestCase):
             ("`research`", "`references/research.md`, with the `audience-research` skill", "ready"),
             ("`page <brief>`", "`references/page.md`, with the `conversion-page-build` skill", "ready"),
             ("`hero`", "`references/hero.md`, with the `hook-lab` skill", "ready"),
-            ("`wireframe`", "the `design-handoff` skill", "v1 engine until slice 3"),
-            ("`vsl`", "`references/vsl.md`", "ready"), ("`design`", "nothing yet", "not built yet, slice 3"),
-            ("`check`", "nothing yet", "not built yet, slice 3"), ("`form`", "nothing yet", "not built yet, slice 3"),
-            ("`data`", "nothing yet", "not built yet, slice 3"), ("`compare`", "nothing yet", "not built yet, slice 3"),
-            ("`diagnose`", "nothing yet", "not built yet, slice 3")]
+            ("`wireframe`", "`references/wireframe.md`, with the `design-handoff` skill", "ready"),
+            ("`vsl`", "`references/vsl.md`", "ready"), ("`design`", "`references/design.md`", "ready"),
+            ("`check`", "`references/check.md`", "ready"), ("`form`", "`references/form.md`", "ready"),
+            ("`data`", "`references/data.md`", "ready"), ("`compare`", "`references/compare.md`", "ready"),
+            ("`diagnose`", "`references/diagnose.md`", "ready")]
     TABLE = "\n".join(["| Command | Goes to | Status |", "| --- | --- | --- |"] + [f"| {a} | {b} | {c} |" for a, b, c in ROWS]) + "\n"
     PHASES = "\n".join([
-        "| Phase | Command | Slice 2 status |", "| --- | --- | --- |",
-        "| 0. Decide | `/cro` with no command (this kickoff) | ready |",
-        "| 1. Research | `/cro research` | ready; a Search project opens it with keyword research |",
+        "| Phase | Command | Slice 3 status |", "| --- | --- | --- |",
+        "| 0. Decide | `/cro` with no command (this kickoff); `/cro diagnose <url>` for a prospect's site | ready |",
+        "| 1. Research | `/cro research`; `/cro data` when the site has GA4 or Clarity | ready; a Search project opens it with keyword research |",
         "| 2. Brief and offer | `/cro offer` | ready (v1 skill) |",
         "| 3. Copy | `/cro page`, `/cro hero`, `/cro vsl` | ready |",
-        "| 4. Wireframe | `/cro wireframe` | v1 engine until slice 3 |",
-        "| 5. Style guide | `/cro design` | not built yet, slice 3 |",
-        "| 6. Design | `/cro design` | not built yet, slice 3 |",
+        "| 4. Wireframe | `/cro wireframe` | ready |",
+        "| 5. Style guide | `/cro design` | ready |",
+        "| 6. Design | `/cro design` | ready |",
         "| 7. Build | none | outside the plugin |",
-        "| 8. Pre-launch | `/cro check` | not built yet, slice 3 |",
+        "| 8. Pre-launch | `/cro check`, `/cro form` | ready |",
         "| 9. Launch | none | outside the plugin |",
-        "| 10. After launch | `/cro audit` again | ready: quote both score lines for before and after |"]) + "\n"
+        "| 10. After launch | `/cro audit` again, then `/cro compare` | ready |"]) + "\n"
     PATHS = ("Reference files write this plugin's folder as CLAUDE_PLUGIN_ROOT and its data folder as CLAUDE_PLUGIN_DATA, "
              "each inside a dollar sign and braces. The shell does not know those names: in every command you run and every "
              "file you read, put `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_PLUGIN_DATA}` in their place.")
@@ -910,7 +918,7 @@ class SetupPermissionsTests(unittest.TestCase):
         text = (ROOT / "skills" / "cro" / "references" / "setup.md").read_text(encoding="utf-8")
         self.assertIn("merge", text.lower())  # the permissions section opens with "Merge": the printed rules go into the existing allow list
         for needle in ("--permissions", "settings.local.json", "claude plugin update",
-                       "python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/setup.py --permissions --data-dir ${CLAUDE_PLUGIN_DATA}"):
+                       "python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/setup.py --permissions --plugin-root ${CLAUDE_PLUGIN_ROOT} --data-dir ${CLAUDE_PLUGIN_DATA}"):
             self.assertIn(needle, text)
 
 
@@ -1448,7 +1456,6 @@ class FixWave1Tests(unittest.TestCase):
         text = flat(read("README.md"))
         self.assertIn("copy deck", text)
         self.assertIn("deck_check.py", text)
-        self.assertIn("the next planned release", text)
 
 
 class DesignRulesTests(unittest.TestCase):
@@ -2116,6 +2123,127 @@ class DiagnoseTests(unittest.TestCase):
         self.assertRegex(flat(rows[0]), r"walked in the buyer-path order with demand last rather than in the source's order")
         self.assertRegex(flat(rows[0]), r"no term kept word for word")
         self.assertRegex(flat(rows[0]), r"The legs' commands, references and outputs are the plugin's own\.")
+
+
+class RouterTests(unittest.TestCase):
+    NEW_COMMAND = ("python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/setup.py --permissions --plugin-root ${CLAUDE_PLUGIN_ROOT} "
+                   "--data-dir ${CLAUDE_PLUGIN_DATA}")
+    SPACE_PARAGRAPH = ("A rule matches a command only when the command names the plugin's folder exactly as the rule writes it. "
+                       "If that folder's path holds a space, the commands have to quote it, so the rules do not match and "
+                       "Claude Code keeps asking before each script.")
+    FORM_PARAGRAPH = ("`/cro form` reads a form without sending it. Its simulated success and simulated error press the submit "
+                      "button, but the plugin replies in place of the form's own address, so nothing reaches the owner. A real "
+                      "test submission runs only through `form_consent.py`, and only with the owner's yes for that test. "
+                      "Claude Code always asks before that script runs, because no `allowed-tools` rule pre-approves it and "
+                      "`/cro setup --permissions` prints no rule for it.")
+    GUARDED_NEW = ("Rendered checks run only through the plugin's own scripts, which share one guard: `render_check.py`, "
+                   "`launch_render.py`, `form_check.py` and `form_consent.py`.")
+    GUARDED_OLD = "Rendered checks run only through `render_check.py`."
+    SENTENCES_NEW = ("Only GET, HEAD and OPTIONS leave the browser, apart from the one consented test submission described below. "
+                     "The browser presents an ordinary Chrome user agent, and every blocked request is written to a log. "
+                     "Outside the form test, no form is sent and nothing is clicked.")
+    SENTENCES_OLD = ("Only GET, HEAD and OPTIONS leave the browser, the browser presents an ordinary Chrome user agent, and every "
+                     "blocked request is written to a log. No form is sent and nothing is clicked.")
+    RESEARCH_NEW = ("where the site has it, never invented: read GA4 and Microsoft Clarity as "
+                    "`${CLAUDE_PLUGIN_ROOT}/skills/cro/references/data.md` says, or use exports the user supplies.")
+
+    def allowed(self):
+        fm, body = frontmatter_and_body(CRO)
+        return re.search(r"^allowed-tools:\s*(.+)$", fm, re.M).group(1)
+
+    def readme_section(self):
+        text = README.read_text(encoding="utf-8")
+        start = text.index("\n## Version 2: the front door\n")
+        return text[start:text.index("\n## ", start + 1)]
+
+    def test_consent_script_is_never_pre_approved(self):
+        allowed = self.allowed()
+        self.assertNotIn("form_consent.py", allowed)
+        entries = re.findall(r"Bash\([^)]*\)", allowed)
+        self.assertEqual(len(entries), 18)
+        with tempfile.TemporaryDirectory() as tmp:
+            done = subprocess.run([sys.executable, str(ROOT / "skills/cro/scripts/setup.py"), "--permissions",
+                                   "--plugin-root", str(ROOT), "--data-dir", tmp], capture_output=True, text=True)
+            self.assertEqual(done.returncode, 0, done.stderr)
+        rules = json.loads(done.stdout[:done.stdout.rindex("}") + 1])["permissions"]["allow"]
+        self.assertNotIn("form_consent", done.stdout)
+        self.assertEqual(len(rules), len(entries))
+
+    def test_router_has_no_not_built_yet_bullet(self):
+        fm, body = frontmatter_and_body(CRO)
+        self.assertNotIn('A "not built yet" row: say so and name its slice.', body)
+        route = body[body.index("## Route"):body.index("## Rules")]
+        self.assertEqual(len([line for line in route.splitlines() if line.startswith("- ")]), 3)
+
+    def test_readme_lists_all_seventeen_commands(self):
+        section = self.readme_section()
+        self.assertEqual(len(CroRulingsTest.ROWS), 17)
+        for cell, goes, status in CroRulingsTest.ROWS:
+            self.assertTrue(any(line.startswith("| " + cell + " |") for line in section.splitlines()), cell)
+
+    def test_readme_form_section_says_the_consent_script_always_asks(self):
+        text = README.read_text(encoding="utf-8")
+        a = text.index("### Rendered checks and your client's analytics")
+        b = text.index("### The form test and the consent script")
+        c = text.index("### Script permissions last one turn")
+        self.assertLess(a, b); self.assertLess(b, c)
+        self.assertIn(self.FORM_PARAGRAPH, flat(text[b:c]))
+        self.assertEqual(len([line for line in text[b:c].splitlines() if line.strip() and not line.startswith("#")]), 1)
+
+    def test_readme_names_every_guarded_renderer(self):
+        text = flat(README.read_text(encoding="utf-8"))
+        for new in (self.GUARDED_NEW, self.SENTENCES_NEW):
+            self.assertIn(new, text)
+        for old in (self.GUARDED_OLD, self.SENTENCES_OLD):
+            self.assertNotIn(old, text)
+
+    def test_readme_drops_the_next_release_sentence(self):
+        self.assertNotIn("next planned release", README.read_text(encoding="utf-8"))
+
+    def test_research_reads_behaviour_data_through_cro_data(self):
+        text = read("skills", "cro", "references", "research.md")
+        self.assertIn(self.RESEARCH_NEW, text)
+        self.assertNotIn("is not built yet", text)
+        self.assertEqual(len(re.findall(r"^\d+\. ", text, re.M)), 11)
+
+    def test_setup_reference_says_a_spaced_path_keeps_the_prompts(self):
+        text = read("skills", "cro", "references", "setup.md")
+        self.assertEqual(text.count(self.SPACE_PARAGRAPH), 1)
+        self.assertLess(text.index("Merge the printed rules"), text.index(self.SPACE_PARAGRAPH))
+        self.assertLess(text.index(self.SPACE_PARAGRAPH), text.index("## The PageSpeed key"))
+        self.assertIn(self.NEW_COMMAND, text)
+
+    def test_every_rule_matches_how_the_references_run_its_script(self):
+        # a rule matches literal text (Task 12 Step 0): the interpreter a reference writes must be the rule's
+        rules = {}
+        for entry in re.findall(r"Bash\(([^)]*) \*\)", self.allowed()):
+            interpreter, script = entry.split(" ", 1)
+            rules[script] = interpreter
+        files = [*sorted((ROOT / "skills").glob("*/references/*.md"))]
+        cro_body = frontmatter_and_body(CRO)[1]
+        run = re.compile(r"(\S+) (\$\{CLAUDE_PLUGIN_ROOT\}/skills/[a-z-]+/scripts/([A-Za-z0-9_]+)\.py)")
+        seen = set()
+        texts = [(path.name, path.read_text(encoding="utf-8")) for path in files] + [("SKILL.md", cro_body)]
+        for name, text in texts:
+            for interpreter, script, stem in run.findall(text):
+                if stem == "form_consent":
+                    continue
+                interpreter = interpreter.strip("`'\"(")
+                self.assertIn(script, rules, f"{name}: {script}")
+                self.assertEqual(interpreter, rules[script], f"{name}: {script}")
+                seen.add(script)
+        self.assertEqual(seen, set(rules))
+
+    def test_no_cro_file_says_not_built_yet(self):
+        paths = [p for p in (ROOT / "skills" / "cro").rglob("*") if p.is_file() and "__pycache__" not in p.parts]
+        paths.append(README)
+        for path in paths:
+            try:
+                text = path.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                continue
+            for phrase in ("not built yet", "v1 engine until slice 3", "next planned release"):
+                self.assertNotIn(phrase, text, f"{path.relative_to(ROOT)}: {phrase}")
 
 
 if __name__ == "__main__":

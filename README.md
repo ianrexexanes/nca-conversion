@@ -28,16 +28,16 @@ Version 2 adds an eighth skill, `cro`, in front of the seven. Type `/nca-convers
 | `research` | `references/research.md`, with the `audience-research` skill | ready |
 | `page <brief>` | `references/page.md`, with the `conversion-page-build` skill | ready |
 | `hero` | `references/hero.md`, with the `hook-lab` skill | ready |
-| `wireframe` | the `design-handoff` skill | v1 engine until slice 3 |
+| `wireframe` | `references/wireframe.md`, with the `design-handoff` skill | ready |
 | `vsl` | `references/vsl.md` | ready |
-| `design` | nothing yet | not built yet, slice 3 |
-| `check` | nothing yet | not built yet, slice 3 |
-| `form` | nothing yet | not built yet, slice 3 |
-| `data` | nothing yet | not built yet, slice 3 |
-| `compare` | nothing yet | not built yet, slice 3 |
-| `diagnose` | nothing yet | not built yet, slice 3 |
+| `design` | `references/design.md` | ready |
+| `check` | `references/check.md` | ready |
+| `form` | `references/form.md` | ready |
+| `data` | `references/data.md` | ready |
+| `compare` | `references/compare.md` | ready |
+| `diagnose` | `references/diagnose.md` | ready |
 
-Slice 3 is the next planned release. `/cro page` and `/cro hero` write a copy deck, a file named "Copy Deck" with the page name and the date, in your project folder. `/cro vsl` writes the hero video script from that deck. `skills/cro/scripts/deck_check.py` checks a deck against the plugin's rules and prints FAIL and WARN lines.
+`/cro page` and `/cro hero` write a copy deck, a file named "Copy Deck" with the page name and the date, in your project folder. `/cro vsl` writes the hero video script from that deck. `skills/cro/scripts/deck_check.py` checks a deck against the plugin's rules and prints FAIL and WARN lines.
 
 ### Setup and the PageSpeed key
 
@@ -49,11 +49,15 @@ Speed checks use a PageSpeed Insights key. Store it in `~/.config/nca-conversion
 
 ### Rendered checks and your client's analytics
 
-Rendered checks run only through `render_check.py`. The common analytics and tag hosts are blocked, and every request is logged in `network-log.json`, so you can see what was not. A finite list is not a guarantee. Only GET, HEAD and OPTIONS leave the browser, the browser presents an ordinary Chrome user agent, and every blocked request is written to a log. No form is sent and nothing is clicked. Web workers are off in the capture, so a map, video or 3D viewer can look blank there while it shows for a visitor.
+Rendered checks run only through the plugin's own scripts, which share one guard: `render_check.py`, `launch_render.py`, `form_check.py` and `form_consent.py`. The common analytics and tag hosts are blocked, and every request is logged in `network-log.json`, so you can see what was not. A finite list is not a guarantee. Only GET, HEAD and OPTIONS leave the browser, apart from the one consented test submission described below. The browser presents an ordinary Chrome user agent, and every blocked request is written to a log. Outside the form test, no form is sent and nothing is clicked. Web workers are off in the capture, so a map, video or 3D viewer can look blank there while it shows for a visitor.
 
 With a PageSpeed key, the speed check loads the page on Google's servers, where this plugin blocks nothing, and whether that visit shows in the client's analytics is not known. Without a key, local Lighthouse runs with the blocked hosts stopped.
 
 The block list errs toward blocking. A few rules match on the path alone, on any host, because a tag can be served from the site's own domain: an audited page whose own address looks like `/tr?id=5` or `/tr/?id=5` reads as blocked. The browser-level patterns cannot anchor a host, so an unusual host such as `myfacebook.com/tr/` is also stopped there, while the request-level check lets it through. The Meta rules are anchored in both layers, so `facebook.com/trending` stays open. The `/ccm/collect` rules are anchored only in the request-level check: the browser-level patterns cannot end at a path, so an address such as `/ccm/collections` still reads as blocked there. Hosts for which no vendor page was found are marked in `skills/cro/scripts/cro_runtime.py` as unverified.
+
+### The form test and the consent script
+
+`/cro form` reads a form without sending it. Its simulated success and simulated error press the submit button, but the plugin replies in place of the form's own address, so nothing reaches the owner. A real test submission runs only through `form_consent.py`, and only with the owner's yes for that test. Claude Code always asks before that script runs, because no `allowed-tools` rule pre-approves it and `/cro setup --permissions` prints no rule for it.
 
 ### Script permissions last one turn
 

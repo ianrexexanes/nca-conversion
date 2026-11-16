@@ -24,6 +24,8 @@ def run(before, after, *extra):
             code = compare.main([str(before), str(after), *extra])
         except SystemExit as exc:
             code = exc.code
+        except Exception as exc:  # a traceback is a failed assertion on the exit code, not an error
+            code = f"traceback: {type(exc).__name__}"
     return code, out.getvalue().splitlines(), err.getvalue().splitlines()
 
 
@@ -251,6 +253,10 @@ class BadInputTests(Base):
         self.assert_exit2(SEARCH, search, "after", "search.json")
         nokey = self.variant(SEARCH, "k", **{"search.json": lambda d: d.pop("keyword")})
         self.assert_exit2(SEARCH, nokey, "after", "search.json")
+        for bad in (["found"], {"a": 1}, 7):
+            odd = self.variant(SEARCH, "st", **{"search.json": lambda d: d["placements"]["title"].update(status=bad)})
+            self.assert_exit2(SEARCH, odd, "after", "search.json")
+            shutil.rmtree(odd)
         facts = self.variant(AFTER, "f", **{"facts.json": lambda d: d["headings"].append({"level": "1", "text": "x"})})
         self.assert_exit2(BEFORE, facts, "after", "facts.json")
         links = self.variant(AFTER, "l", **{"facts.json": lambda d: d.update(links="no")})

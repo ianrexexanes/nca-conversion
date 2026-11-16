@@ -76,7 +76,7 @@ def _check_search(data, side, problems):
         and isinstance(data.get("keyword_confirmed"), bool)
         and isinstance(placements, dict)
         and all(
-            isinstance(placements.get(name), dict) and placements[name].get("status") in search_check.LABELS
+            isinstance(placements.get(name), dict) and isinstance(placements[name].get("status"), str) and placements[name]["status"] in search_check.LABELS
             for name in search_check.PLACEMENTS
         )
     )

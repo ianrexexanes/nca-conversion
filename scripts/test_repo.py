@@ -2550,6 +2550,8 @@ class EvidenceRulesTextTests(unittest.TestCase):
                       "banner holds back goes to Could not check with that reason, not to not installed.", text)
         self.assertIn("Rendered evidence comes only from the plugin's scripts, with analytics blocked, and no browser tool is run "
                       "on a page that is not the user's own.", text)
+        self.assertNotIn("Accept the consent banner before auditing tags", text)
+        self.assertIn("### A tag behind a consent banner is not checked, not missing", text)
 
 
 if __name__ == "__main__":

@@ -59,7 +59,7 @@ general form. Then cross-check against the DOM: if the text you expected is in t
 absent from the picture, the picture is what is wrong. Report a section as blank only when the
 markup is empty too.
 
-### Accept the consent banner before auditing tags
+### A tag behind a consent banner is not checked, not missing
 
 Consent management platforms hold analytics, advertising and most third-party tags until the
 visitor consents. That is what they are for. Before you click accept, the tag is not in the page,

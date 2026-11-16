@@ -2319,5 +2319,29 @@ class RoundFixTests(unittest.TestCase):
                         seen[out] = path.name
 
 
+class ScoreRulePinsTest(unittest.TestCase):
+    def anchors(self):
+        return flat((ROOT / "skills/cro/references/score-anchors.md").read_text(encoding="utf-8"))
+
+    def test_factor_four_ties_the_button_to_the_headline_promise(self):
+        t = self.anchors().split("## 4. What do I do next?")[1].split("## 5.")[0]
+        self.assertIn("or it promises something other than the headline does", t)
+        self.assertIn("its label names the outcome the headline promised", t)
+
+    def test_register_rule_never_costs_a_swiss_b2b_page_for_no_urgency(self):
+        self.assertIn("Register rule: a conservative Swiss B2B page never loses points for having no urgency or scarcity", self.anchors())
+
+    def test_three_states_are_missing_not_applicable_and_not_checked(self):
+        t = self.anchors()
+        self.assertIn("Three states.", t)
+        self.assertIn("A thing that could not be observed is `not_checked`: it is left out of the total and lowers coverage", t)
+
+    def test_wireframe_says_which_layout_route_was_used(self):
+        t = flat((ROOT / "skills/cro/references/wireframe.md").read_text(encoding="utf-8"))
+        self.assertIn("When UI/UX Pro Max is on, run its layout pass", t)
+        self.assertIn("When it is off, use the table alone", t)
+        self.assertIn("Say in the output which of the two was used.", t)
+
+
 if __name__ == "__main__":
     unittest.main()

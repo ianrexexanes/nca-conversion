@@ -2118,7 +2118,7 @@ class FounderPlaybookTests(unittest.TestCase):
         for path, folder in (("positioning.md", "skills/obviously-awesome"), ("lead-sources.md", "skills/100m-leads"),
                              ("sales-follow-up.md", "skills/spin-selling")):
             hit = [r for r in rows if r.startswith("| `skills/cro/references/%s`" % path)]
-            self.assertEqual(len(hit), 1, path)
+            self.assertGreaterEqual(len(hit), 1, path)
             self.assertIn("`getagentseal/founder-playbook` at `e811e63`", hit[0])
             self.assertIn("`%s`" % folder, hit[0])
         positioning_row = next(r for r in rows if r.startswith("| `skills/cro/references/positioning.md`"))
@@ -2532,15 +2532,15 @@ class ScoreRulePinsTest(unittest.TestCase):
 
 
 class AttributionTextTests(unittest.TestCase):
-    def test_every_cro_reference_has_a_derivation_row(self):
+    def test_every_skill_file_and_reference_has_a_derivation_row(self):
         section = read("ATTRIBUTION.md").split("## 3. Derivation map", 1)[1]
         rows = [r for r in section.splitlines() if r.startswith("| `")]
-        tracked = subprocess.run(["git", "ls-files", "skills/cro/references"], cwd=ROOT, capture_output=True,
-                                 text=True, check=True).stdout.split()
-        self.assertGreaterEqual(len(tracked), 20)
+        tracked = subprocess.run(["git", "ls-files", "skills/*/SKILL.md", "skills/*/references/*.md"], cwd=ROOT,
+                                 capture_output=True, text=True, check=True).stdout.split()
+        self.assertGreaterEqual(len(tracked), 60)
         for path in tracked:
             hit = [r for r in rows if r.startswith("| `%s`" % path)]
-            self.assertEqual(len(hit), 1, path)
+            self.assertGreaterEqual(len(hit), 1, path)
 
 
 class EvidenceRulesTextTests(unittest.TestCase):

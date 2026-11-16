@@ -220,6 +220,11 @@ def speed_block(b, a):
     return out
 
 
+def _variants(data):
+    found = data.get("variants")
+    return {search_check.normalise(v) for v in found if isinstance(v, str)} if isinstance(found, list) else set()
+
+
 def search_block(b, a):
     if b is None and a is None:
         return []
@@ -229,6 +234,8 @@ def search_block(b, a):
         return ["Search: not compared: the keyword is not confirmed"]
     if search_check.normalise(b["keyword"]) != search_check.normalise(a["keyword"]):
         return [f'Search: not compared: keyword "{b["keyword"]}" against "{a["keyword"]}"']
+    if _variants(b) != _variants(a):
+        return ["Search: not compared: spelling variants differ"]
     labels = search_check.LABELS
     return [f"Search {name}: {labels[b['placements'][name]['status']]} -> {labels[a['placements'][name]['status']]}"
             for name in search_check.PLACEMENTS]

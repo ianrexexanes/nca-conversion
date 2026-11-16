@@ -155,6 +155,16 @@ class CompareTests(Base):
         self.assertIn("Search: not compared: the keyword is not confirmed", self.lines(SEARCH, unconfirmed))
         self.assertIn("Search: not compared: search.json on one side only", self.lines(SEARCH, BEFORE))
 
+    def test_search_not_compared_when_variants_differ(self):
+        base = self.variant(SEARCH, "search-va", **{"search.json": lambda d: d.update(variants=[])})
+        other = self.variant(SEARCH, "search-vb", **{"search.json": lambda d: (d.update(variants=["boat lamps"]), d["placements"]["meta_description"].update(status="found"))})
+        lines = self.lines(base, other)
+        self.assertIn("Search: not compared: spelling variants differ", lines)
+        self.assertFalse([l for l in lines if l.startswith("Search ") and "->" in l])
+        same = self.variant(SEARCH, "search-vc", **{"search.json": lambda d: d.update(variants=[" Boat  LAMPS"])})
+        again = self.variant(SEARCH, "search-vd", **{"search.json": lambda d: d.update(variants=["boat lamps", "Boat lamps"])})
+        self.assertEqual(len([l for l in self.lines(same, again) if l.startswith("Search ") and "->" in l]), 6)
+
     def test_facts_drift_lists_the_changed_h1(self):
         lines = self.lines(BEFORE, AFTER)
         self.assertIn('H1: "Lanterns made by hand" -> "Handmade lanterns for your boat"', lines)

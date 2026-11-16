@@ -2246,5 +2246,25 @@ class RouterTests(unittest.TestCase):
                 self.assertNotIn(phrase, text, f"{path.relative_to(ROOT)}: {phrase}")
 
 
+REFS = ROOT / "skills/cro/references"
+
+
+class RoundFixTests(unittest.TestCase):
+    def test_form_tests_write_to_separate_folders(self):
+        form = (REFS / "form.md").read_text(encoding="utf-8")
+        for folder in ("read-only", "simulated-success", "simulated-error", "consent"):
+            self.assertEqual(form.count('--out "<folder>/%s"' % folder), 1, folder)
+        self.assertIn("simulated-success/form.json", [l for l in form.splitlines() if l.startswith("5.")][0])
+        seen = {}
+        for path in sorted(REFS.glob("*.md")):
+            for line in path.read_text(encoding="utf-8").splitlines():
+                if "form_check.py" in line or "--simulate" in line:
+                    outs = re.findall(r'--out "[^"]*"', line)
+                    self.assertTrue(outs or "--simulate" not in line, "%s: a form_check run without its own --out" % path.name)
+                    for out in outs:
+                        self.assertNotIn(out, seen, "%s and %s run form_check on the same %s" % (seen.get(out), path.name, out))
+                        seen[out] = path.name
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -357,6 +357,32 @@ class SiteCheckTests(unittest.TestCase):
         out = self.site({"/index.html": page_html(CLEAN_DECK)}, files)[1]
         self.assertIn("SITEMAP", rules_in(out), out)  # a second level is not read
 
+    def test_a_missing_deck_is_skipped_not_passed(self):
+        code, out = self.site({"/index.html": page_html(CLEAN_DECK)})
+        self.assertEqual(code, 0, out)
+        self.assertRegex(out, r"(?m)^SKIPPED /index\.html PARITY: no --deck")
+        self.assertRegex(out, r"(?m)^SKIPPED /index\.html FAQ_SCHEMA: no --deck")
+
+    def test_a_json_ld_block_that_is_not_json_fails_faq_schema(self):
+        page = page_html(CLEAN_DECK, body_extra='<script type="application/ld+json">{"@type": </script>')
+        out = self.site({"/index.html": page}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")[1]
+        self.assertRegex(out, r"(?m)^FAIL /index\.html FAQ_SCHEMA: a JSON-LD block is not valid JSON")
+
+    def test_a_sitemap_index_that_lists_a_missing_file_fails(self):
+        files = {"sitemap.xml": None, "sitemap-index.xml": sitemap_index([ORIGIN + "/sitemap-gone.xml"])}
+        out = self.site({"/index.html": page_html(CLEAN_DECK)}, files)[1]
+        self.assertRegex(out, r"(?m)^FAIL sitemap-index\.xml SITEMAP: sitemap-index\.xml lists .*sitemap-gone\.xml, which is not in the dist")
+
+    def test_a_sitemap_index_inside_a_sitemap_index_warns(self):
+        files = {"sitemap.xml": None, "sitemap-index.xml": sitemap_index([ORIGIN + "/sitemap-pages.xml"]),
+                 "sitemap-pages.xml": sitemap_index([ORIGIN + "/sitemap-deeper.xml"])}
+        out = self.site({"/index.html": page_html(CLEAN_DECK)}, files)[1]
+        self.assertRegex(out, r"(?m)^WARN sitemap-pages\.xml SITEMAP: a sitemap index inside a sitemap index")
+
+    def test_a_sitemap_that_is_not_xml_fails(self):
+        out = self.site({"/index.html": page_html(CLEAN_DECK)}, {"sitemap.xml": "<urlset><url>"})[1]
+        self.assertRegex(out, r"(?m)^FAIL sitemap\.xml SITEMAP: sitemap\.xml is not valid XML")
+
     def test_links_to_a_missing_local_file_fail_and_other_links_do_not(self):
         extra = ('<a href="/missing.html">Gone</a><a href="mailto:a@example.test">Mail</a><a href="https://elsewhere.test/x">Out</a>'
                  '<a href="#top">Top</a><a href="/index.html#form">Home</a><a href="tel:+000">Call</a>')

@@ -188,6 +188,14 @@ class FormConsentTests(unittest.TestCase):
             self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SEND") and "GET" in d], (page, run.lines))
             self.assertEqual(run.data["network"]["consented"], 0, page)
 
+    def test_a_tracking_post_fired_by_the_click_does_not_take_the_single_send(self):
+        run = self.consent("form-clickhook.html")
+        self.assertEqual(run.code, 0, (run.err, run.lines))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead"])
+        self.assertTrue(run.logged("/api/event", "blocked", "consent:"), run.log)
+        self.assertEqual(run.data["network"]["consented"], 1)
+        self.assertEqual(sum(1 for e in run.log if e["outcome"] == "consented" and e["url"].endswith("/lead")), 1)
+
     def test_a_307_after_the_consented_post_is_a_fail(self):
         run = self.consent("form-307.html")
         self.assertEqual(run.code, 1, (run.err, run.lines))

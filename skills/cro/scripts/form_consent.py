@@ -114,6 +114,7 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
             print("not sent: the fill does not satisfy %s (%s)" % (p["field"], p["message"]))
         add_issue(entry, "SKIPPED", "SEND", "the fill does not satisfy %s; nothing was sent" % ", ".join(p["field"] for p in problems))
         return False
+    sender.allow_post_marker = args.email  # only a request that carries the typed address can take the send
     sender.allow_post_host = host  # open the consent now, for the press alone
     mark = len(sender.entries)
 
@@ -150,6 +151,8 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         if not posts:
             add_issue(entry, "SKIPPED", "SEND", "the press sent nothing to %s; nothing was sent. The form may need a field this test "
                       "data does not fill" % host)
+        elif posts[0]["rule"] == "consent:no-marker":
+            add_issue(entry, "SKIPPED", "SEND", "no request to %s carried the address typed into the form; nothing was sent" % host)
         elif posts[0]["rule"] == "consent:used":
             add_issue(entry, "SKIPPED", "SEND", "the single send was already used before this request; nothing more was sent")
         elif host_of(posts[0]["url"]) == host:

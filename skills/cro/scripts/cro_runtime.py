@@ -4,7 +4,7 @@ import os
 import re
 import stat
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import unquote_plus, urlsplit
 
 PLAYWRIGHT_VERSION = "1.62.0"
 KEY_ENV = "NCA_PAGESPEED_KEY"
@@ -155,6 +155,8 @@ class Recorder:
 
     With allow_post_host, the first non-GET request to that host continues and is logged "consented";
     any later one to it is aborted with rule "consent:used". Every other non-GET request is aborted.
+    With allow_post_marker, only a request whose body carries that text (percent-decoded) can take the send; any other non-GET
+    request to that host is aborted with rule "consent:no-marker" and does not use the consent up.
     """
 
     def __init__(self, allow_post_host: str | None = None):
@@ -162,7 +164,19 @@ class Recorder:
         self.by_request = {}
         self.errors = []
         self.allow_post_host = allow_post_host.lower() if allow_post_host else None
+        self.allow_post_marker = None
         self.consent_used = False
+
+    def carries_marker(self, request):
+        if not self.allow_post_marker:
+            return True
+        try:
+            raw = request.post_data_buffer or b""
+        except Exception:
+            raw = b""
+        text = raw.decode("utf-8", "replace").lower()
+        marker = self.allow_post_marker.lower()
+        return marker in text or marker in unquote_plus(text)
 
     def entry(self, request):
         found = self.by_request.get(request)
@@ -196,12 +210,15 @@ class Recorder:
         rule = is_blocked(request.url)
         if rule is None and request.method not in ALLOWED_METHODS:
             if self.allow_post_host and (urlsplit(request.url).hostname or "").lower() == self.allow_post_host:
-                if not self.consent_used:
+                if self.consent_used:
+                    rule = "consent:used"
+                elif not self.carries_marker(request):
+                    rule = "consent:no-marker"
+                else:
                     self.consent_used = True
                     self.entry(request)["outcome"] = "consented"
                     route.continue_()
                     return
-                rule = "consent:used"
             else:
                 rule = "method:" + request.method
         if rule is None:

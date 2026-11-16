@@ -733,6 +733,12 @@ class AuditSlice2Tests(unittest.TestCase):
         self.assertIn("form-and-signup-audit.md", flat(audit_step(8)))
         self.assertIn("test-design.md", flat(audit()))
 
+    def test_test_design_states_the_low_traffic_rule(self):
+        t = flat((ROOT / "skills/conversion-page-audit/references/test-design.md").read_text(encoding="utf-8"))
+        for s in ('Route confirmed defects to "Fix now"', "name the qualitative alternative",
+                  "with no traffic context attached"):
+            self.assertIn(s, t)
+
     def test_sheet_carries_plugin_version_and_the_folder_lists_facts(self):
         self.assertIn('"plugin_version": "%s"' % VERSION, audit_step(11))
         self.assertIn(".claude-plugin/plugin.json", flat(audit_step(11)))

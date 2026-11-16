@@ -1772,6 +1772,10 @@ class CheckTests(unittest.TestCase):
         self.assertIn("a noindex sent as an `X-Robots-Tag` header", self.step(10))
 
 
+    def test_step_2_says_a_live_run_fetches_every_same_origin_link_in_full(self):
+        self.assertIn("`LINK` check on a live run fetches every same-origin link in full", self.step(2))
+
+
 class FormTests(unittest.TestCase):
     def setUp(self):
         self.raw = read_or_empty("skills", "cro", "references", "form.md")

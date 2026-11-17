@@ -39,6 +39,15 @@ LANGUAGE_HOME = re.compile(r"/[a-z]{2}(-[a-z]{2})?/?", re.I)
 BLOCKS = {"p", "div", "section", "article", "aside", "header", "main", "ul", "ol", "li", "blockquote", "figure",
           "table", "tr", "td", "th", "form", "hr"} | HEADINGS
 SENTENCE_END = re.compile(r"[.!?](?=\s|$)")
+CLOSED_SENTENCE = re.compile(r"[.!?][\"'\u2019\u201d\u00bb)\]]*$")
+WORD = re.compile(r"[^\W_]+")
+
+
+def _is_first_sentence(own, has_time):
+    """A date, byline or rating line is not the first sentence: it holds a time element, or it ends with no
+    end mark and runs under twelve words."""
+    text = " ".join(" ".join(own).split())
+    return not has_time and (bool(CLOSED_SENTENCE.search(text)) or len(WORD.findall(text)) >= 12)
 
 
 def normalise(text: str) -> str:
@@ -74,15 +83,21 @@ class _Text(HTMLParser):
         self.h1_index = None
         self.h1_state = "none"  # none, inside, after, done
         self.after = []
-        self.after_open = True  # the first block with text of its own closes the first sentence
+        self.after_open = True  # the first block that reads as a sentence closes the first sentence
+        self.fallback = []  # the first block with text of its own, used when none reads as a sentence
+        self.own = []  # the text of the block outside any link or button
+        self.has_time = False
         self.block = []  # text of the block being read after the h1
         self.block_own = False  # it holds text outside any link or button
 
     def _block_edge(self, tag):
         if tag in BLOCKS and self.h1_state == "after" and self.after_open:
             if self.block_own:
-                self.after, self.after_open = self.block, False
-            self.block, self.block_own = [], False
+                if _is_first_sentence(self.own, self.has_time):
+                    self.after, self.after_open = self.block, False
+                elif not self.fallback:
+                    self.fallback = self.block
+            self.block, self.block_own, self.own, self.has_time = [], False, [], False
 
     def handle_starttag(self, tag, attrs):
         self._block_edge(tag)
@@ -93,6 +108,8 @@ class _Text(HTMLParser):
             return
         if self.h1_state == "after" and tag in HEADINGS:
             self.h1_state = "done"
+        if tag == "time" and self.h1_state == "after":
+            self.has_time = True
         if tag in VOID:
             return
         if tag == "h1" and self.h1_state == "none":
@@ -123,7 +140,9 @@ class _Text(HTMLParser):
         self.nodes.append(data)
         if self.h1_state == "after" and self.after_open and "button" not in self.stack:
             self.block.append(data)
-            self.block_own = self.block_own or (bool(data.strip()) and "a" not in self.stack)
+            if data.strip() and "a" not in self.stack:
+                self.block_own = True
+                self.own.append(data)
 
 
 def _parse(html, skip, keep_footer=False):
@@ -144,7 +163,8 @@ def page_text(html: str) -> str:
 
 def first_sentence_after_h1(html: str):
     parser = _parse(html, SKIP)
-    text = " ".join(" ".join(parser.after or (parser.block if parser.block_own else [])).split())
+    last = parser.block if parser.block_own and _is_first_sentence(parser.own, parser.has_time) else []
+    text = " ".join(" ".join(parser.after or last or parser.fallback or (parser.block if parser.block_own else [])).split())
     if not text:
         return None
     end = SENTENCE_END.search(text)

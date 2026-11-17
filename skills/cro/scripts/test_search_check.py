@@ -294,7 +294,7 @@ class RulingsTest(unittest.TestCase):
 
     def test_the_first_sentence_keeps_the_links_inside_its_own_block(self):
         cases = [
-            ("<p>Family workshop</p><a href='/book'>Book bike repair now</a><p>We fix things.</p>", "Family workshop", "missing"),
+            ("<p>Family workshop</p><a href='/book'>Book bike repair now</a><p>We fix things.</p>", "We fix things.", "missing"),
             ("<p>Family workshop.</p><a href='/book'>Book bike repair now</a>", "Family workshop.", "missing"),
             ("<p>We do <a href=\"/bike-repair\">bike repair</a> the same day.</p><a href='/book'>Book now</a>",
              "We do bike repair the same day.", "found"),
@@ -327,7 +327,7 @@ class RulingsTest(unittest.TestCase):
         for stop in ("", "."):
             result = check_html("<title>T</title>" + lede % stop)
             self.assertEqual(result["placements"]["first_sentence"]["status"], "missing")
-        self.assertEqual(search_check.first_sentence_after_h1(lede % ""), "Family workshop")
+        self.assertEqual(search_check.first_sentence_after_h1(lede % ""), "We fix things.")
         inline = "<h1>H</h1><div>We fix <a href='/b'>bike repair</a> fast <button>Book</button></div>"
         self.assertEqual(search_check.first_sentence_after_h1(inline), "We fix bike repair fast")
 
@@ -364,6 +364,64 @@ class PageTextTests(unittest.TestCase):
     def test_page_text_reads_a_footer_inside_a_section_too(self):
         html = "<section><p>Body.</p><footer>Card footer</footer></section><footer role='contentinfo'>Page footer</footer>"
         self.assertEqual(search_check.page_text(html), "Body. Card footer Page footer")
+
+
+class FirstSentenceMetaLinesTest(unittest.TestCase):
+    PUMP = "Pump maintenance keeps your plant running all year."
+
+    def _first(self, between):
+        html = "<h1>Pump maintenance guide</h1>%s<p>%s</p><h2>Prices</h2>" % (between, self.PUMP)
+        return search_check.first_sentence_after_h1(html), check_html(html, keyword="pump maintenance")
+
+    def _skipped(self, between):
+        text, result = self._first(between)
+        self.assertEqual(text, self.PUMP)
+        self.assertEqual(result["placements"]["first_sentence"]["status"], "found")
+
+    def test_a_date_div_under_the_h1_is_skipped(self):
+        self._skipped('<div class="meta">12 November 2026</div>')
+
+    def test_a_byline_under_the_h1_is_skipped(self):
+        self._skipped("<p>By the editorial team</p>")
+
+    def test_a_time_element_block_under_the_h1_is_skipped(self):
+        self._skipped('<div><time datetime="2026-11-12">12 Nov. 2026</time></div>')
+
+    def test_a_rating_line_under_the_h1_is_skipped(self):
+        self._skipped("<div><span>4.8 out of 5 stars</span></div>")
+
+    def test_a_read_time_line_under_the_h1_is_skipped(self):
+        self._skipped("<p>5 min read</p>")
+
+    def test_a_combined_meta_line_under_the_h1_is_skipped(self):
+        self._skipped("<p>By the editorial team \u00b7 12 November 2026 \u00b7 5 min read</p>")
+
+    def test_a_time_element_block_with_a_sentence_is_still_skipped(self):
+        self._skipped('<p>Posted <time datetime="2026-11-12">today</time>. Thanks for reading.</p>')
+
+    def test_a_short_sentence_under_the_h1_is_the_first_sentence(self):
+        html = "<h1>Pump maintenance</h1><p>We fix pumps.</p><p>%s</p>" % self.PUMP
+        self.assertEqual(search_check.first_sentence_after_h1(html), "We fix pumps.")
+
+    def test_a_closing_quote_after_the_end_mark_still_ends_a_sentence(self):
+        html = '<h1>Pump maintenance</h1><p>\u201cWe fix pumps.\u201d</p><p>%s</p>' % self.PUMP
+        self.assertEqual(search_check.first_sentence_after_h1(html), "\u201cWe fix pumps.\u201d")
+
+    def test_twelve_words_without_an_end_mark_is_the_first_sentence(self):
+        twelve = "We service industrial pumps for plants across the region with fast response"
+        self.assertEqual(len(twelve.split()), 12)
+        html = "<h1>Pump maintenance</h1><p>%s</p><p>%s</p>" % (twelve, self.PUMP)
+        self.assertEqual(search_check.first_sentence_after_h1(html), twelve)
+
+    def test_eleven_words_without_an_end_mark_is_skipped(self):
+        eleven = "We service industrial pumps for plants across the region with fast"
+        self.assertEqual(len(eleven.split()), 11)
+        html = "<h1>Pump maintenance</h1><p>%s</p><p>%s</p>" % (eleven, self.PUMP)
+        self.assertEqual(search_check.first_sentence_after_h1(html), self.PUMP)
+
+    def test_a_meta_line_alone_is_still_read_when_nothing_follows(self):
+        html = "<h1>Pump maintenance</h1><p>Book a slot</p><h2>Prices</h2>"
+        self.assertEqual(search_check.first_sentence_after_h1(html), "Book a slot")
 
 
 if __name__ == "__main__":

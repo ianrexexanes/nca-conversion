@@ -68,7 +68,12 @@ class _Chain(BaseHTTPRequestHandler):
         port = self.server.server_address[1]
         moves = {"/r1": "/r2", "/r2": "http://127.0.0.1:%d/final" % port, "/loop": "/loop",
                  "/ftp": "ftp://127.0.0.1:%d/x" % _Chain.ftp_port, "/file": "file:///etc/hostname", "/space": "/thank you"}
-        if self.path in moves:
+        odd = {"/m300": 300, "/m305": 305}  # 3xx answers that urllib hands back as an HTTPError
+        if self.path in odd:
+            self.send_response(odd[self.path])
+            self.send_header("Location", "http://[::1")
+            self.end_headers()
+        elif self.path in moves:
             self.send_response(301)
             self.send_header("Location", moves[self.path])
             self.end_headers()
@@ -135,6 +140,24 @@ class FollowTests(unittest.TestCase):
         self.assertEqual(code, 1, out)
         self.assertRegex(out, r"FAIL %s\S* REDIRECT_TARGET" % re.escape(self.base + "/space"))
         self.assertRegex(out, r"FAIL %s\S* REDIRECT_HTTPS" % re.escape(self.base + "/r1"))
+
+    def test_a_300_or_305_with_a_location_that_cannot_be_parsed_ends_the_chain_there(self):
+        for path, status in (("/m300", 300), ("/m305", 305)):
+            try:
+                hops = redirect_check.follow(self.base + path)
+            except Exception as error:  # a crash is a failed assertion here
+                self.fail("follow raised %r on %s" % (error, path))
+            self.assertEqual(hops, [(self.base + path, status)])
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        cases = Path(tmp.name) / "cases.json"
+        cases.write_text(json.dumps([{"from": self.base + "/m300", "to": self.base + "/final", "status": 200},
+                                     {"from": self.base + "/m305", "to": self.base + "/final", "status": 200}]), encoding="utf-8")
+        code, out = run("--cases", str(cases))
+        self.assertNotIn("Traceback", out)
+        self.assertEqual(code, 1, out)
+        self.assertRegex(out, r"FAIL %s/m300 REDIRECT_STATUS" % re.escape(self.base))
+        self.assertRegex(out, r"FAIL %s/m305 REDIRECT_STATUS" % re.escape(self.base))
 
     def test_an_unreachable_host_ends_the_chain_with_status_0(self):
         self.assertEqual(redirect_check.follow("http://127.0.0.1:1/x"), [("http://127.0.0.1:1/x", 0)])

@@ -33,7 +33,7 @@ _OPENER = urllib.request.build_opener(_NoRedirect)
 
 def follow(url: str, max_hops: int = MAX_REDIRECTS) -> list:
     """[(url, status)] for each hop. It stops at the first answer that is not a redirect, or after the redirect past
-    `max_hops` (so judge() can see the limit was broken); status 0 means no answer."""
+    `max_hops` (so judge() can see the limit was broken), or at a hop whose Location cannot be parsed; status 0 means no answer."""
     hops = []
     while True:
         if urllib.parse.urlparse(url).scheme not in ("http", "https"):  # never open ftp:, file: or the like
@@ -53,7 +53,10 @@ def follow(url: str, max_hops: int = MAX_REDIRECTS) -> list:
         redirects = sum(1 for _, s in hops if 300 <= s < 400)
         if not (300 <= status < 400 and location) or redirects > max_hops:
             return hops
-        url = urllib.parse.urljoin(url, location)
+        try:
+            url = urllib.parse.urljoin(url, location)
+        except ValueError:  # a Location that cannot be parsed ends the chain at the hop that answered
+            return hops
 
 
 def judge(case: dict, hops: list) -> list:

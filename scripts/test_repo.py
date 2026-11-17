@@ -1802,8 +1802,7 @@ class CheckTests(unittest.TestCase):
         step = next(body for n, body in self.steps() if n == 5)
         sentence = ("A FAIL is fixed in the page. Two kinds are confirmed in an ordinary browser first: a `PAGE_ERROR`, because this run "
                     "blocks tag hosts and every non-GET request, which can itself make a page script fail, and a `CONTRAST` FAIL, "
-                    "because the pass reads a background from the element's own ancestors and misses one drawn by a sibling layer. "
-                    "A WARN is fixed")
+                    "because the pass reads a background from the element's own ancestors and misses one drawn by a sibling layer.")
         self.assertIn(sentence, step)
 
     def test_it_cites_the_pages_the_noindex_rule_rests_on(self):
@@ -2691,6 +2690,13 @@ class ReferenceTextRound3Tests(unittest.TestCase):
         step = self.ref("check.md", 5)
         self.assertIn("A button carries the label when its text matches it once every character that is not a letter or a digit is "
                       "dropped from both ends, so \"Book my pump check \u2192\" is the label for \"Book my pump check\".", step)
+
+    def test_a_page_error_is_a_warn_only_for_a_fetch_the_guard_blocked(self):
+        step = self.ref("check.md", 5)
+        self.assertIn("A `PAGE_ERROR` is a `WARN` only when all three hold: its text holds `Failed to fetch`, the guard blocked at least "
+                      "one request the page made with `fetch` on that view, and no `fetch` request on that view failed on its own. "
+                      "The row says how many `fetch` requests the guard blocked and to confirm in an ordinary browser; every other "
+                      "`PAGE_ERROR` is a `FAIL`.", step)
 
 
 if __name__ == "__main__":

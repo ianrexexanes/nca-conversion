@@ -18,6 +18,7 @@ browser.close() alone.
 import argparse
 import re
 import sys
+import time
 from datetime import date
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -33,6 +34,7 @@ EMAIL = re.compile(r"[^@\s]+@[^@\s.]+(\.[^@\s.]+)+")
 DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 NON_GET = ("GET", "HEAD", "OPTIONS")
 WAIT_MS = 30000
+POST_WAIT_MS = 10000
 GIVE_UP_MS = 2000
 LOOPBACK = ("127.0.0.1", "::1", "localhost")
 
@@ -151,7 +153,24 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         sent = any(e["outcome"] == "consented" for e in posts)
         return not sent and any(e["outcome"] == "blocked" for e in posts) and elapsed >= GIVE_UP_MS
 
+    pressed_at = time.monotonic()
+    waited = lambda: (time.monotonic() - pressed_at) * 1000  # noqa: E731
+    posts = lambda: [e for e in sender.entries[mark:] if e["method"] not in NON_GET]  # noqa: E731
     entry["submit"], text = press(page, info["i"], info, WAIT_MS, stop)
+    submit = entry["submit"]
+    # wait for the form's host to answer before anything is judged: first for a late request, then for its answer
+    pressed_back = waited()
+    while submit["state"] != "navigated" and not posts() and waited() - pressed_back < POST_WAIT_MS:
+        page.wait_for_timeout(100)
+    while any(e["outcome"] == "consented" and e["status"] is None for e in posts()) and waited() < WAIT_MS:
+        page.wait_for_timeout(100)
+    sender.allow_post_host = None  # the consent is closed: a later request of the page is aborted like any other
+    if submit["state"] != "navigated" and any(e["outcome"] == "consented" and e["status"] is not None for e in posts()):
+        now = form_check.safe_eval(page, form_check.SNAPSHOT, info["i"], None)
+        if now is not None and now["marked"]:
+            submit["state"], submit["time_ms"] = form_check.wait_for_state(
+                page, info["i"], None, pressed_at, waited() + 3000, resume=((now["form"], now["regions"]), submit["time_ms"]))
+            text = form_check.read_outcome(page, info["i"], submit)
     entry["thank_you"]["text"] = text
     if entry["submit"]["state"] == "navigated":
         entry["thank_you"]["url"] = page.url
@@ -199,7 +218,10 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
                   "page's script sending the form there; check that the test lead arrived before any rerun" % (sent[0]["url"], action))
         return True
     status = sent[0]["status"]
-    if status is not None and status >= 400:
+    if status is None:
+        add_issue(entry, "WARN", "SEND", "the form's host had not answered %d seconds after the press, so whether the test lead arrived "
+                  "is not known; check before any rerun" % round(waited() / 1000))
+    elif status >= 400:
         add_issue(entry, "FAIL", "SEND", "the action host %s answered HTTP %d" % (host, status))
     return ok
 

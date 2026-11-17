@@ -375,6 +375,36 @@ class FormConsentTests(unittest.TestCase):
         first_post = next(i for i, (m, _p, _a, _b) in enumerate(run.seen) if m == "POST")
         self.assertEqual([m for m, _p, _a, _b in run.seen[:first_post]], ["GET"] * first_post)
 
+    def test_a_slow_answer_is_waited_for(self):
+        run = self.consent("form-slow.html")
+        self.assertEqual(run.code, 0, (run.err, run.lines))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead-slow"])
+        self.assertEqual([e["status"] for e in run.log if e["outcome"] == "consented"], [200])
+        self.assertIn("Thanks", run.form["submit"]["status_text"])
+        self.assertNotIn("Sending", run.form["submit"]["status_text"])
+        self.assertGreaterEqual(run.form["submit"]["time_ms"], 1500)
+
+    def test_a_late_post_is_waited_for(self):
+        run = self.consent("form-late.html")
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead"])
+
+    def test_a_post_after_the_wait_is_not_sent(self):
+        with mock.patch.object(form_consent, "POST_WAIT_MS", 400):
+            run = self.in_process(FakeTerminal(False), page="form-later.html", loopback=form_consent.LOOPBACK)
+        self.assertEqual(run.code, 3, run.out + run.err)
+        self.assertEqual(run.posts(), [])
+        self.assertIn("nothing was sent", run.out)
+        self.assertEqual(len(run.logged("/lead", "blocked", "method:")), 1, run.log)
+        self.assertFalse([e for e in run.log if e["outcome"] == "consented"], run.log)
+
+    def test_an_unanswered_send_is_a_warning(self):
+        with mock.patch.object(form_consent, "WAIT_MS", 1500):
+            run = self.in_process(FakeTerminal(False), page="form-slower.html", loopback=form_consent.LOOPBACK)
+        self.assertEqual(run.code, 0, run.out + run.err)
+        self.assertEqual([p for _m, p in run.posts()], ["/lead-slower"])
+        self.assertEqual(len([d for lv, _f, r, d in run.lines if (lv, r) == ("WARN", "SEND") and "had not answered" in d]), 1, run.lines)
+
 
 @SKIP
 class FormConsentLeakPaths(GuardLeakPathsMixin, unittest.TestCase):

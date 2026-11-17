@@ -182,6 +182,14 @@ class FormCheckTests(unittest.TestCase):
         self.assertEqual(run.paths().count("/lead"), 0)
         self.assertEqual(run.posts(), [])
 
+    def test_the_simulated_state_is_the_one_after_the_reply(self):
+        run = self.run_page("form-slow.html", "--simulate", "success")
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        text = run.form["submit"]["status_text"]
+        self.assertIn("Thanks", text)
+        self.assertNotIn("Sending", text)
+        self.assertEqual(run.posts(), [])
+
     def test_simulate_needs_one_form(self):
         run = self.run_page("form-two.html", "--simulate", "success")
         self.assertEqual(run.code, 3, run.err)

@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -17,6 +18,7 @@ FIXTURES = HERE / "fixtures"
 TYPES = {".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript"}
 CORS = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
         "Access-Control-Allow-Headers": "content-type"}
+DELAYS = {"/lead-slow": 1.5, "/lead-slower": 4.0}  # POST paths that answer late, in seconds
 LINE = re.compile(r"^(FAIL|WARN|SKIPPED) (form\d+) ([A-Z][A-Z0-9_]*)\b:?\s?(.*)$")
 
 
@@ -35,6 +37,12 @@ class FormServer(BaseHTTPRequestHandler):
             self._send(204, b"", None, CORS)
         elif self.command == "POST" and path in ("/lead", "/lead-cors", "/lead-twice"):
             self._send(200, b'{"ok": true}', "application/json", CORS)
+        elif self.command == "POST" and path in DELAYS:
+            time.sleep(DELAYS[path])
+            try:
+                self._send(200, b'{"ok": true}', "application/json", CORS)
+            except OSError:  # the browser closed while the answer was pending
+                pass
         elif self.command == "POST" and path in ("/sink", "/api/event"):
             self._send(200, b"{}", "application/json", CORS)
         elif self.command == "POST" and path == "/lead-prg":

@@ -40,6 +40,7 @@ import cro_runtime  # noqa: E402
 DESKTOP = (1440, 900, False)
 PHONE = (390, 844, True)
 MAX_FIELDS = 4
+SETTLE_MS = 300
 SIM_LINE = "Test submission, simulated by form_check, nothing is sent"
 SIM_EMAIL = "test.person@example.com"
 FIELD_KEYS = ("name", "id", "label", "type", "required", "autocomplete", "inputmode", "visible")
@@ -427,19 +428,27 @@ def safe_eval(page, script, arg, default):
         return default
 
 
-def wait_for_state(page, i, before, started, limit_ms, stop=None):
+def wait_for_state(page, i, before, started, limit_ms, stop=None, resume=None):
     """After a press: "navigated" when the document is replaced, "changed" when the form's text or a region's text changes
-    against the snapshot taken before the press, else "none" at the limit. Returns (state, milliseconds from the press to the
-    state). stop(elapsed_ms) ends the wait early."""
-    state = "none"
+    against the snapshot taken before the press, else "none" at the limit. A change is waited out: the wait goes on until the
+    text has stayed the same for SETTLE_MS, so a button that says "Sending" is not the answer. Returns (state, milliseconds
+    from the press to the state, or for "changed" to the last change seen). stop(elapsed_ms) ends the wait early.
+    resume=(snapshot pair, ms of the last change) goes on from a state that has changed already."""
+    state, seen, changed, quiet = "none", None, 0.0, 0.0
+    if resume:
+        state, (seen, changed), quiet = "changed", resume, (time.monotonic() - started) * 1000
     while True:
         elapsed = (time.monotonic() - started) * 1000
         now = safe_eval(page, SNAPSHOT, i, None)
         if now is not None and not now["marked"]:
             state = "navigated"
             break
-        if now is not None and before is not None and (now["form"], now["regions"]) != (before["form"], before["regions"]):
+        pair = (now["form"], now["regions"]) if now is not None else None
+        if state == "none" and pair is not None and before is not None and pair != (before["form"], before["regions"]):
             state = "changed"
+        if state == "changed" and pair is not None and pair != seen:
+            seen, changed, quiet = pair, elapsed, elapsed
+        if state == "changed" and elapsed - quiet >= SETTLE_MS:
             break
         if elapsed >= limit_ms or (stop is not None and stop(elapsed)):
             break
@@ -449,7 +458,16 @@ def wait_for_state(page, i, before, started, limit_ms, stop=None):
             page.wait_for_load_state("domcontentloaded", timeout=5000)
         except PlaywrightError:
             pass
-    return state, int((time.monotonic() - started) * 1000)
+    return state, int(changed if state == "changed" else (time.monotonic() - started) * 1000)
+
+
+def read_outcome(page, i, submit):
+    """Read the regions and the status text as the page shows them now into submit. Returns the text."""
+    if submit["state"] != "navigated":
+        submit["regions"] = safe_eval(page, REGIONS, i, submit["regions"])
+    shown = [r["text"] for r in submit["regions"] if r["text"]]
+    submit["status_text"] = shown[0] if shown and submit["state"] != "navigated" else safe_eval(page, PAGE_TEXT, None, None)
+    return submit["status_text"]
 
 
 def press(page, i, info, limit_ms, stop=None):
@@ -466,11 +484,7 @@ def press(page, i, info, limit_ms, stop=None):
     if submit["pressed"]:
         submit["state"], submit["time_ms"] = wait_for_state(page, i, before, started, limit_ms, stop)
         submit["validation"] = safe_eval(page, VALIDATION, i, [])
-        if submit["state"] != "navigated":
-            submit["regions"] = safe_eval(page, REGIONS, i, submit["regions"])
-        shown = [r["text"] for r in submit["regions"] if r["text"]]
-        text = shown[0] if shown and submit["state"] != "navigated" else safe_eval(page, PAGE_TEXT, None, None)
-        submit["status_text"] = text
+        text = read_outcome(page, i, submit)
     return submit, text
 
 

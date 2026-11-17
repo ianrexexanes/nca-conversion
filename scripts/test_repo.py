@@ -1918,6 +1918,11 @@ class FormTests(unittest.TestCase):
                       "the form's host carries it, such as a form with no email field or one that sends the address in another "
                       "shape, it prints `SKIPPED ... SEND` with exit 3 and sends nothing.", self.text)
 
+    def test_it_says_the_send_waits_for_the_hosts_answer_and_what_an_unanswered_one_prints(self):
+        self.assertIn("check that the test lead arrived before any rerun. It waits for the form's host to answer before it judges the send. "
+                      "When the host has not answered by the end of the wait, it prints `WARN ... SEND` with exit 0: whether the test lead "
+                      "arrived is not known, so check before any rerun.", self.text)
+
     def test_the_consent_script_docstring_does_not_say_always_asks(self):
         doc = flat(read("skills/cro/scripts/form_consent.py").split('"""')[1])
         self.assertIn("The yes in the chat comes first, as `form.md` step 7 says", doc)

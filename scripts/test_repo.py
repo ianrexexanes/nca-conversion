@@ -2648,7 +2648,10 @@ class ReferenceTextRound3Tests(unittest.TestCase):
     def test_the_simulated_success_names_where_the_status_text_came_from(self):
         step = self.ref("form.md", 3)
         self.assertIn("Read `submit.state`, `submit.status_text`, `submit.status_source` and the picture", step)
-        self.assertIn("`status_source` is `region`, `form`, `page` or `none`; `none` with a null `status_text` means nothing on the page changed.", step)
+        self.assertIn("`status_source` is `region`, `form`, `page` or `none`. `page` is the page's own text, read after a navigation or "
+                      "when the form is gone or no longer shown. `none` with a null `status_text` means the form's text did not change, "
+                      "the form stayed in view and no status region showed text; a message that appears elsewhere on the page while "
+                      "the form stays as it was is not read.", step)
 
     def test_an_unwritable_text_folder_stops_the_run_before_any_row(self):
         step = self.ref("check.md", 1)

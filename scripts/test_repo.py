@@ -2655,6 +2655,16 @@ class ReferenceTextRound3Tests(unittest.TestCase):
         self.assertIn("that one run is the site gate too. A text folder that cannot be written stops the run with exit 2 "
                       "before any row is worked out.", step)
 
+    def test_the_text_export_starts_with_the_title_and_the_meta_description(self):
+        step = self.ref("check.md", 1)
+        self.assertIn("Each file starts with the title on line 1 and the meta description on line 2, an empty line when the page "
+                      "has none, then the page text.", step)
+
+    def test_placeholder_and_forbidden_read_the_title_and_the_meta_description(self):
+        step = self.ref("check.md", 2)
+        self.assertIn("`PLACEHOLDER` and `FORBIDDEN` read the title, the meta description and the page text, and the row says which "
+                      "of the three held the word.", step)
+
 
 if __name__ == "__main__":
     unittest.main()

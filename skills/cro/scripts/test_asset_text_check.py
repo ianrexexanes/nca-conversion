@@ -322,6 +322,21 @@ class AssetTextCheckTests(unittest.TestCase):
             block = exif(sub=[(0x9286, 7, b"UNICODE\x00" + "lorem TODO".encode(wrong))], big=big)
             self.assertIn("TODO", " ".join(exif_texts(block)), big)
 
+    def exif_pointer_block(self, count=None):
+        base = tiff_base(2)
+        sub = struct.pack("<H", 1) + struct.pack("<HHII", 0x9286, 7, 13, base + 18 + 0) + struct.pack("<I", 0)
+        return tiff([(0x8769, 4, 1, base), (0x010E, 2, 6, base + 18 + 13)], sub + b"ASCII\x00\x00\x00MARK\x00" + b"txt11\x00", count=count)
+
+    def test_a_directory_named_by_a_pointer_is_read_though_the_first_count_runs_past_the_block(self):
+        text = " ".join(exif_texts(self.exif_pointer_block(count=5000)))
+        self.assertIn("txt11", text)
+        self.assertIn("MARK", text)
+
+    def test_the_same_block_with_a_true_count_gives_both(self):
+        text = " ".join(exif_texts(self.exif_pointer_block()))
+        self.assertIn("txt11", text)
+        self.assertIn("MARK", text)
+
     def test_a_placeholder_beside_a_bad_binary_entry_is_a_fail_row(self):
         base = tiff_base(2)
         block = tiff([(0x010E, 2, 17, base), (0x927C, 7, 1000, 99999)], b"lorem ipsum TODO\x00")

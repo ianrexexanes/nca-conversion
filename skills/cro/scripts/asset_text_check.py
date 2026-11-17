@@ -68,15 +68,15 @@ EXIF_ASCII_PREFIX = b"Exif\x00\x00"
 EXIF_POINTER = 0x8769
 USER_COMMENT = 0x9286
 XP_TAGS = range(0x9C9B, 0x9CA0)  # XPTitle, XPComment, XPAuthor, XPKeywords, XPSubject: BYTE, UTF-16LE
-TIFF_SIZES = {1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 7: 1, 9: 4, 10: 8}
 
 
 def exif_text(block):
     """The text fields of an EXIF block: ASCII-type entries of the first directory and of the Exif sub-directory (the first pointer
     of the first directory, followed once), UserComment by its character code (UNICODE in both byte orders) and the Windows XP tags
     as UTF-16LE. Data is read only for an entry that becomes text; a text entry whose data runs past the block is skipped, and the
-    fields read together never exceed the block's length. A directory that runs past the block ends the read and what was gathered
-    is returned; a block with no TIFF header gives nothing. Thumbnail data and maker notes are never read."""
+    fields read together never exceed the block's length. A directory that runs past the block ends there,
+    and a directory already named by a pointer is still read; a block with no TIFF header gives nothing. Thumbnail data and maker
+    notes are never read."""
     block = block[len(EXIF_ASCII_PREFIX):] if block.startswith(EXIF_ASCII_PREFIX) else block
     order = {b"II": "<", b"MM": ">"}.get(block[:2])
     if order is None or len(block) < 8 or struct.unpack(order + "H", block[2:4])[0] != 42:
@@ -90,7 +90,7 @@ def exif_text(block):
         for i in range(struct.unpack(order + "H", block[offset:offset + 2])[0]):
             raw = block[offset + 2 + 12 * i:offset + 14 + 12 * i]
             if len(raw) < 12:
-                return parts
+                break
             tag, kind, items, value = struct.unpack(order + "HHI4s", raw)
             if is_first and tag == EXIF_POINTER and kind == 4:
                 if not followed:

@@ -59,6 +59,53 @@ def webp(xmp_text=None, exif_text=None):
     return b"RIFF" + struct.pack("<I", len(body)) + body
 
 
+def exif(ifd0=(), sub=(), thumb=b"", big=False):
+    """A TIFF block as an EXIF APP1 holds it. Entries are (tag, type, payload); a payload over four bytes goes in a data area.
+    IFD0 points at the Exif sub-directory and, with a thumbnail, at a second directory whose thumbnail bytes come last."""
+    e = ">" if big else "<"
+
+    def layout(entries, start, extra, next_ifd):
+        entries = list(entries) + list(extra)
+        data_at = start + 2 + 12 * len(entries) + 4
+        table, data = b"", b""
+        for tag, kind, payload in entries:
+            count = len(payload) // {3: 2, 4: 4}.get(kind, 1)
+            if len(payload) <= 4:
+                value = payload.ljust(4, b"\x00")
+            else:
+                value = struct.pack(e + "I", data_at + len(data))
+                data += payload + (b"\x00" if len(payload) % 2 else b"")
+            table += struct.pack(e + "HHI", tag, kind, count) + value
+        return struct.pack(e + "H", len(entries)) + table + struct.pack(e + "I", next_ifd) + data
+
+    sub_at = 8 + len(layout(ifd0, 8, [(0x8769, 4, b"\x00" * 4)], 0))
+    thumb_ifd = 0
+    if thumb:
+        thumb_ifd = sub_at + len(layout(sub, sub_at, [], 0))
+    block0 = layout(ifd0, 8, [(0x8769, 4, struct.pack(e + "I", sub_at))], thumb_ifd)
+    block1 = layout(sub, sub_at, [], 0)
+    out = (b"MM\x00*" if big else b"II*\x00") + struct.pack(e + "I", 8) + block0 + block1
+    if thumb:
+        out += layout([], len(out), [(0x0201, 4, struct.pack(e + "I", len(out) + 2 + 12 + 4))], 0) + thumb
+    return out
+
+
+def ascii_entry(tag, text):
+    return (tag, 2, text.encode("utf-8") + b"\x00")
+
+
+def jpeg_exif(block):
+    data = b"Exif\x00\x00" + block
+    return b"\xff\xd8\xff\xe1" + struct.pack(">H", len(data) + 2) + data + b"\xff\xd9"
+
+
+def webp_exif(block):
+    def chunk(fourcc, data):
+        return fourcc + struct.pack("<I", len(data)) + data + (b"\x00" if len(data) % 2 else b"")
+    body = b"WEBP" + chunk(b"VP8X", bytes([0, 0, 0, 0]) + b"\x00" * 6) + chunk(b"EXIF", block)
+    return b"RIFF" + struct.pack("<I", len(body)) + body
+
+
 def gif(comment=None):
     out = b"GIF89a" + struct.pack("<HHBBB", 1, 1, 0, 0, 0)
     if comment is not None:
@@ -156,6 +203,67 @@ class AssetTextCheckTests(unittest.TestCase):
         self.assertEqual(code, 1, out)
         self.assertRegex(out, r"(?m)^FAIL a\.jpg FORBIDDEN: .*zürich")
         self.assertRegex(out, r"(?m)^FAIL a\.jpg FORBIDDEN: .*lösung")
+
+    def test_exif_thumbnail_bytes_are_never_read(self):
+        block = exif([ascii_entry(0x010E, "a pump hall")], thumb=b"\xff\xd8\xff\xe0 AI \x00KI ")
+        code, out = self.forbidden({"a.jpg": jpeg_exif(block), "b.webp": webp_exif(block)}, ["AI", "KI"])
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("FORBIDDEN", out)
+
+    def test_exif_image_description_is_reported(self):
+        block = exif([ascii_entry(0x010E, "lorem ipsum TODO")], thumb=b"\xff\xd8\xff\xe0")
+        tmp, root = self.folder({"a.jpg": jpeg_exif(block), "b.webp": webp_exif(block)})
+        code, out = run("--dir", str(root))
+        self.assertEqual(code, 1, out)
+        for name in ("a.jpg", "b.webp"):
+            self.assertRegex(out, r"(?m)^FAIL %s ASSET_TEXT: " % re.escape(name), name)
+
+    def test_exif_windows_xp_tag_is_read_as_utf16(self):
+        xp = ("lorem ipsum TODO".encode("utf-16-le") + b"\x00\x00")
+        block = exif([(0x9C9C, 1, xp)])
+        tmp, root = self.folder({"a.jpg": jpeg_exif(block), "b.webp": webp_exif(block)})
+        code, out = run("--dir", str(root))
+        self.assertEqual(code, 1, out)
+        for name in ("a.jpg", "b.webp"):
+            self.assertRegex(out, r"(?m)^FAIL %s ASSET_TEXT: " % re.escape(name), name)
+
+    def test_exif_user_comment_is_read_by_its_character_code(self):
+        for big in (False, True):
+            unicode_comment = b"UNICODE\x00" + "lorem ipsum TODO".encode("utf-16-be" if big else "utf-16-le")
+            ascii_comment = b"ASCII\x00\x00\x00" + b"lorem ipsum TODO"
+            tmp, root = self.folder({"a.jpg": jpeg_exif(exif(sub=[(0x9286, 7, unicode_comment)], big=big)),
+                                     "b.jpg": jpeg_exif(exif(sub=[(0x9286, 7, ascii_comment)], big=big))})
+            code, out = run("--dir", str(root))
+            self.assertEqual(code, 1, (big, out))
+            for name in ("a.jpg", "b.jpg"):
+                self.assertRegex(out, r"(?m)^FAIL %s ASSET_TEXT: " % re.escape(name), (big, name))
+
+    def test_exif_artist_in_utf8_is_found_by_a_forbid_word_with_an_umlaut(self):
+        block = exif([ascii_entry(0x013B, "Käse Werbung")], thumb=b"\xff\xd8\xff\xe0")
+        code, out = self.forbidden({"a.jpg": jpeg_exif(block), "b.webp": webp_exif(block)}, ["käse"])
+        self.assertEqual(code, 1, out)
+        for name in ("a.jpg", "b.webp"):
+            self.assertRegex(out, r"(?m)^FAIL %s FORBIDDEN: .*käse" % re.escape(name), name)
+
+    def test_a_jpeg_comment_and_an_xmp_packet_are_still_found(self):
+        code, out = self.forbidden({"a.jpg": jpeg(com="Zorblat hall"), "b.jpg": jpeg(app1="Zorblat hall")}, ["zorblat"])
+        self.assertEqual(code, 1, out)
+        self.assertRegex(out, r"(?m)^FAIL a\.jpg FORBIDDEN: ")
+        self.assertRegex(out, r"(?m)^FAIL b\.jpg FORBIDDEN: ")
+
+    def test_an_exif_block_that_cannot_be_parsed_gives_no_row_and_no_traceback(self):
+        import random
+        noise = random.Random(7).randbytes(300)
+        blocks = [noise, b"II*\x00" + struct.pack("<I", 9999), b"MM\x00*" + struct.pack(">I", 8) + b"\xff\xff" + noise[:20],
+                  b"II*\x00" + struct.pack("<IH", 8, 1) + struct.pack("<HHII", 0x010E, 2, 4000000000, 26)]
+        files = {}
+        for i, block in enumerate(blocks):
+            files["j%d.jpg" % i] = jpeg_exif(block)
+            files["w%d.webp" % i] = webp_exif(block)
+        code, out = self.forbidden(files, ["lorem"])
+        self.assertNotIn("Traceback", out)
+        self.assertEqual(code, 0, out)
+        self.assertEqual(out.strip(), SUMMARY_0)
 
     def test_no_images_is_skipped_and_bad_input_exits_2(self):
         tmp, root = self.folder({"readme.txt": b"hello"})

@@ -2682,6 +2682,11 @@ class ReferenceTextRound3Tests(unittest.TestCase):
         self.assertIn("The headline ratio is read at the widest view only; when that view does not load, the widest view that did "
                       "gets a `SKIPPED` `HEADLINE_RATIO` row that says the ratio was not checked.", step)
 
+    def test_small_targets_are_one_warn_row_for_each_view(self):
+        step = self.ref("check.md", 5)
+        self.assertIn("Targets under 44 CSS pixels come as one `WARN` `TARGET` row for each view, with the count and examples; a "
+                      "target under 24 pixels with no clear space around it is a `FAIL` row of its own.", step)
+
 
 if __name__ == "__main__":
     unittest.main()

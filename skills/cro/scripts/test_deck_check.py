@@ -512,6 +512,31 @@ class DeckCheckTest(unittest.TestCase):
         done = subprocess.run([sys.executable, "-I", str(SCRIPT), str(FIXTURES / "deck-variants.md")], capture_output=True, text=True, cwd="/")
         self.assertEqual(done.returncode, 0, done.stderr)
 
+    def test_a_huge_faq_number_gives_the_gap_row_at_once(self):
+        import resource
+        import tempfile
+
+        def capped():
+            gib = 1024 ** 3
+            resource.setrlimit(resource.RLIMIT_AS, (gib, gib))
+
+        deck = read("deck-clean-direct.md")
+        control = re.sub(r"(?m)^p\.faq\.([qa])3:", r"p.faq.\g<1>4:", deck)
+        huge = re.sub(r"(?m)^p\.faq\.([qa])3:", r"p.faq.\g<1>12345678901:", deck)
+        with tempfile.TemporaryDirectory() as d:
+            outs = []
+            for name, text in (("control.md", control), ("huge.md", huge)):
+                path = Path(d) / name
+                path.write_text(text, encoding="utf-8")
+                done = subprocess.run([sys.executable, str(SCRIPT), str(path)], capture_output=True, text=True,
+                                      preexec_fn=capped, timeout=60)
+                outs.append(done)
+        control_done, huge_done = outs
+        self.assertIn("FAIL p.faq FAQ_PAIRS: numbering is not 1 to 4 without gaps", control_done.stdout)
+        self.assertNotIn("Traceback", huge_done.stderr)
+        self.assertIn("FAIL p.faq FAQ_PAIRS: numbering is not 1 to 12345678901 without gaps", huge_done.stdout)
+        self.assertIn("deck_check: 1 FAIL, 0 WARN", huge_done.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

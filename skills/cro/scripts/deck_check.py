@@ -360,7 +360,7 @@ def check_namespace(deck, ns, part, final, add):
         for n in sorted(as_ - qs):
             add("FAIL", "%s.faq.q%d" % (ns, n), "FAQ_PAIRS", "answer %d has no question" % n)
         both = qs | as_
-        if both and sorted(both) != list(range(1, max(both) + 1)):
+        if both and not (min(both) == 1 and len(both) == max(both)):  # distinct counts, never a range up to the largest
             add("FAIL", ns + ".faq", "FAQ_PAIRS", "numbering is not 1 to %d without gaps" % max(both))
     # SEARCH_PLACEMENT
     if mode == "search" and keyword:

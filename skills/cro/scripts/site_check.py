@@ -184,6 +184,14 @@ def shorten(text, size=60):
     return text if len(text) <= size else text[:size] + "..."
 
 
+def parse_url(text):
+    """urlparse, or None when the text is not an address Python can parse (an unclosed IPv6 bracket, for one)."""
+    try:
+        return urllib.parse.urlparse(text)
+    except ValueError:
+        return None
+
+
 def page_rows(page, deck, mapped, forbid, add, internal_link):
     facts = page.facts
     url = page.url
@@ -195,10 +203,10 @@ def page_rows(page, deck, mapped, forbid, add, internal_link):
     if not (facts["meta_description"] or "").strip():
         add("FAIL", url, "META_DESCRIPTION", "no meta description")
     canonical = page.site.canonical
-    parsed = urllib.parse.urlparse(canonical or "")
+    parsed = parse_url(canonical or "")
     if not canonical:
         add("FAIL", url, "CANONICAL", "no canonical link")
-    elif parsed.scheme not in ("http", "https") or not parsed.netloc:
+    elif parsed is None or parsed.scheme not in ("http", "https") or not parsed.netloc:
         add("FAIL", url, "CANONICAL", "%r is not an absolute URL" % canonical)
     for image in facts["images"]:
         if image["alt"] is None:
@@ -287,8 +295,19 @@ def load_sitemap(dist, add):
         add("FAIL", "sitemap.xml", "SITEMAP", "neither sitemap.xml nor sitemap-index.xml is in the dist folder")
         return None
     urls = []
+
+    def parseable(name, locs):
+        good = []
+        for loc in locs:
+            if parse_url(loc) is None:
+                add("FAIL", name, "SITEMAP", "%s lists %s, which is not an address that can be read" % (name, loc))
+            else:
+                good.append(loc)
+        return good
+
     try:
         kind, locs = sitemap_locs(top)
+        locs = parseable(top.name, locs)
         if kind != "sitemapindex":
             return locs
         for loc in locs:
@@ -300,7 +319,7 @@ def load_sitemap(dist, add):
             if child_kind == "sitemapindex":
                 add("WARN", child.name, "SITEMAP", "a sitemap index inside a sitemap index; only one level is read")
             else:
-                urls.extend(child_locs)
+                urls.extend(parseable(child.name, child_locs))
     except ET.ParseError as error:
         add("FAIL", top.name, "SITEMAP", "%s is not valid XML: %s" % (top.name, error))
         return None
@@ -366,8 +385,12 @@ def make_internal_link(dist, fetch_page):
     def check(page, href):
         if dist is not None:
             base = "http://dist.invalid" + page.path
-            hosts = {"dist.invalid", urllib.parse.urlparse(page.site.canonical or "").netloc} - {""}
-            target = urllib.parse.urlparse(urllib.parse.urljoin(base, href))
+            own = parse_url(page.site.canonical or "")
+            hosts = {"dist.invalid", own.netloc if own else ""} - {""}
+            try:
+                target = urllib.parse.urlparse(urllib.parse.urljoin(base, href))
+            except ValueError:
+                return "the address cannot be read"
             if target.netloc not in hosts or target.scheme not in ("http", "https"):
                 return None
             path = urllib.parse.unquote(target.path) or "/"
@@ -377,8 +400,11 @@ def make_internal_link(dist, fetch_page):
             if file.is_file() or (not file.suffix and file.with_name(file.name + ".html").is_file()):
                 return None
             return "no such file in the dist folder"
-        target = urllib.parse.urljoin(page.base, href)
-        parts = urllib.parse.urlparse(target)
+        try:
+            target = urllib.parse.urljoin(page.base, href)
+            parts = urllib.parse.urlparse(target)
+        except ValueError:
+            return "the address cannot be read"
         if parts.scheme not in ("http", "https") or parts.netloc != urllib.parse.urlparse(page.base).netloc:
             return None
         target = urllib.parse.urldefrag(target)[0]

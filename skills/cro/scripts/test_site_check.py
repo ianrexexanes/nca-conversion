@@ -431,6 +431,39 @@ class SiteCheckTests(unittest.TestCase):
         self.assertEqual(len(links), 1, out)
         self.assertIn("/missing.html", links[0])
 
+    def test_an_address_that_cannot_be_parsed_is_a_row_not_a_traceback(self):
+        bad = "http://[::1"
+        about = page_html(CLEAN_DECK, canonical=ORIGIN + "/about.html", body_extra='<a href="/gone.html">Gone</a>')
+        # a canonical href: the CANONICAL rule; the other page and the other rules are still checked
+        pages = {"/index.html": page_html(CLEAN_DECK, canonical=bad, body_extra='<a href="/about.html">About</a>'),
+                 "/about.html": about}
+        out = self.site(pages, {"sitemap.xml": urlset([ORIGIN + "/", ORIGIN + "/about.html"])})[1]
+        self.assertNotIn("Traceback", out)
+        self.assertRegex(out, r"(?m)^FAIL /index\.html CANONICAL: .*http://\[::1.* is not an absolute URL")
+        self.assertRegex(out, r"(?m)^FAIL /about\.html LINK: /gone\.html")
+        self.assertRegex(out, r"(?m)^site_check: \d+ FAIL, \d+ WARN$")
+        # a link href: the LINK rule
+        pages = {"/index.html": page_html(CLEAN_DECK, body_extra='<a href="%s">Odd</a>' % bad), "/about.html": about}
+        out = self.site(pages, {"sitemap.xml": urlset([ORIGIN + "/", ORIGIN + "/about.html"])})[1]
+        self.assertNotIn("Traceback", out)
+        self.assertRegex(out, r"(?m)^FAIL /index\.html LINK: http://\[::1: ")
+        self.assertRegex(out, r"(?m)^FAIL /about\.html LINK: /gone\.html")
+        self.assertRegex(out, r"(?m)^site_check: \d+ FAIL, \d+ WARN$")
+        # a sitemap loc: the SITEMAP rule, in a sitemap and in a child of a sitemap index
+        one = {"/index.html": page_html(CLEAN_DECK)}
+        out = self.site(one, {"sitemap.xml": urlset([bad, ORIGIN + "/"])})[1]
+        self.assertNotIn("Traceback", out)
+        self.assertRegex(out, r"(?m)^FAIL sitemap\.xml SITEMAP: .*http://\[::1")
+        self.assertNotRegex(out, r"(?m)^FAIL /index\.html SITEMAP")  # the good loc still lists the page
+        self.assertRegex(out, r"(?m)^site_check: \d+ FAIL, \d+ WARN$")
+        files = {"sitemap.xml": None, "sitemap-index.xml": sitemap_index([bad, ORIGIN + "/sitemap-pages.xml"]),
+                 "sitemap-pages.xml": urlset([ORIGIN + "/"])}
+        out = self.site(one, files)[1]
+        self.assertNotIn("Traceback", out)
+        self.assertRegex(out, r"(?m)^FAIL sitemap-index\.xml SITEMAP: .*http://\[::1")
+        self.assertNotRegex(out, r"(?m)^FAIL /index\.html SITEMAP")
+        self.assertRegex(out, r"(?m)^site_check: \d+ FAIL, \d+ WARN$")
+
     def test_head_rules_fire_on_their_own(self):
         good = page_html(CLEAN_DECK)
         cases = {
@@ -614,6 +647,14 @@ class SiteCheckUrlTests(unittest.TestCase):
         fetched.clear()
         site_check.make_internal_link(None, fetched.append)(page, "http://example.com/about")
         self.assertEqual(fetched, [])  # the address that was asked for is no longer the page's own host
+
+    def test_a_link_that_cannot_be_parsed_is_a_link_row_on_a_live_page(self):
+        base = self.serve({"/index.html": page_html(CLEAN_DECK, body_extra='<a href="http://[::1">Odd</a><a href="/gone.html">Gone</a>')})
+        out = run("--url", base + "/index.html")[1]
+        self.assertNotIn("Traceback", out)
+        self.assertRegex(out, r"(?m)^FAIL \S+/index\.html LINK: http://\[::1: ")
+        self.assertRegex(out, r"(?m)^FAIL \S+/index\.html LINK: /gone\.html")
+        self.assertRegex(out, r"(?m)^site_check: \d+ FAIL, \d+ WARN$")
 
     def test_an_unreachable_url_exits_2(self):
         code, out = run("--url", "http://127.0.0.1:1/index.html")

@@ -132,6 +132,15 @@ class FormCheckTests(unittest.TestCase):
             self.assertIn(phrase, submit["status_text"], answer)
             self.assertEqual(len(submit["regions"]), 2, submit["regions"])
 
+    def test_a_rendered_region_whose_children_are_hidden_has_no_text(self):
+        run = self.run_page("form-hidden-children.html", "--simulate", "success")
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        submit = run.form["submit"]
+        self.assertEqual(submit["state"], "changed")
+        for text in [submit["status_text"]] + [r["text"] for r in submit["regions"]]:
+            self.assertNotIn("went wrong", text)
+            self.assertNotIn("we reply soon", text)
+
     def test_a_screen_reader_only_live_region_keeps_its_text(self):
         run = self.run_page("form-sr-live.html", "--simulate", "success")
         self.assertEqual(run.code, 0, (run.out, run.err))

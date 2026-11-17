@@ -77,7 +77,7 @@ const regionsOf = (form) => {
     if (seen.has(el)) return;
     seen.add(el);
     found.push({selector: describe(el), role: el.getAttribute('role'), aria_live: el.getAttribute('aria-live'),
-                text: rendered(el) ? clean(el.innerText || el.textContent) : ''});
+                text: rendered(el) ? clean(el.innerText) : ''});
   };
   form.querySelectorAll(REGION).forEach(add);
   for (let sib = form.nextElementSibling; sib; sib = sib.nextElementSibling) {

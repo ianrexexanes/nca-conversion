@@ -1798,6 +1798,14 @@ class CheckTests(unittest.TestCase):
                     "stays and the gate's row gives the reason. A WARN is read")
         self.assertIn(sentence, step)
 
+    def test_step_5_has_two_kinds_of_fail_confirmed_in_an_ordinary_browser_first(self):
+        step = next(body for n, body in self.steps() if n == 5)
+        sentence = ("A FAIL is fixed in the page. Two kinds are confirmed in an ordinary browser first: a `PAGE_ERROR`, because this run "
+                    "blocks tag hosts and every non-GET request, which can itself make a page script fail, and a `CONTRAST` FAIL, "
+                    "because the pass reads a background from the element's own ancestors and misses one drawn by a sibling layer. "
+                    "A WARN is fixed")
+        self.assertIn(sentence, step)
+
     def test_it_cites_the_pages_the_noindex_rule_rests_on(self):
         for url in ("developers.google.com/search/docs/crawling-indexing/block-indexing",
                     "developers.google.com/search/docs/crawling-indexing/google-special-case-crawlers", "support.google.com/google-ads",

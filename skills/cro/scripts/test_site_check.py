@@ -734,6 +734,17 @@ class SiteCheckUrlTests(unittest.TestCase):
         self.assertRegex(out, r"(?m)^FAIL \S+/index\.html LINK: /gone\.html")
         self.assertRegex(out, r"(?m)^site_check: \d+ FAIL, \d+ WARN$")
 
+    def test_an_unwritable_text_export_stops_the_run_before_any_link_is_fetched(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        blocker = Path(tmp.name) / "text"
+        blocker.write_text("a file, not a folder", encoding="utf-8")
+        base = self.serve({"/index.html": page_html(CLEAN_DECK, body_extra='<a href="/other">Other</a>')})
+        code, out = run("--url", base + "/index.html", "--visible-text", str(blocker))
+        self.assertEqual(code, 2, out)
+        self.assertIn("cannot write", out)
+        self.assertNotIn("/other", [path for path, _ in _Recorder.seen], _Recorder.seen)
+
     def test_an_unreachable_url_exits_2(self):
         code, out = run("--url", "http://127.0.0.1:1/index.html")
         self.assertEqual(code, 2, out)

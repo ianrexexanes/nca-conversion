@@ -564,6 +564,12 @@ def main(argv=None):
     except BadInput as error:
         print("site_check: %s" % error, file=sys.stderr)
         return 2
+    if args.visible_text:
+        try:
+            write_visible_text(args.visible_text, pages)
+        except OSError as error:
+            print("site_check: cannot write %s: %s" % (args.visible_text, error.strerror or error), file=sys.stderr)
+            return 2
     for url, why in skipped:
         add("SKIPPED", url, "LAUNCH_PAGE", why)
     dist = Path(args.dist) if args.dist else None
@@ -577,12 +583,6 @@ def main(argv=None):
         add("SKIPPED", pages[0].url, "ROBOTS", "needs --dist: a live site's robots.txt is not read")
     if pages_list is not None:
         check_noindex(pages_list, pages, add)
-    if args.visible_text:
-        try:
-            write_visible_text(args.visible_text, pages)
-        except OSError as error:
-            print("site_check: cannot write %s: %s" % (args.visible_text, error.strerror or error), file=sys.stderr)
-            return 2
     return finish("site_check", rows)
 
 

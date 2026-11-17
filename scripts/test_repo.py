@@ -1791,6 +1791,13 @@ class CheckTests(unittest.TestCase):
                     "`SKIPPED` row, unless the pages list names it.")
         self.assertIn("and `ROBOTS`. " + sentence + " `NOINDEX` is a WARN", step)
 
+    def test_step_1_lets_the_user_keep_words_a_page_means_to_say(self):
+        step = next(body for n, body in self.steps() if n == 1)
+        sentence = ("and fix every FAIL, with one exception: a FAIL on words the page means to say, such as the name of an AI product "
+                    "on a page that sells an AI service or a score the owner publishes, is put to the user, and on their yes the line "
+                    "stays and the gate's row gives the reason. A WARN is read")
+        self.assertIn(sentence, step)
+
     def test_it_cites_the_pages_the_noindex_rule_rests_on(self):
         for url in ("developers.google.com/search/docs/crawling-indexing/block-indexing",
                     "developers.google.com/search/docs/crawling-indexing/google-special-case-crawlers", "support.google.com/google-ads",

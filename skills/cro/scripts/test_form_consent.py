@@ -407,13 +407,26 @@ class FormConsentTests(unittest.TestCase):
         self.assertEqual([p for _m, p in run.posts()], ["/lead"])
 
     def test_a_post_after_the_wait_is_not_sent(self):
-        with mock.patch.object(form_consent, "POST_WAIT_MS", 400):
-            run = self.in_process(FakeTerminal(False), page="form-later.html", loopback=form_consent.LOOPBACK)
+        real = form_consent.snap_form
+
+        def post_after_the_close(page, i, path):
+            # snap_form runs after the consent is closed: a request of the page to the form's own address now is not the send
+            page.evaluate("(email) => fetch('/lead', {method: 'POST', body: 'email=' + email}).catch(() => 0)", EMAIL)
+            return real(page, i, path)
+
+        with mock.patch.object(form_consent, "POST_WAIT_MS", 300), mock.patch.object(form_consent, "snap_form", post_after_the_close):
+            run = self.in_process(FakeTerminal(False), page="form-silent.html", loopback=form_consent.LOOPBACK)
         self.assertEqual(run.code, 3, run.out + run.err)
         self.assertEqual(run.posts(), [])
         self.assertIn("nothing was sent", run.out)
         self.assertEqual(len(run.logged("/lead", "blocked", "method:")), 1, run.log)
         self.assertFalse([e for e in run.log if e["outcome"] == "consented"], run.log)
+
+    def test_a_beacon_to_another_host_does_not_end_the_wait_for_the_form(self):
+        run = self.consent("form-beacon-first.html")
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead"])
+        self.assertEqual(len(run.logged("localhost", "blocked")), 1, run.log)
 
     def test_an_unanswered_send_is_a_warning(self):
         with mock.patch.object(form_consent, "WAIT_MS", 1500):

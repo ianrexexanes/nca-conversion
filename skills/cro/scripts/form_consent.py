@@ -160,7 +160,8 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
     submit = entry["submit"]
     # wait for the form's host to answer before anything is judged: first for a late request, then for its answer
     pressed_back = waited()
-    while submit["state"] != "navigated" and not posts() and waited() - pressed_back < POST_WAIT_MS:
+    own = lambda: [e for e in posts() if host_of(e["url"]) == host]  # noqa: E731  (a request elsewhere is not the form's)
+    while submit["state"] != "navigated" and not own() and waited() - pressed_back < POST_WAIT_MS:
         page.wait_for_timeout(100)
     while any(e["outcome"] == "consented" and e["status"] is None for e in posts()) and waited() < WAIT_MS:
         page.wait_for_timeout(100)

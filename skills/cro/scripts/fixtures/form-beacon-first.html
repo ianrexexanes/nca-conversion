@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form fixture</title>
+<link rel="stylesheet" href="/form-base.css">
+</head><body><main><h1>Book a pump check</h1>
+<form id="f" method="post" action="/lead">
+<label for="f-name">Your name</label><input id="f-name" name="name" type="text" required autocomplete="name"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" required autocomplete="email" inputmode="email">
+<button type="submit">Send request</button>
+<p role="status" aria-live="polite"></p>
+</form>
+</main><script>
+// Shows "Sending…", sends a beacon to the same server under another loopback name at once, and posts the form 1.2 s later.
+document.getElementById('f').addEventListener('submit', function (event) {
+  event.preventDefault();
+  var form = event.target;
+  var data = new FormData(form);
+  form.querySelector('button').textContent = 'Sending…';
+  navigator.sendBeacon('http://localhost:{{PORT}}/sink', 'x');
+  setTimeout(function () {
+    fetch(form.getAttribute('action'), { method: 'POST', body: data }).then(function () {
+      form.querySelector('[role=status]').textContent = 'Thanks, we reply within one working day.';
+    });
+  }, 1200);
+});
+</script></body></html>

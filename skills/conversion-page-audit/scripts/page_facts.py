@@ -23,12 +23,17 @@ and the collector reads markup only, not styles or scripts that change what a vi
 
 Usage:
     python3 page_facts.py <file.html|url> [--url <original-url>] [--out FILE]
+
+Exit codes: 0 when the facts were produced; 2 when the target cannot be read or --out cannot be
+written, with one line on stderr (`page_facts: cannot read <target>: <reason>` or `cannot write`).
 """
 import argparse
 import codecs
+import http.client
 import json
 import re
 import sys
+import urllib.error
 import urllib.request
 from datetime import date
 from html.parser import HTMLParser
@@ -366,6 +371,17 @@ def extract_facts(html, url=""):
     }
 
 
+# What reading a file, fetching an address and writing a file can raise; a defect in extract_facts is not here.
+_IO_ERRORS = (OSError, urllib.error.URLError, http.client.HTTPException, ValueError, UnicodeError)
+
+
+def _reason(error):
+    """The cause in a few words, on one line."""
+    if isinstance(error, urllib.error.URLError):
+        error = error.reason  # a URLError holds the failure it wraps
+    return (getattr(error, "strerror", None) or str(error) or type(error).__name__).splitlines()[0]
+
+
 def main(argv):
     parser = argparse.ArgumentParser(description="Deterministic page facts from static markup.")
     parser.add_argument("target", metavar="file.html|url")
@@ -373,22 +389,26 @@ def main(argv):
     parser.add_argument("--out", help="write the JSON to this file and print one summary line")
     args = parser.parse_args(argv)
     target, url, out = args.target, args.url, args.out
-    if target.startswith("http"):
-        try:
+    try:
+        if target.startswith("http"):
             html = fetch(target)
-        except ValueError as error:  # an address that cannot be parsed
-            print("page_facts: cannot read %s: %s" % (target, error), file=sys.stderr)
-            return 2
-        url = url or target
-    else:
-        with open(target, "rb") as handle:
-            html = decode_body(handle.read(), None)
+            url = url or target
+        else:
+            with open(target, "rb") as handle:
+                html = decode_body(handle.read(), None)
+    except _IO_ERRORS as error:
+        print("page_facts: cannot read %s: %s" % (target, _reason(error)), file=sys.stderr)
+        return 2
     text = json.dumps(extract_facts(html, url), indent=2, ensure_ascii=False)
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     if out:
-        Path(out).parent.mkdir(parents=True, exist_ok=True)
-        Path(out).write_text(text + "\n", encoding="utf-8")
+        try:
+            Path(out).parent.mkdir(parents=True, exist_ok=True)
+            Path(out).write_text(text + "\n", encoding="utf-8")
+        except _IO_ERRORS as error:
+            print("page_facts: cannot write %s: %s" % (out, _reason(error)), file=sys.stderr)
+            return 2
         facts = json.loads(text)
         print("page_facts: wrote %s: %d headings, %d links, %d forms, %d images"
               % (out, len(facts["headings"]), len(facts["links"]), len(facts["forms"]), len(facts["images"])))

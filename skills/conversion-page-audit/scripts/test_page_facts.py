@@ -391,6 +391,53 @@ class FetchHelpersTest(unittest.TestCase):
         import sys
         return subprocess.run([sys.executable, page_facts.__file__, *args], capture_output=True, encoding="utf-8")
 
+    def _assert_one_line_exit_2(self, done, start):
+        self.assertEqual(done.returncode, 2, done.stderr)
+        self.assertNotIn("Traceback", done.stderr)
+        self.assertEqual(len(done.stderr.strip().splitlines()), 1, done.stderr)
+        self.assertTrue(done.stderr.startswith(start), done.stderr)
+        self.assertEqual(done.stdout, "")
+
+    def test_a_missing_file_is_cannot_read_and_exit_2(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as folder:
+            target = str(Path(folder) / "nothing.html")
+            self._assert_one_line_exit_2(self._run(target), "page_facts: cannot read %s: " % target)
+
+    def test_a_folder_is_cannot_read_and_exit_2(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            self._assert_one_line_exit_2(self._run(folder), "page_facts: cannot read %s: " % folder)
+
+    def test_an_address_on_a_closed_port_is_cannot_read_and_exit_2(self):
+        target = "http://127.0.0.1:1/"
+        self._assert_one_line_exit_2(self._run(target), "page_facts: cannot read %s: " % target)
+
+    def test_an_out_below_a_file_is_cannot_write_and_exit_2(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as folder:
+            page = Path(folder) / "page.html"
+            page.write_bytes(PAGE)
+            blocker = Path(folder) / "blocker"
+            blocker.write_text("a file", encoding="utf-8")
+            out = str(blocker / "facts.json")
+            self._assert_one_line_exit_2(self._run(str(page), "--out", out), "page_facts: cannot write %s: " % out)
+
+    def test_a_good_file_with_out_still_writes_the_facts_and_prints_the_summary(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as folder:
+            page = Path(folder) / "page.html"
+            page.write_bytes(PAGE)
+            out = Path(folder) / "sub" / "facts.json"
+            done = self._run(str(page), "--out", str(out))
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual(json.loads(out.read_text(encoding="utf-8"))["title"], "Fixture")
+            self.assertTrue(done.stdout.startswith("page_facts: wrote %s: " % out), done.stdout)
+
     def test_an_address_that_cannot_be_parsed_is_one_line_and_exit_2(self):
         done = self._run("http://[::1")
         self.assertEqual(done.returncode, 2, done.stderr)

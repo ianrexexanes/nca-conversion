@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form fixture</title>
+<link rel="stylesheet" href="/form-base.css">
+</head><body><main><h1>Book a pump check</h1>
+<form id="f" method="post" action="/lead-slow">
+<label for="f-name">Your name</label><input id="f-name" name="name" type="text" required autocomplete="name"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" required autocomplete="email" inputmode="email">
+<button type="submit">Send request</button>
+<p role="status" aria-live="polite"></p>
+</form>
+</main><script>
+// Shows "Sending…" at once, posts the form, and moves on to the thank-you page when the host has answered.
+document.getElementById('f').addEventListener('submit', function (event) {
+  event.preventDefault();
+  var form = event.target;
+  form.querySelector('button').textContent = 'Sending…';
+  fetch(form.getAttribute('action'), { method: 'POST', body: new FormData(form) }).then(function () {
+    location = '/form-thanks-news.html';
+  });
+});
+</script></body></html>

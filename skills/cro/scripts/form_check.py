@@ -499,7 +499,7 @@ def press(page, i, info, limit_ms, stop=None):
         submit["pressed"] = click_submit(page, i)
     if submit["pressed"]:
         submit["state"], submit["time_ms"] = wait_for_state(page, i, before, started, limit_ms, stop)
-        submit["validation"] = safe_eval(page, VALIDATION, i, [])
+        submit["validation"] = [] if submit["state"] == "navigated" else safe_eval(page, VALIDATION, i, [])
         text = read_outcome(page, i, submit)
     return submit, text
 

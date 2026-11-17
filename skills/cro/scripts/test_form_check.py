@@ -141,6 +141,13 @@ class FormCheckTests(unittest.TestCase):
             self.assertNotIn("went wrong", text)
             self.assertNotIn("we reply soon", text)
 
+    def test_nothing_is_read_from_a_form_of_the_new_document_after_a_navigation(self):
+        run = self.run_page("form-moves-news.html", "--simulate", "success")
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        submit = run.form["submit"]
+        self.assertEqual(submit["state"], "navigated")
+        self.assertEqual(submit["validation"], [])
+
     def test_a_screen_reader_only_live_region_keeps_its_text(self):
         run = self.run_page("form-sr-live.html", "--simulate", "success")
         self.assertEqual(run.code, 0, (run.out, run.err))

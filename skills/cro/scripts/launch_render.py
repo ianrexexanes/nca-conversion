@@ -77,6 +77,10 @@ MEASURE_PAGE = r"""
     const text = textOf(el).slice(0, 40);
     return text ? tag + ' "' + text + '"' : tag;
   };
+  // an element carries the deck's label when its text and the label match once everything but letters and digits is cut from both ends
+  const core = (t) => t.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
+  const carries = (el) => opts.label !== null && (core(opts.label) !== '' ? core(textOf(el)) === core(opts.label) : textOf(el) === opts.label);
+  const labelEls = opts.label === null ? [] : Array.from(document.querySelectorAll('a, button, input[type=submit], input[type=button], [role=button]')).filter((el) => visible(el) && carries(el));
   const ownText = (el) => Array.from(el.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim() !== '');
   const body = document.body || doc;
   const out = {};
@@ -140,8 +144,7 @@ MEASURE_PAGE = r"""
       const form = el.form || el.closest('form');
       return submits && form ? formTarget(form) : 'script';
     };
-    const matched = Array.from(document.querySelectorAll('a, button, input[type=submit], input[type=button], [role=button]'))
-      .filter((el) => visible(el) && textOf(el) === opts.label);
+    const matched = labelEls;
     // matches inside one another are one element: the outermost, going where a match inside it goes when it only runs a script
     candidates = matched.filter((el) => !matched.some((outer) => outer !== el && outer.contains(el)))
       .map((el) => {
@@ -161,7 +164,7 @@ MEASURE_PAGE = r"""
   if (opts.action !== null) {
     const same = (c) => c && c.a > 0 && Math.abs(c.r - opts.action[0]) <= 1 && Math.abs(c.g - opts.action[1]) <= 1 && Math.abs(c.b - opts.action[2]) <= 1;
     const actionRoots = candidates !== null
-      ? Array.from(document.querySelectorAll('a, button, input[type=submit], input[type=button], [role=button]')).filter((el) => visible(el) && textOf(el) === opts.label)
+      ? labelEls
       : targetEls;
     const inAction = (el) => actionRoots.some((root) => root === el || root.contains(el));
     out.action_carriers = [];

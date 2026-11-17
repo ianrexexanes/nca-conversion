@@ -144,6 +144,15 @@ class LaunchRenderTests(unittest.TestCase):
         _c, out, rows = self.render("clean.html", 1440, "--deck", str(VARIANTS), "--variant", "c")
         self.assertFalse(self.has(rows, "FAIL", "ONE_TARGET", 1440), out)
 
+    def test_a_label_with_an_arrow_is_still_the_label(self):
+        _c, out, rows = self.render("arrow-label.html", 1440, "--deck", str(VARIANTS), "--variant", "c")
+        self.assertFalse(self.has(rows, "FAIL", "LABEL_FOLD", 1440, "no button or link shows it"), out)
+        self.assertTrue(self.has(rows, "FAIL", "ONE_TARGET", 1440), out)
+
+    def test_a_label_with_a_word_added_is_not_the_label(self):
+        _c, out, rows = self.render("label-plus-word.html", 1440, "--deck", str(VARIANTS), "--variant", "c")
+        self.assertTrue(self.has(rows, "FAIL", "LABEL_FOLD", 1440, "no button or link shows it"), out)
+
     def test_a_button_inside_a_link_is_one_call_to_action(self):
         _c, out, rows = self.render("button-in-link.html", 1440, "--deck", str(VARIANTS), "--variant", "c")
         self.assertFalse(self.has(rows, "FAIL", "ONE_TARGET", 1440), out)

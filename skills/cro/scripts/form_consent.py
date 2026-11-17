@@ -165,8 +165,19 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         pressed_at = time.monotonic()
         waited = lambda: (time.monotonic() - pressed_at) * 1000  # noqa: E731
         posts = lambda: [e for e in sender.entries[mark:] if e["method"] not in cro_runtime.ALLOWED_METHODS]  # noqa: E731
-        in_flight = lambda: any(e["resource_type"] == "document" and e["status"] is None and e["outcome"] in (None, "consented")  # noqa: E731
-                                and "failure" not in e for e in sender.entries[mark:])
+        navigations = []  # the page's own main-frame navigation requests made since the press (a frame loading inside it does not hold the page)
+
+        def on_request(request):
+            try:  # request.frame throws for a request of a service worker or one made before its frame exists, and is then not the main frame's
+                if request.is_navigation_request() and request.frame == page.main_frame:
+                    navigations.append(request)
+            except form_check.PlaywrightError:
+                pass
+
+        page.on("request", on_request)  # documented at https://playwright.dev/python/docs/api/class-page#page-event-request
+        # is_navigation_request() and frame: https://playwright.dev/python/docs/api/class-request#request-is-navigation-request
+        in_flight = lambda: any((e := sender.by_request.get(r)) is not None and e["status"] is None  # noqa: E731
+                                and e["outcome"] in (None, "consented") and "failure" not in e for r in navigations)
         entry["submit"], text = press(page, info["i"], info, WAIT_MS, stop, into=kept, hold=in_flight)
         submit = entry["submit"]
         # wait for the form's host to answer before anything is judged: first for a late request, then for its answer
@@ -202,6 +213,10 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
     finally:
         sender.allow_post_host = None
         form_check.READ_BOUND_MS = None
+        try:
+            page.remove_listener("request", on_request)
+        except (NameError, form_check.PlaywrightError):
+            pass
     sender.finish()
 
     after = sender.entries[mark:]

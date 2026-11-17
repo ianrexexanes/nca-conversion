@@ -274,6 +274,23 @@ class HangUpTests(HeldAnswerTests):
     test_a_page_blocked_by_a_synchronous_request_to_a_slow_host_still_ends_the_run = None
 
 
+class FollowUpTests(HeldAnswerTests):
+    """What the run reads and reports once the answer is in: the page that follows the send, and how a failed request is named."""
+
+    def test_a_frame_that_loads_after_the_send_does_not_hold_the_page(self):
+        run, _took = self.bounded_run("form-frame-after-send.html")
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead"])
+        self.assertEqual(run.form["thank_you"]["text"], "Thank you, we got it", run.form["thank_you"])
+        self.assertFalse([d for lv, _f, r, d in run.lines if lv == "WARN"], run.lines)
+        self.assertNotIn("had not loaded", run.out + run.err)
+        self.assertTrue((Path(run.dir) / "form1-consented.png").is_file(), sorted(p.name for p in Path(run.dir).iterdir()))
+
+    test_a_post_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None  # inherited tests run once, in their own class
+    test_a_page_after_the_send_that_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None
+    test_a_page_blocked_by_a_synchronous_request_to_a_slow_host_still_ends_the_run = None
+
+
 class FakeTerminal:
     """Standard input for an in-process run: isatty() and readline() are the test's to set."""
 

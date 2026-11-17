@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form fixture</title>
+<link rel="stylesheet" href="/form-base.css">
+</head><body><main><h1>Book a pump check</h1>
+<form id="frame-after" action="/lead" method="post">
+<label for="f-name">Your name</label><input id="f-name" name="name" type="text" required autocomplete="name"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" required autocomplete="email" inputmode="email">
+<button type="submit">Send request</button>
+</form>
+<p id="answer" role="status"></p>
+</main><script>
+// Posts the form by script, shows the thank-you in a status region, then appends a frame whose document the server holds.
+var form = document.querySelector("form");
+form.addEventListener("submit", function (event) {
+  event.preventDefault();
+  fetch(form.getAttribute("action"), { method: "POST", body: new FormData(form) }).then(function () {
+    document.getElementById("answer").textContent = "Thank you, we got it";
+    var frame = document.createElement("iframe");
+    frame.src = "/page-held";
+    document.body.appendChild(frame);
+  });
+});
+</script></body></html>

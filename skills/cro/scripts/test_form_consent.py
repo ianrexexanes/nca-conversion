@@ -249,7 +249,8 @@ class HeldAnswerTests(unittest.TestCase):
         self.assertEqual(run.data["network"]["consented"], 1)
 
     def test_a_page_blocked_by_a_synchronous_request_to_a_slow_host_still_ends_the_run(self):
-        run, _took = self.bounded_run("form-sync-xhr.html", bound=self.WAIT / 1000 + 20)
+        # the read bound lets the run end 20 seconds from the press at the latest; the allowance of 10 seconds is for the browser's start
+        run, _took = self.bounded_run("form-sync-xhr.html", bound=self.WAIT / 1000 + 20 + 10)
         self.assertEqual(run.code, 0, (run.out, run.err))
         self.assertEqual([p for _m, p in run.posts()], ["/lead-hold-long"])
         self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("WARN", "SEND") and "had not answered" in d], run.lines)

@@ -2645,6 +2645,11 @@ class ReferenceTextRound3Tests(unittest.TestCase):
         self.assertIn("when the answer to the one consented request was HTTP 400 or more, wherever that request went, with the address "
                       "and the status in the line,", step)
 
+    def test_the_simulated_success_names_where_the_status_text_came_from(self):
+        step = self.ref("form.md", 3)
+        self.assertIn("Read `submit.state`, `submit.status_text`, `submit.status_source` and the picture", step)
+        self.assertIn("`status_source` is `region`, `form`, `page` or `none`; `none` with a null `status_text` means nothing on the page changed.", step)
+
 
 if __name__ == "__main__":
     unittest.main()

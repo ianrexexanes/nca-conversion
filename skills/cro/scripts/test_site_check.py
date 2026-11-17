@@ -413,6 +413,18 @@ class SiteCheckTests(unittest.TestCase):
         out = self.site({"/index.html": page_html(CLEAN_DECK)}, files)[1]
         self.assertRegex(out, r"(?m)^FAIL sitemap-index\.xml SITEMAP: sitemap-index\.xml lists .*sitemap-gone\.xml, which is not in the dist")
 
+    def test_a_child_sitemap_that_is_not_valid_xml_is_named_by_its_own_file(self):
+        index = sitemap_index([ORIGIN + "/sitemap-0.xml", ORIGIN + "/sitemap-1.xml"])
+        cut = urlset([ORIGIN + "/"])[:-30]
+        unknown = '<?xml version="1.0" encoding="x-no-such-encoding"?>\n<urlset></urlset>\n'
+        for label, child in (("cut off", cut), ("unknown encoding", unknown)):
+            with self.subTest(label):
+                files = {"sitemap.xml": None, "sitemap-index.xml": index, "sitemap-0.xml": child,
+                         "sitemap-1.xml": urlset([ORIGIN + "/"])}
+                out = self.site({"/index.html": page_html(CLEAN_DECK)}, files)[1]
+                self.assertRegex(out, r"(?m)^FAIL sitemap-0\.xml SITEMAP: sitemap-0\.xml ")
+                self.assertNotRegex(out, r"(?m)^FAIL sitemap-index\.xml SITEMAP")
+
     def test_a_sitemap_index_inside_a_sitemap_index_warns(self):
         files = {"sitemap.xml": None, "sitemap-index.xml": sitemap_index([ORIGIN + "/sitemap-pages.xml"]),
                  "sitemap-pages.xml": sitemap_index([ORIGIN + "/sitemap-deeper.xml"])}

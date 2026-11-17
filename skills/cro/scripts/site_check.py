@@ -313,6 +313,7 @@ def load_sitemap(dist, add):
                 good.append(loc)
         return good
 
+    parsing = top.name  # the file whose parse is under way, named in a parse error
     try:
         kind, locs = sitemap_locs(top)
         locs = parseable(top.name, locs)
@@ -323,13 +324,14 @@ def load_sitemap(dist, add):
             if not there(child, "file"):
                 add("FAIL", top.name, "SITEMAP", "%s lists %s, which is not in the dist folder" % (top.name, loc))
                 continue
+            parsing = child.name
             child_kind, child_locs = sitemap_locs(child)
             if child_kind == "sitemapindex":
                 add("WARN", child.name, "SITEMAP", "a sitemap index inside a sitemap index; only one level is read")
             else:
                 urls.extend(parseable(child.name, child_locs))
     except (ET.ParseError, LookupError) as error:  # LookupError: an XML encoding Python does not know
-        add("FAIL", top.name, "SITEMAP", "%s is not valid XML: %s" % (top.name, error))
+        add("FAIL", parsing, "SITEMAP", "%s is not valid XML: %s" % (parsing, error))
         return None
     except OSError as error:
         name = Path(error.filename).name if error.filename else top.name

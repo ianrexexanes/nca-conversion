@@ -27,6 +27,8 @@ class _Pages(BaseHTTPRequestHandler):
         type(self).requests.append((self.command, self.path, self.headers.get("User-Agent", "")))
         name = self.path.split("?")[0].lstrip("/")
         target = LAUNCH / name
+        if name == "mobile-only.html" and "Mobile" not in self.headers.get("User-Agent", ""):
+            target = LAUNCH / "missing"  # a page that only the phone view can load
         if name and target.is_file() and target.parent == LAUNCH:
             body, status = target.read_bytes(), 200
         else:
@@ -77,6 +79,15 @@ class LaunchRenderTests(unittest.TestCase):
 
     def levels(self, rows, rule):
         return {r[0] for r in rows if r[3] == rule}
+
+    def test_a_headline_ratio_the_widest_view_could_not_check_is_skipped_on_the_narrower(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            done = subprocess.run([sys.executable, str(SCRIPT), "%s/mobile-only.html" % self.base, "--out", tmp,
+                                   "--widths", "375,1440"], capture_output=True, text=True, timeout=180)
+        self.assertIn(done.returncode, (0, 1), done.stderr)
+        rows = findings(done.stdout)
+        self.assertTrue(self.has(rows, "SKIPPED", "HEADLINE_RATIO", 375, "did not load"), done.stdout)
+        self.assertTrue(self.has(rows, "FAIL", "STATUS", 1440), done.stdout)
 
     def test_horizontal_scroll_fails(self):
         code, out, rows = self.render("wide.html", 375)

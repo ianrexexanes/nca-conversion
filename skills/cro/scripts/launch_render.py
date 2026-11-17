@@ -555,6 +555,8 @@ def main(argv=None):
             readable = max(reads) if reads else None
             for width, (view, facts, recorder) in reads.items():
                 rows = analyse(facts, args, widest, width, width == readable)
+                if width == readable and widest not in reads:
+                    rows.append(("SKIPPED", "HEADLINE_RATIO", "the widest view (%d px) did not load, so the headline ratio was not checked" % widest))
                 rows += [("FAIL", "PAGE_ERROR", one_line(e)[:300]) for e in recorder.errors]
                 view["findings"].extend({"level": lv, "rule": rule, "detail": detail} for lv, rule, detail in rows)
             for view in entry["views"]:

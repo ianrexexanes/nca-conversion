@@ -1,4 +1,5 @@
 import json
+import struct
 import subprocess
 import sys
 import tempfile
@@ -136,6 +137,18 @@ class FormCheckTests(unittest.TestCase):
         self.assertEqual(run.code, 0, (run.out, run.err))
         self.assertEqual(run.form["submit"]["state"], "changed")
         self.assertIn("Thanks", run.form["submit"]["status_text"])
+
+    def test_a_form_the_page_removed_is_not_replaced_by_the_next_form(self):
+        run = self.run_page("form-replaced.html", "--simulate", "success", "--form", "#lead")
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        submit = run.form["submit"]
+        self.assertEqual(submit["state"], "changed")
+        self.assertIn("Thank you, your pump check request", submit["status_text"])
+        self.assertEqual([row["field"] for row in submit["validation"]], [])
+        # the second form is 400 px wide in the fixture: a picture of it is 400 px wide, the whole page is as wide as the 1440 px window
+        header = (run.dir / "form1-simulate-success.png").read_bytes()[16:24]
+        width, _height = struct.unpack(">II", header)
+        self.assertEqual(width, 1440)
 
     def test_simulate_success_reaches_the_thank_you_state_and_sends_nothing(self):
         self.check_simulated("success", "Thanks")

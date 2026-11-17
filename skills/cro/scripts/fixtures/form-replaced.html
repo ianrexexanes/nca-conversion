@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form fixture</title>
+<link rel="stylesheet" href="/form-base.css">
+</head><body><main><h1>Book a pump check</h1>
+<form id="lead" action="/lead" method="post">
+<label for="f-name">Your name</label><input id="f-name" name="name" type="text" required autocomplete="name"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" required autocomplete="email" inputmode="email">
+<button type="submit">Send request</button>
+</form>
+<form id="news" action="/news" method="post" style="width:400px">
+<label for="n-mail">Newsletter address</label><input id="n-mail" name="newsletter_email" type="email" required>
+<button type="submit">Subscribe</button>
+</form>
+</main><script>
+document.getElementById('lead').addEventListener('submit', function (event) {
+  event.preventDefault();
+  var form = event.target;
+  fetch('/lead', { method: 'POST', body: new FormData(form) }).then(function (r) {
+    if (!r.ok) { return; }
+    var block = document.createElement('div');
+    block.id = 'thanks';
+    block.textContent = 'Thank you, your pump check request is with us.';
+    form.replaceWith(block);
+  });
+});
+</script></body></html>

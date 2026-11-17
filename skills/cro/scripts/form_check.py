@@ -63,6 +63,13 @@ const rendered = (el) => {
   const s = getComputedStyle(el);
   return el.getClientRects().length > 0 && s.visibility === 'visible' && s.opacity !== '0';
 };
+const formOf = (i) => {
+  if (window.__formCheckMark === true && window.__formCheckIndex === i) {
+    const kept = window.__formCheckForm;
+    return kept && kept.isConnected ? kept : null;
+  }
+  return document.querySelectorAll('form')[i] || null;
+};
 const regionsOf = (form) => {
   const seen = new Set();
   const found = [];
@@ -162,13 +169,13 @@ return [...document.querySelectorAll('form')].map((form, i) => {
 });
 }"""
 SNAPSHOT = "(i) => {" + HELPERS + r"""
-const form = document.querySelectorAll('form')[i];
+const form = formOf(i);
 return {marked: window.__formCheckMark === true, form: form ? clean(form.innerText) : null,
         regions: form ? regionsOf(form).map((r) => r.text) : []};
 }"""
-REGIONS = "(i) => {" + HELPERS + "const form = document.querySelectorAll('form')[i]; return form ? regionsOf(form) : [];}"
-VALIDATION = r"""(i) => {
-const form = document.querySelectorAll('form')[i];
+REGIONS = "(i) => {" + HELPERS + "const form = formOf(i); return form ? regionsOf(form) : [];}"
+VALIDATION = "(i) => {" + HELPERS + r"""
+const form = formOf(i);
 if (!form) return [];
 return [...form.querySelectorAll('input, select, textarea')].filter((e) => e.willValidate && !e.validity.valid)
   .map((e) => ({field: e.getAttribute('name') || e.id || e.tagName.toLowerCase(), message: e.validationMessage}));
@@ -184,7 +191,8 @@ if (!form) return;
 form.setAttribute('target', '_self');
 form.querySelectorAll('[formtarget]').forEach((el) => el.setAttribute('formtarget', '_self'));
 }"""
-MARK = "() => { window.__formCheckMark = true; }"
+MARK = "(i) => { window.__formCheckMark = true; window.__formCheckIndex = i; window.__formCheckForm = document.querySelectorAll('form')[i] || null; }"
+FORM_NODE = "([i, pressed]) => {" + HELPERS + "return pressed && window.__formCheckMark !== true ? null : formOf(i);}"
 SET_FIELD = r"""(el, [action, value]) => {
 if (action === 'fill') {
   el.focus(); el.value = value;
@@ -369,10 +377,13 @@ def new_entry(info):
 
 
 def snap_form(page, i, path):
-    """Screenshot the form, else the whole page. Returns whether a file was written."""
+    """Screenshot the form, else the whole page. Returns whether a file was written. After a press the form is the one that
+    was pressed: when it has left the page or the document was replaced, the picture is the whole page, never another form."""
     try:
-        page.locator("form").nth(i).screenshot(path=str(path), timeout=5000)
-        return True
+        node = page.evaluate_handle(FORM_NODE, [i, getattr(page, "form_check_pressed", False)]).as_element()
+        if node is not None:
+            node.screenshot(path=str(path), timeout=5000)
+            return True
     except PlaywrightError:
         pass
     try:
@@ -481,7 +492,8 @@ def press(page, i, info, limit_ms, stop=None):
     text = None
     if info["submit"]["found"]:
         safe_eval(page, NEUTRALISE, i, None)  # no popup and no other target: the press stays on this page, behind the route
-        safe_eval(page, MARK, None, None)
+        safe_eval(page, MARK, i, None)
+        page.form_check_pressed = True
         before = safe_eval(page, SNAPSHOT, i, None)
         started = time.monotonic()
         submit["pressed"] = click_submit(page, i)

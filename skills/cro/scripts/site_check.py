@@ -156,10 +156,11 @@ def faq_entities(page):
     for body in page.site.jsonld:
         try:
             data = json.loads(body)
-        except ValueError:
+            nodes = list(walk(data))
+        except (ValueError, RecursionError):  # not JSON, or nested too deep to read or walk
             broken = True
             continue
-        for node in walk(data):
+        for node in nodes:
             kind = node.get("@type")
             if "FAQPage" in (kind if isinstance(kind, list) else [kind]):
                 found = True

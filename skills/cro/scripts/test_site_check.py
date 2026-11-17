@@ -403,6 +403,23 @@ class SiteCheckTests(unittest.TestCase):
         self.assertRegex(out, r"(?m)^SKIPPED /index\.html PARITY: no --deck")
         self.assertRegex(out, r"(?m)^SKIPPED /index\.html FAQ_SCHEMA: no --deck")
 
+    def test_faq_entities_counts_a_block_nested_too_deep_as_broken(self):
+        class Site:
+            jsonld = ["[" * 3000 + "]" * 3000]
+        class Stand:
+            site = Site()
+        try:
+            pairs, found, broken = site_check.faq_entities(Stand())
+        except RecursionError:
+            self.fail("faq_entities raised RecursionError on a block nested too deep")
+        self.assertEqual((pairs, found, broken), ([], False, True))
+
+    def test_a_json_ld_block_nested_100000_deep_never_ends_the_run(self):
+        deep = '<script type="application/ld+json">%s</script>' % ("[" * 100000 + "]" * 100000)
+        out = self.site({"/index.html": page_html(CLEAN_DECK, body_extra=deep)}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")[1]
+        self.assertNotIn("Traceback", out)
+        self.assertRegex(out, r"(?m)^site_check: \d+ FAIL, \d+ WARN$")
+
     def test_a_json_ld_block_that_is_not_json_fails_faq_schema(self):
         page = page_html(CLEAN_DECK, body_extra='<script type="application/ld+json">{"@type": </script>')
         out = self.site({"/index.html": page}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")[1]

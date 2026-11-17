@@ -374,7 +374,11 @@ def main(argv):
     args = parser.parse_args(argv)
     target, url, out = args.target, args.url, args.out
     if target.startswith("http"):
-        html = fetch(target)
+        try:
+            html = fetch(target)
+        except ValueError as error:  # an address that cannot be parsed
+            print("page_facts: cannot read %s: %s" % (target, error), file=sys.stderr)
+            return 2
         url = url or target
     else:
         with open(target, "rb") as handle:

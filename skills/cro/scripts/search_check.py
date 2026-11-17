@@ -280,6 +280,12 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     if args.url is not None and not args.url.startswith(("http://", "https://")):
         parser.error("--url must start with http:// or https://")
+    if args.url is not None:
+        try:
+            urllib.parse.urlsplit(args.url)
+        except ValueError as error:  # e.g. an IPv6 address with no closing bracket
+            print("search_check: cannot read --url %s: %s" % (args.url, error), file=sys.stderr)
+            return 2
     if args.keyword is not None and not normalise(args.keyword):
         parser.error("--keyword is empty")
     if any(not normalise(v) for v in args.variant):

@@ -391,6 +391,14 @@ class FetchHelpersTest(unittest.TestCase):
         import sys
         return subprocess.run([sys.executable, page_facts.__file__, *args], capture_output=True, encoding="utf-8")
 
+    def test_an_address_that_cannot_be_parsed_is_one_line_and_exit_2(self):
+        done = self._run("http://[::1")
+        self.assertEqual(done.returncode, 2, done.stderr)
+        self.assertNotIn("Traceback", done.stderr)
+        self.assertEqual(len(done.stderr.strip().splitlines()), 1, done.stderr)
+        self.assertTrue(done.stderr.startswith("page_facts:"), done.stderr)
+        self.assertIn("http://[::1", done.stderr)
+
     def test_out_with_no_value_exits_2_with_usage(self):
         import tempfile
         from pathlib import Path

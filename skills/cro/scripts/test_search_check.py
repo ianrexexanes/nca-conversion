@@ -156,6 +156,16 @@ class SearchCheckTests(unittest.TestCase):
         self.assertTrue(lines[-1].startswith("search_check: 2 misses of 6 placements"), lines[-1])
 
 
+class BadAddressTest(unittest.TestCase):
+    def test_a_url_that_cannot_be_parsed_is_one_line_and_exit_2(self):
+        code, out, err = run(str(FIXTURES / "search-home.html"), "--url", "http://[::1", "--keyword", KEYWORD)
+        self.assertEqual(code, 2, err)
+        self.assertNotIn("Traceback", err)
+        self.assertEqual(len(err.strip().splitlines()), 1, err)
+        self.assertTrue(err.startswith("search_check:"), err)
+        self.assertIn("http://[::1", err)
+
+
 class SvgTitleTest(unittest.TestCase):
     def test_title_placement_reads_the_head_title_not_a_logo_svg_title(self):
         page = ('<html><head><title>%s</title></head><body><h1>Welcome</h1>'

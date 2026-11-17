@@ -464,6 +464,26 @@ class SiteCheckTests(unittest.TestCase):
         self.assertNotRegex(out, r"(?m)^FAIL /index\.html SITEMAP")
         self.assertRegex(out, r"(?m)^site_check: \d+ FAIL, \d+ WARN$")
 
+    def test_a_name_the_file_system_refuses_is_a_file_that_is_not_there(self):
+        long = "a" * 300
+        about = page_html(CLEAN_DECK, canonical=ORIGIN + "/about.html")
+        for href in ("/%s.html" % long, "/%s/index.html" % long, "/page.html?x=%s" % long, "/%s" % long):
+            extra = '<a href="%s">Long</a>' % href
+            out = self.site({"/index.html": page_html(CLEAN_DECK, body_extra=extra), "/about.html": about},
+                            {"sitemap.xml": urlset([ORIGIN + "/", ORIGIN + "/about.html"])})[1]
+            self.assertNotIn("Traceback", out)
+            if "?" not in href:
+                self.assertRegex(out, r"(?m)^FAIL /index\.html LINK: /a{300}")
+            self.assertRegex(out, r"(?m)^site_check: \d+ FAIL, \d+ WARN$")
+        child = ORIGIN + "/%s.xml" % long
+        files = {"sitemap.xml": None, "sitemap-index.xml": sitemap_index([child, ORIGIN + "/sitemap-pages.xml"]),
+                 "sitemap-pages.xml": urlset([ORIGIN + "/"])}
+        out = self.site({"/index.html": page_html(CLEAN_DECK)}, files)[1]
+        self.assertNotIn("Traceback", out)
+        self.assertRegex(out, r"(?m)^FAIL sitemap-index\.xml SITEMAP: sitemap-index\.xml lists .*a{300}\.xml, which is not in the dist")
+        self.assertNotRegex(out, r"(?m)^FAIL /index\.html SITEMAP")
+        self.assertRegex(out, r"(?m)^site_check: \d+ FAIL, \d+ WARN$")
+
     def test_head_rules_fire_on_their_own(self):
         good = page_html(CLEAN_DECK)
         cases = {

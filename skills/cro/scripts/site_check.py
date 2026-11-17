@@ -192,6 +192,14 @@ def parse_url(text):
         return None
 
 
+def there(path, kind):
+    """Whether `path` is a file (kind "file") or a folder (kind "dir"); a name the file system refuses is not there."""
+    try:
+        return path.is_file() if kind == "file" else path.is_dir()
+    except OSError:
+        return False
+
+
 def page_rows(page, deck, mapped, forbid, add, internal_link):
     facts = page.facts
     url = page.url
@@ -312,7 +320,7 @@ def load_sitemap(dist, add):
             return locs
         for loc in locs:
             child = dist / urllib.parse.unquote(urllib.parse.urlparse(loc).path).lstrip("/")
-            if not child.is_file():
+            if not there(child, "file"):
                 add("FAIL", top.name, "SITEMAP", "%s lists %s, which is not in the dist folder" % (top.name, loc))
                 continue
             child_kind, child_locs = sitemap_locs(child)
@@ -395,9 +403,9 @@ def make_internal_link(dist, fetch_page):
                 return None
             path = urllib.parse.unquote(target.path) or "/"
             file = dist / path.lstrip("/")
-            if file.is_dir() or path.endswith("/"):
+            if there(file, "dir") or path.endswith("/"):
                 file = file / "index.html"
-            if file.is_file() or (not file.suffix and file.with_name(file.name + ".html").is_file()):
+            if there(file, "file") or (not file.suffix and there(file.with_name(file.name + ".html"), "file")):
                 return None
             return "no such file in the dist folder"
         try:

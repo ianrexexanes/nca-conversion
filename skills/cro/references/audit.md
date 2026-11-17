@@ -17,7 +17,7 @@ This is the procedure `/cro audit <url> [mode] [keyword] [traffic] [page role] [
 ```json
 {
   "page": "https://harborlane.example/services/bike-repair/",
-  "plugin_version": "0.4.0",
+  "plugin_version": "0.4.1",
   "mode": "search",
   "page_role": "service",
   "traffic": "search",

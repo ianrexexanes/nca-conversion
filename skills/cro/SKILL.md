@@ -4,7 +4,7 @@ description: "Use when the user types /nca-conversion:cro, asks to audit or scor
 license: MIT
 allowed-tools: Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/setup.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/doctor.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/conversion-page-audit/scripts/page_facts.py *) Bash(${CLAUDE_PLUGIN_DATA}/venv/bin/python ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/render_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/speed_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/score.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/search_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/client_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/deck_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/wire_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/design_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/site_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/asset_text_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/redirect_check.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/clarity_export.py *) Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/compare.py *) Bash(${CLAUDE_PLUGIN_DATA}/venv/bin/python ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/launch_render.py *) Bash(${CLAUDE_PLUGIN_DATA}/venv/bin/python ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/form_check.py *)
 metadata:
-  version: 0.4.0
+  version: 0.4.1
 ---
 
 # cro

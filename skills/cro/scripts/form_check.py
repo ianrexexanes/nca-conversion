@@ -446,7 +446,7 @@ def click_submit(page, i):
         pass
     landed = safe_eval(page, LANDED, None, None)
     if page.is_closed():
-        return False  # the page is gone: no click was made
+        return False  # the page is gone: whether the click landed can no longer be asked
     if landed is None or not landed["marked"] or landed["seen"]:
         return True  # the document was replaced, or it saw the click or the submit: the press was made
     try:
@@ -463,17 +463,24 @@ def safe_eval(page, script, arg, default):
         return default
 
 
-def wait_for_state(page, i, before, started, limit_ms, stop=None, resume=None):
+def wait_for_state(page, i, before, started, limit_ms, stop=None, resume=None, hold=None):
     """After a press: "navigated" when the document is replaced, "changed" when the form's text or a region's text changes, or the form stops
     being shown, against the snapshot taken before the press, else "none" at the limit. A change is waited out: the wait goes on until the
     text has stayed the same for SETTLE_MS, so a button that says "Sending" is not the answer. Returns (state, milliseconds
     from the press to the state, or for "changed" to the last change seen). stop(elapsed_ms) ends the wait early.
-    resume=(snapshot pair, ms of the last change) goes on from a state that has changed already."""
+    resume=(snapshot pair, ms of the last change) goes on from a state that has changed already. hold(), when given, is true
+    while the page must not be asked (a document request is in flight, and the page's calls wait for it): the loop then only
+    waits, in steps that do not ask the page, until the limit."""
     state, seen, changed, quiet = "none", None, 0.0, 0.0
     if resume:
         state, (seen, changed), quiet = "changed", resume, (time.monotonic() - started) * 1000
     while True:
         elapsed = (time.monotonic() - started) * 1000
+        if hold is not None and hold():
+            if elapsed >= limit_ms:
+                break
+            page.wait_for_timeout(100)
+            continue
         now = safe_eval(page, SNAPSHOT, i, None)
         if now is not None and not now["marked"]:
             state = "navigated"
@@ -516,7 +523,7 @@ def read_outcome(page, i, submit):
     return text
 
 
-def press(page, i, info, limit_ms, stop=None, into=None):
+def press(page, i, info, limit_ms, stop=None, into=None, hold=None):
     """Press submit once and record what followed. Returns the form's submit dict and the thank-you text.
     into, a dict, receives the submit dict as "submit" at once, so a caller that loses the page inside press still holds it."""
     submit = {"text": info["submit"]["text"], "regions": info["regions"], "pressed": False, "validation": [],
@@ -532,9 +539,12 @@ def press(page, i, info, limit_ms, stop=None, into=None):
         started = time.monotonic()
         submit["pressed"] = click_submit(page, i)
     if submit["pressed"]:
-        submit["state"], submit["time_ms"] = wait_for_state(page, i, before, started, limit_ms, stop)
-        submit["validation"] = [] if submit["state"] == "navigated" else safe_eval(page, VALIDATION, i, [])
-        text = read_outcome(page, i, submit)
+        if hold is not None:
+            page.wait_for_timeout(400)  # a navigation the press starts shows in the caller's record before the page is asked
+        submit["state"], submit["time_ms"] = wait_for_state(page, i, before, started, limit_ms, stop, hold=hold)
+        if hold is None or not hold():  # a page held by a request in flight is not asked
+            submit["validation"] = [] if submit["state"] == "navigated" else safe_eval(page, VALIDATION, i, [])
+            text = read_outcome(page, i, submit)
     return submit, text
 
 

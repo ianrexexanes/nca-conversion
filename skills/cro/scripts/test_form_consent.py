@@ -3,6 +3,7 @@ import io
 import json
 import os
 import pty
+import socket
 import subprocess
 import sys
 import tempfile
@@ -25,6 +26,7 @@ from http.server import ThreadingHTTPServer  # noqa: E402
 from form_tests import FormServer, Run, run_script  # noqa: E402
 from guard_tests import SKIP, GuardLeakPathsMixin  # noqa: E402
 
+HOLD_SECONDS = 6.0  # how long the fixture server holds a POST or a page it is asked to hold
 TODAY = date.today().isoformat()
 YESTERDAY = (date.today() - timedelta(days=1)).isoformat()
 OWNER = "Test Owner"
@@ -82,9 +84,27 @@ class AnswerServer(FormServer):
     """The recording server with the extra answers these tests need: a POST that answers after 6 seconds, and answers of 200 and 500."""
     ANSWERS = {"/lead-6s": (200, 6.0), "/lead-elsewhere-500": (500, 0), "/lead-elsewhere-200": (200, 0), "/api/lead": (200, 0)}
 
+    PAGE = b"<!doctype html><title>Thanks</title><main><h1>Thank you</h1><p>We reply within one working day.</p></main>"
+
     def _go(self):
         path = self.path.split("?", 1)[0]
-        if self.command == "POST" and path in self.ANSWERS:
+        if path in ("/lead-hold", "/lead-hold-303", "/lead-hangup", "/page-held"):
+            length = int(self.headers.get("Content-Length") or 0)
+            body = self.rfile.read(length).decode("utf-8", "replace") if length else ""
+            with FormServer.lock:
+                FormServer.requests.append((self.command, self.path, self.headers.get("User-Agent", ""), body))
+            try:
+                if path == "/lead-hangup":
+                    self.close_connection = True
+                    self.connection.shutdown(socket.SHUT_RDWR)  # no answer at all: the connection just ends
+                elif path == "/lead-hold-303":
+                    self._send(303, b"", None, {"Location": "/page-held"})
+                else:
+                    time.sleep(HOLD_SECONDS)
+                    self._send(200, self.PAGE, "text/html; charset=utf-8")
+            except OSError:
+                pass
+        elif self.command == "POST" and path in self.ANSWERS:
             length = int(self.headers.get("Content-Length") or 0)
             body = self.rfile.read(length).decode("utf-8", "replace") if length else ""
             with FormServer.lock:
@@ -177,6 +197,56 @@ class ElsewhereAnswerTests(unittest.TestCase):
         self.assertEqual(run.code, 0, (run.out, run.err))
         self.assertEqual([p for _m, p in run.posts()], ["/lead-elsewhere-200"])
         self.assertEqual([r for lv, _f, r, _d in run.lines if lv == "FAIL"], [], run.lines)
+
+
+class HeldAnswerTests(unittest.TestCase):
+    """S07: a host that has not answered must not hold the script past the wait. The wait is cut to 1.5 seconds and the host holds
+    for 6, and each run has its own bound of the wait plus 10 seconds."""
+    WAIT = 1500
+
+    @classmethod
+    def setUpClass(cls):
+        cls.server, cls.base = start_answer_server()
+        cls.addClassCleanup(cls.server.server_close)
+        cls.addClassCleanup(cls.server.shutdown)
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.addClassCleanup(cls.tmp.cleanup)
+
+    def bounded_run(self, page):
+        folder = tempfile.mkdtemp(dir=self.tmp.name)
+        with FormServer.lock:
+            mark = len(FormServer.requests)
+        out, err, result = io.StringIO(), io.StringIO(), []
+
+        def go():
+            with mock.patch.object(form_consent, "WAIT_MS", self.WAIT), mock.patch.object(form_consent, "POST_WAIT_MS", 1000), \
+                    mock.patch.object(form_consent, "LOOPBACK", form_consent.LOOPBACK), mock.patch.object(sys, "stdin", FakeTerminal(False)), \
+                    contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                result.append(form_consent.main(["%s/%s" % (self.base, page), "--out", folder, *GOOD]))
+
+        thread = threading.Thread(target=go, daemon=True)
+        started = time.monotonic()
+        thread.start()
+        thread.join(self.WAIT / 1000 + 10)
+        self.assertFalse(thread.is_alive(), "the run did not end within the wait plus 10 seconds")
+        with FormServer.lock:
+            seen = list(FormServer.requests[mark:])
+        return Run(result[0], out.getvalue(), err.getvalue(), seen, folder), time.monotonic() - started
+
+    def test_a_post_the_host_holds_past_the_wait_ends_the_run_with_the_warning(self):
+        run, _took = self.bounded_run("form-hold-post.html")
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead-hold"])
+        self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("WARN", "SEND") and "had not answered" in d], run.lines)
+        self.assertIs(run.form["submit"]["pressed"], True)
+        self.assertEqual(run.data["network"]["consented"], 1)
+
+    def test_a_page_after_the_send_that_the_host_holds_past_the_wait_ends_the_run_with_the_warning(self):
+        run, _took = self.bounded_run("form-hold-page.html")
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead-hold-303"])
+        self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("WARN", "SEND") and "had not loaded" in d and "303" in d], run.lines)
+        self.assertIs(run.form["submit"]["pressed"], True)
 
 
 class FakeTerminal:

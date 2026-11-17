@@ -147,6 +147,7 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
     sender.allow_post_host = host  # open the consent now, for the press alone
     session.consent_opened = True  # for main: a send may have left if the script fails from here on
     page_error = None
+    held = False  # a document request made since the press was still in flight when the wait ended
     kept = {}  # press hands its submit block here, so a page lost inside it still leaves the block
     mark = len(sender.entries)
     try:
@@ -159,7 +160,9 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         pressed_at = time.monotonic()
         waited = lambda: (time.monotonic() - pressed_at) * 1000  # noqa: E731
         posts = lambda: [e for e in sender.entries[mark:] if e["method"] not in cro_runtime.ALLOWED_METHODS]  # noqa: E731
-        entry["submit"], text = press(page, info["i"], info, WAIT_MS, stop, into=kept)
+        in_flight = lambda: any(e["resource_type"] == "document" and e["status"] is None and e["outcome"] in (None, "consented")  # noqa: E731
+                                and "failure" not in e for e in sender.entries[mark:])
+        entry["submit"], text = press(page, info["i"], info, WAIT_MS, stop, into=kept, hold=in_flight)
         submit = entry["submit"]
         # wait for the form's host to answer before anything is judged: first for a late request, then for its answer
         pressed_back = waited()
@@ -169,7 +172,8 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         while any(e["outcome"] == "consented" and e["status"] is None for e in posts()) and waited() < WAIT_MS:
             page.wait_for_timeout(100)
         sender.allow_post_host = None  # the consent is closed: a later request of the page is aborted like any other
-        if submit["state"] == "changed" and any(e["outcome"] == "consented" and e["status"] is not None for e in posts()):
+        held = in_flight()  # while one is in flight the page's calls wait for it: the page is not asked
+        if not held and submit["state"] == "changed" and any(e["outcome"] == "consented" and e["status"] is not None for e in posts()):
             # read the page again after the answer: it may have moved on to a thank-you page, which is mid-load while no snapshot reads
             now, looked = None, waited()
             while now is None and waited() - looked < 3000:
@@ -183,7 +187,8 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         entry["thank_you"]["text"] = text
         if entry["submit"]["state"] == "navigated":
             entry["thank_you"]["url"] = page.url
-        snap_form(page, info["i"], out_dir / ("form%d-consented.png" % entry["index"]))
+        if not held:
+            snap_form(page, info["i"], out_dir / ("form%d-consented.png" % entry["index"]))
         page.wait_for_timeout(500)
     except form_check.PlaywrightError as error:
         entry["submit"] = kept.get("submit", entry["submit"])  # the press may have been made before the page was lost
@@ -244,6 +249,9 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
                   "is not known; check before any rerun" % round(waited() / 1000))
     elif status is not None and status >= 400:
         add_issue(entry, "FAIL", "SEND", "%s answered HTTP %d" % (sent[0]["url"] if elsewhere else "the action host " + host, status))
+    if held and status is not None:
+        add_issue(entry, "WARN", "SEND", "the page that follows the send had not loaded %d seconds after the press, so the thank-you state "
+                  "is not known; the send was answered HTTP %d; check that the test lead arrived before any rerun" % (round(waited() / 1000), status))
     return True if elsewhere else ok
 
 

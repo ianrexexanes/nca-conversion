@@ -180,6 +180,7 @@ if (!form) return [];
 return [...form.querySelectorAll('input, select, textarea')].filter((e) => e.willValidate && !e.validity.valid)
   .map((e) => ({field: e.getAttribute('name') || e.id || e.tagName.toLowerCase(), message: e.validationMessage}));
 }"""
+FORM_TEXT = "(i) => {" + HELPERS + "const form = formOf(i); return form ? clean(form.innerText).slice(0, 600) : null;}"
 PAGE_TEXT = r"""() => {
 const main = document.querySelector('main, [role=main]') || document.body;
 return (main.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 600);
@@ -382,7 +383,7 @@ def new_entry(info):
     return {"index": info["i"] + 1, "action": info["action"], "method": info["method"],
             "fields": [{k: f[k] for k in FIELD_KEYS} for f in info["fields"]], "issues": [],
             "submit": {"text": info["submit"]["text"], "regions": info["regions"], "pressed": False, "validation": [],
-                       "state": "none", "status_text": None, "time_ms": None},
+                       "state": "none", "status_text": None, "status_source": "none", "time_ms": None},
             "thank_you": {"url": info["thank_you"], "text": None}, "filled": {}}
 
 
@@ -493,19 +494,30 @@ def wait_for_state(page, i, before, started, limit_ms, stop=None, resume=None):
 
 
 def read_outcome(page, i, submit):
-    """Read the regions and the status text as the page shows them now into submit. Returns the text."""
+    """Read the regions and the status text as the page shows them now into submit, with status_source: "region" for a shown
+    region's text, "form" for the form's own text after a change, "page" for the page's text after a navigation or when the
+    form is gone, "none" (and no text) when nothing changed. Returns the text."""
     if submit["state"] != "navigated":
         submit["regions"] = safe_eval(page, REGIONS, i, submit["regions"])
     shown = [r["text"] for r in submit["regions"] if r["text"]]
-    submit["status_text"] = shown[0] if shown and submit["state"] != "navigated" else safe_eval(page, PAGE_TEXT, None, None)
-    return submit["status_text"]
+    text, source = None, "none"
+    if shown and submit["state"] != "navigated":
+        text, source = shown[0], "region"
+    elif submit["state"] == "navigated":
+        text, source = safe_eval(page, PAGE_TEXT, None, None), "page"
+    elif submit["state"] == "changed":
+        text, source = safe_eval(page, FORM_TEXT, i, None), "form"
+        if text is None:  # the form is gone: the page's text is what is left to read
+            text, source = safe_eval(page, PAGE_TEXT, None, None), "page"
+    submit["status_text"], submit["status_source"] = text, source
+    return text
 
 
 def press(page, i, info, limit_ms, stop=None, into=None):
     """Press submit once and record what followed. Returns the form's submit dict and the thank-you text.
     into, a dict, receives the submit dict as "submit" at once, so a caller that loses the page inside press still holds it."""
     submit = {"text": info["submit"]["text"], "regions": info["regions"], "pressed": False, "validation": [],
-              "state": "none", "status_text": None, "time_ms": None}
+              "state": "none", "status_text": None, "status_source": "none", "time_ms": None}
     if into is not None:
         into["submit"] = submit
     text = None
@@ -675,7 +687,7 @@ def run_simulate(args, browser, major, session, doc, out_dir, timeout_ms):
         entry["submit"], text = press(page, info["i"], info, 10000)
     if entry["submit"]["state"] == "navigated" and address(page.url) in targets:
         # no script took the reply: the simulated answer became the document, which is not a state the site shows
-        entry["submit"]["status_text"] = None
+        entry["submit"]["status_text"], entry["submit"]["status_source"] = None, "none"
         add_issue(entry, "SKIPPED", "SIMULATE", "this form submits without a script, so the simulated reply replaced the page and is "
                   "not a state the site shows; nothing was sent")
     else:

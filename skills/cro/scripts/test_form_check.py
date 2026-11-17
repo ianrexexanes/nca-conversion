@@ -141,6 +141,31 @@ class FormCheckTests(unittest.TestCase):
             self.assertNotIn("went wrong", text)
             self.assertNotIn("we reply soon", text)
 
+    def test_the_status_source_says_where_the_outcome_text_came_from(self):
+        hero = "Our pump maintenance team keeps your plant running"
+        run = self.run_page("form-plain-message.html", "--simulate", "success")
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        submit = run.form["submit"]
+        self.assertEqual(submit["state"], "changed")
+        self.assertEqual(submit.get("status_source"), "form", submit)
+        self.assertIn("Thanks, we reply within one working day.", submit["status_text"])
+        self.assertFalse(submit["status_text"].startswith(hero), submit["status_text"])
+        self.assertLessEqual(len(submit["status_text"]), 600)
+        self.assertEqual(run.form["thank_you"]["text"], submit["status_text"])
+        self.assertEqual(self.run_page("form-lead.html", "--simulate", "success").form["submit"].get("status_source"), "region")
+        moved = self.run_page("form-moves-news.html", "--simulate", "success").form
+        self.assertEqual(moved["submit"].get("status_source"), "page", moved["submit"])
+        self.assertEqual(moved["thank_you"]["text"], moved["submit"]["status_text"])
+
+    def test_a_press_that_changes_nothing_reports_no_outcome_text(self):
+        run = self.run_page("form-quiet.html")
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        submit = run.form["submit"]
+        self.assertEqual(submit["state"], "none")
+        self.assertIsNone(submit["status_text"])
+        self.assertEqual(submit.get("status_source"), "none", submit)
+        self.assertIsNone(run.form["thank_you"]["text"])
+
     def test_nothing_is_read_from_a_form_of_the_new_document_after_a_navigation(self):
         run = self.run_page("form-moves-news.html", "--simulate", "success")
         self.assertEqual(run.code, 0, (run.out, run.err))

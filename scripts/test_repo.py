@@ -2673,8 +2673,8 @@ class ReferenceTextRound3Tests(unittest.TestCase):
 
     def test_the_first_sentence_skips_a_date_byline_or_read_time_line(self):
         text = self.ref("modes.md")
-        self.assertIn("The check reads the first block under the H1 that holds no time element and either ends with a full stop, `!` or `?` "
-                      "or runs to twelve words, so a date, byline, rating or read-time line is skipped; when no block does, it reads "
+        self.assertIn("The check reads the first block under the H1 that holds no time element and either ends with a full stop, `!` or `?`, "
+                      "looked for in the block's whole text with its links, or runs to twelve words outside links and buttons, so a date, byline, rating or read-time line is skipped; when no block does, it reads "
                       "the first block with text of its own.", text)
 
     def test_the_launch_render_checks_each_address_before_a_browser_opens(self):
@@ -2734,6 +2734,16 @@ class ReferenceTextRound3Tests(unittest.TestCase):
         self.assertIn("If the command is still running a minute after the host was typed, or a minute after it started when no host is "
                       "asked, the page is holding it. The user stops it with Ctrl+C, the script prints the same line, and the same "
                       "check applies.", step)
+
+    def test_a_dynamic_import_error_is_a_fail_even_with_a_blocked_fetch(self):
+        step = self.ref("check.md", 5)
+        self.assertIn("The error of a dynamic import that did not load is a `FAIL` too: its text holds the same words, but a blocked "
+                      "`fetch` is not what stops a script from loading.", step)
+
+    def test_compare_does_not_compare_the_first_sentence_across_the_0_4_1_change(self):
+        text = self.ref("compare.md")
+        self.assertIn("A changed keyword is a new test. When one side was read before 0.4.1 and the other by 0.4.1 or later, the "
+                      "first-sentence line is not compared, because 0.4.1 reads the first sentence differently.", text)
 
 
 if __name__ == "__main__":

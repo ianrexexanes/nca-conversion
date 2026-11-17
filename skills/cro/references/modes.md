@@ -18,7 +18,7 @@ The brief records, for each page, the keyword, its spelling variants, its monthl
 
 ## The six placements
 
-The exact keyword goes in six places: the title tag (near the front), the meta description, the URL slug, the H1, the first sentence after the H1, and one or two H2s. The check reads the first block under the H1 that holds no time element and either ends with a full stop, `!` or `?` or runs to twelve words, so a date, byline, rating or read-time line is skipped; when no block does, it reads the first block with text of its own. The first sentence answers first and names both the business and the keyword. For a made-up example: "Harbor Lane Cycles is a family workshop that offers bike repair for commuters and weekend riders."
+The exact keyword goes in six places: the title tag (near the front), the meta description, the URL slug, the H1, the first sentence after the H1, and one or two H2s. The check reads the first block under the H1 that holds no time element and either ends with a full stop, `!` or `?`, looked for in the block's whole text with its links, or runs to twelve words outside links and buttons, so a date, byline, rating or read-time line is skipped; when no block does, it reads the first block with text of its own. The first sentence answers first and names both the business and the keyword. For a made-up example: "Harbor Lane Cycles is a family workshop that offers bike repair for commuters and weekend riders."
 
 A home page cannot carry the keyword in its address, so the URL placement is not applicable there. The same goes for the home page of a language folder such as `/en/`.
 

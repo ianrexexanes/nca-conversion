@@ -1923,6 +1923,11 @@ class FormTests(unittest.TestCase):
                       "When the host has not answered by the end of the wait, it prints `WARN ... SEND` with exit 0: whether the test lead "
                       "arrived is not known, so check before any rerun.", self.text)
 
+    def test_it_says_a_form_without_a_script_is_not_simulated(self):
+        self.assertIn("say that this form could not be simulated and give the reason. A form that submits without a script prints "
+                      "`SKIPPED ... SIMULATE` too, because the simulated reply would replace the page: say that its success and error "
+                      "states could not be simulated, and judge that form by the thank-you step alone.", self.text)
+
     def test_the_consent_script_docstring_does_not_say_always_asks(self):
         doc = flat(read("skills/cro/scripts/form_consent.py").split('"""')[1])
         self.assertIn("The yes in the chat comes first, as `form.md` step 7 says", doc)

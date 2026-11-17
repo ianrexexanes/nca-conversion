@@ -190,6 +190,17 @@ class FormCheckTests(unittest.TestCase):
         self.assertNotIn("Sending", text)
         self.assertEqual(run.posts(), [])
 
+    def test_a_form_without_a_script_is_not_simulated(self):
+        for answer in ("success", "error"):
+            run = self.run_page("form-noscript.html", "--simulate", answer)
+            self.assertEqual(run.code, 0, (run.out, run.err))
+            self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SIMULATE") and "without a script" in d], run.lines)
+            self.assertNotIn("Simulated answer", json.dumps(run.form["thank_you"]))
+            self.assertIsNone(run.form["thank_you"]["text"])
+            self.assertIsNone(run.form["thank_you"]["url"])
+            self.assertFalse((run.dir / ("form1-simulate-%s.png" % answer)).exists())
+            self.assertEqual(run.posts(), [])
+
     def test_simulate_needs_one_form(self):
         run = self.run_page("form-two.html", "--simulate", "success")
         self.assertEqual(run.code, 3, run.err)

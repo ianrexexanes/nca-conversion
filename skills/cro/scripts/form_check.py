@@ -638,10 +638,16 @@ def run_simulate(args, browser, major, session, doc, out_dir, timeout_ms):
                       % (p["field"], p["message"]))
     else:
         entry["submit"], text = press(page, info["i"], info, 10000)
-    entry["thank_you"]["text"] = text
-    if entry["submit"]["state"] == "navigated":
-        entry["thank_you"]["url"] = page.url
-    snap_form(page, info["i"], out_dir / ("form%d-simulate-%s.png" % (entry["index"], args.simulate)))
+    if entry["submit"]["state"] == "navigated" and address(page.url) in targets:
+        # no script took the reply: the simulated answer became the document, which is not a state the site shows
+        entry["submit"]["status_text"] = None
+        add_issue(entry, "SKIPPED", "SIMULATE", "this form submits without a script, so the simulated reply replaced the page and is "
+                  "not a state the site shows; nothing was sent")
+    else:
+        entry["thank_you"]["text"] = text
+        if entry["submit"]["state"] == "navigated":
+            entry["thank_you"]["url"] = page.url
+        snap_form(page, info["i"], out_dir / ("form%d-simulate-%s.png" % (entry["index"], args.simulate)))
     elsewhere = [e for e in recorder.entries[mark:] if e["method"] not in ("GET", "HEAD", "OPTIONS")
                  and e["rule"] != "form:simulate" and address(e["url"]) not in targets]
     answered = [e for e in recorder.entries[mark:] if e["rule"] == "form:simulate"]

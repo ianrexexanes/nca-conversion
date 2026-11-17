@@ -459,7 +459,7 @@ def click_submit(page, i):
 
 
 READ_BOUND_MS = None  # form_consent sets it once the consent opens: every read of the page then has this limit
-READ_MISSED = False  # set when a bounded read got no answer inside its limit
+READ_MISSED = False  # whether the last bounded read got no answer inside its limit: a read that is answered clears it
 
 
 def safe_eval(page, script, arg, default):
@@ -474,7 +474,9 @@ def safe_eval(page, script, arg, default):
         if READ_BOUND_MS is None:
             return page.evaluate(script, arg)
         handle = page.wait_for_function("(arg) => ({value: (" + script + ")(arg)})", arg=arg, timeout=READ_BOUND_MS, polling=100)
-        return handle.json_value()["value"]
+        value = handle.json_value()["value"]
+        READ_MISSED = False  # the last bounded read was answered
+        return value
     except PlaywrightError as error:
         if "Timeout" in type(error).__name__:
             READ_MISSED = True

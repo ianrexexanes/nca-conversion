@@ -55,6 +55,36 @@ class WaitForStateStopTests(unittest.TestCase):
         self.assertLess(time.monotonic() - started, 1.0)
 
 
+class BoundedReadFlagTests(unittest.TestCase):
+    """form_check.safe_eval with the bound set, over a stand-in page, no browser."""
+
+    class Handle:
+        def json_value(self):
+            return {"value": "answer"}
+
+    class Page:
+        def __init__(self, error):
+            self.calls = 0
+            self.error = error
+
+        def wait_for_function(self, *_args, **_kwargs):
+            self.calls += 1
+            if self.calls == 1:
+                raise self.error("Timeout 3000ms exceeded")
+            return BoundedReadFlagTests.Handle()
+
+    def test_a_read_that_is_answered_clears_the_flag_a_missed_read_set(self):
+        from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+        self.addCleanup(lambda: setattr(form_check, "READ_BOUND_MS", None))
+        self.addCleanup(lambda: setattr(form_check, "READ_MISSED", False))
+        form_check.READ_BOUND_MS, form_check.READ_MISSED = 3000, False
+        page = self.Page(PlaywrightTimeoutError)
+        self.assertEqual(form_check.safe_eval(page, "() => 1", None, "default"), "default")
+        self.assertIs(form_check.READ_MISSED, True)
+        self.assertEqual(form_check.safe_eval(page, "() => 1", None, "default"), "answer")
+        self.assertIs(form_check.READ_MISSED, False)
+
+
 @SKIP
 class FormCheckTests(unittest.TestCase):
     @classmethod

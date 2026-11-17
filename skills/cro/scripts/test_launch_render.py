@@ -226,8 +226,13 @@ class LaunchRenderTests(unittest.TestCase):
         self.assertFalse(self.has(rows, "WARN", "PAGE_ERROR", 1440), out)
 
     def test_a_page_error_with_blocked_requests_but_no_network_text_still_fails(self):
-        _c, out, rows = self.render("throws.html", 1440)
+        _c, out, rows = self.render("blocked-fetch-and-plain-throw.html", 1440)
         self.assertTrue(self.has(rows, "FAIL", "PAGE_ERROR", 1440, "page says boom"), out)
+
+    def test_a_failed_dynamic_import_is_never_excused_by_a_blocked_fetch(self):
+        _c, out, rows = self.render("blocked-fetch-and-missing-chunk.html", 1440)
+        self.assertTrue(self.has(rows, "FAIL", "PAGE_ERROR", 1440, "dynamically imported module"), out)
+        self.assertFalse(self.has(rows, "WARN", "PAGE_ERROR", 1440, "dynamically imported module"), out)
 
     def test_body_black_warns(self):
         _c, out, rows = self.render("black.html", 1440)

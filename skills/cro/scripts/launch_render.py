@@ -578,12 +578,13 @@ def main(argv=None):
                 rows = analyse(facts, args, widest, width, width == readable)
                 if width == readable and widest not in reads:
                     rows.append(("SKIPPED", "HEADLINE_RATIO", "the widest view (%d px) did not load, so the headline ratio was not checked" % widest))
+                # a failed import() carries the same words but is a script that did not load, never the guard's doing.
                 # fetch() is what rejects with these texts: the guard can be the cause only when it stopped a fetch
                 # and no fetch failed on its own (rows are made before recorder.finish(), so one still under way is not failed)
                 blocked = sum(1 for e in recorder.entries if e["resource_type"] == "fetch" and e["outcome"] == "blocked")
                 failed = any(e["resource_type"] == "fetch" and e["outcome"] == "failed" for e in recorder.entries)
                 for e in recorder.errors:
-                    if blocked and not failed and any(t in e for t in NETWORK_FAILURES):
+                    if blocked and not failed and "dynamically imported module" not in e and any(t in e for t in NETWORK_FAILURES):
                         rows.append(("WARN", "PAGE_ERROR", "%s; the guard blocked %d fetch request(s) on this view, so this may be its own doing: confirm in an ordinary browser" % (one_line(e)[:300], blocked)))
                     else:
                         rows.append(("FAIL", "PAGE_ERROR", one_line(e)[:300]))

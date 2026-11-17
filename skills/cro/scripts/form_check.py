@@ -637,7 +637,7 @@ def tripwire(entries, session, targets, marks):
         for e in found.entries[marks.get(id(found), 0):]:
             if e["resource_type"] == "websocket" or e["outcome"] == "blocked":
                 continue
-            if e["method"] not in ("GET", "HEAD", "OPTIONS") or address(e["url"]) in targets:
+            if e["method"] not in cro_runtime.ALLOWED_METHODS or address(e["url"]) in targets:
                 add_issue(first, "FAIL", "SENT", "%s %s left the browser (%s)" % (e["method"], e["url"], e["outcome"]))
                 return
 
@@ -671,7 +671,7 @@ def run_simulate(args, browser, major, session, doc, out_dir, timeout_ms):
         if entry["submit"]["state"] == "navigated":
             entry["thank_you"]["url"] = page.url
         snap_form(page, info["i"], out_dir / ("form%d-simulate-%s.png" % (entry["index"], args.simulate)))
-    elsewhere = [e for e in recorder.entries[mark:] if e["method"] not in ("GET", "HEAD", "OPTIONS")
+    elsewhere = [e for e in recorder.entries[mark:] if e["method"] not in cro_runtime.ALLOWED_METHODS
                  and e["rule"] != "form:simulate" and address(e["url"]) not in targets]
     answered = [e for e in recorder.entries[mark:] if e["rule"] == "form:simulate"]
     if elsewhere:

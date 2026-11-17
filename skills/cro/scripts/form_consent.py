@@ -32,7 +32,6 @@ from form_check import (BadInput, Parser, Unreadable, add_issue, count_issues, f
 
 EMAIL = re.compile(r"[^@\s]+@[^@\s.]+(\.[^@\s.]+)+")
 DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
-NON_GET = ("GET", "HEAD", "OPTIONS")
 WAIT_MS = 30000
 POST_WAIT_MS = 10000
 GIVE_UP_MS = 2000
@@ -153,13 +152,13 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
     try:
 
         def stop(elapsed):
-            posts = [e for e in sender.entries[mark:] if e["method"] not in NON_GET]
+            posts = [e for e in sender.entries[mark:] if e["method"] not in cro_runtime.ALLOWED_METHODS]
             sent = any(e["outcome"] == "consented" for e in posts)
             return not sent and any(e["outcome"] == "blocked" for e in posts) and elapsed >= GIVE_UP_MS
 
         pressed_at = time.monotonic()
         waited = lambda: (time.monotonic() - pressed_at) * 1000  # noqa: E731
-        posts = lambda: [e for e in sender.entries[mark:] if e["method"] not in NON_GET]  # noqa: E731
+        posts = lambda: [e for e in sender.entries[mark:] if e["method"] not in cro_runtime.ALLOWED_METHODS]  # noqa: E731
         entry["submit"], text = press(page, info["i"], info, WAIT_MS, stop, into=kept)
         submit = entry["submit"]
         # wait for the form's host to answer before anything is judged: first for a late request, then for its answer
@@ -203,7 +202,7 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
     ok = True
     sent_at = after.index(sent[0]) if sent else len(after)
     for n, e in enumerate(after):
-        if e["method"] not in NON_GET and e["outcome"] == "completed":
+        if e["method"] not in cro_runtime.ALLOWED_METHODS and e["outcome"] == "completed":
             add_issue(entry, "FAIL", "SEND", "a second %s reached %s by a redirect the guard cannot see" % (e["method"], e["url"]))
             ok = False
         elif n < sent_at or (n > sent_at and e["method"] not in ("GET", "HEAD")):
@@ -213,7 +212,7 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
                           % (e["method"], e["url"]))
                 ok = False
     if not sent:
-        posts = [e for e in after if e["method"] not in NON_GET and e["outcome"] == "blocked"]
+        posts = [e for e in after if e["method"] not in cro_runtime.ALLOWED_METHODS and e["outcome"] == "blocked"]
         if not posts and page_error is not None:
             add_issue(entry, "SKIPPED", "SEND", "the page could not be read after the press (%s) and no request to %s had left; "
                       "nothing was sent" % (first_line(page_error), host))

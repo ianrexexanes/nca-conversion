@@ -75,6 +75,14 @@ class BadInputTests(unittest.TestCase):
                 self.assertIn("form_consent", done.stderr)
 
 
+class ReadMethodNameTests(unittest.TestCase):
+    def test_the_read_methods_have_one_name_and_no_other_copy(self):
+        self.assertFalse(hasattr(form_consent, "NON_GET"))
+        literal = '("GET", "HEAD", ' + '"OPTIONS")'
+        for script in ("form_check.py", "form_consent.py"):
+            self.assertNotIn(literal, (HERE / script).read_text(encoding="utf-8"), script)
+
+
 class FakeTerminal:
     """Standard input for an in-process run: isatty() and readline() are the test's to set."""
 

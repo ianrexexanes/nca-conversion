@@ -294,12 +294,18 @@ def _schema_types(blocks, notes):
         except (ValueError, RecursionError):  # not JSON, or nested too deep to read
             notes.append("A JSON-LD block failed to parse; its types could not be read.")
             continue
-        for node in _walk(data):
-            value = node.get("@type")
-            if isinstance(value, list):
-                types.extend(item for item in value if isinstance(item, str))
-            elif isinstance(value, str):
-                types.append(value)
+        found = []
+        try:
+            for node in _walk(data):
+                value = node.get("@type")
+                if isinstance(value, list):
+                    found.extend(item for item in value if isinstance(item, str))
+                elif isinstance(value, str):
+                    found.append(value)
+        except RecursionError:  # parsed, but nested too deep to walk
+            notes.append("A JSON-LD block failed to parse; its types could not be read.")
+            continue
+        types.extend(found)
     return sorted(set(types))
 
 

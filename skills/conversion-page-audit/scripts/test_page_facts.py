@@ -521,5 +521,44 @@ class DecodeNotesTest(unittest.TestCase):
         self.assertIn(self.CAFE, text)
 
 
+class DeepJsonLdTest(unittest.TestCase):
+    NOTE = "A JSON-LD block failed to parse; its types could not be read."
+
+    @staticmethod
+    def _page(depth):
+        block = '{"a":' * depth + "1" + "}" * depth
+        return '<html><body><h1>Pumps</h1><script type="application/ld+json">%s</script></body></html>' % block
+
+    def _run(self, script, depth, *args):
+        import subprocess
+        import sys
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as folder:
+            file = Path(folder) / "deep.html"
+            file.write_text(self._page(depth), encoding="utf-8")
+            return subprocess.run([sys.executable, script, str(file), *args], capture_output=True, encoding="utf-8")
+
+    def _check(self, depth):
+        import json
+        done = self._run(page_facts.__file__, depth)
+        self.assertEqual(done.returncode, 0, done.stderr[-300:])
+        self.assertNotIn("Traceback", done.stderr)
+        self.assertIn(self.NOTE, json.loads(done.stdout)["notes"])
+
+    def test_jsonld_nested_3000_deep_gives_the_note(self):
+        self._check(3000)
+
+    def test_jsonld_nested_100000_deep_gives_the_note(self):
+        self._check(100000)
+
+    def test_search_check_on_a_3000_deep_page_has_no_traceback(self):
+        from pathlib import Path
+        script = str(Path(page_facts.__file__).resolve().parents[2] / "cro" / "scripts" / "search_check.py")
+        done = self._run(script, 3000, "--keyword", "pumps")
+        self.assertNotIn("Traceback", done.stderr)
+        self.assertEqual(done.returncode, 0, done.stderr[-300:])
+
+
 if __name__ == "__main__":
     unittest.main()

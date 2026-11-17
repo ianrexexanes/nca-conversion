@@ -448,7 +448,7 @@ def write_visible_text(directory, pages):
 def not_a_launch_page(url):
     """Why a --dist file is not a launch page, or None: the error page, or Google's verification file."""
     path = urllib.parse.urlparse(url).path
-    if path.endswith("/404.html") or path == "/404/index.html":
+    if path.endswith(("/404.html", "/404/index.html")):
         return "the error page is not a launch page"
     if re.fullmatch(r"/(?:.*/)?google[0-9a-f]{16}\.html", path):
         return "a search engine's verification file is not a launch page"

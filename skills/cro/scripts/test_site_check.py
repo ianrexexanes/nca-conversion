@@ -278,6 +278,12 @@ class SiteCheckTests(unittest.TestCase):
         out = self.site({"/index.html": page_html(CLEAN_DECK), "/other.html": other})[1]
         self.assertRegex(out, r"(?m)^FAIL /other\.html SITEMAP: ")
 
+    def test_an_error_page_in_a_language_folder_is_skipped_too(self):
+        err = page_html(CLEAN_DECK, canonical=ORIGIN + "/en/404/")
+        out = self.site({"/index.html": page_html(CLEAN_DECK), "/en/404/index.html": err})[1]
+        self.assertNotRegex(out, r"(?m)^FAIL /en/404", out)
+        self.assertEqual(len(re.findall(r"(?m)^SKIPPED /en/404/index\.html .*LAUNCH_PAGE", out)), 1, out)
+
     def test_a_skipped_kind_of_file_is_checked_when_the_pages_list_names_it(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)

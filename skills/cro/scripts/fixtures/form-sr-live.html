@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form fixture</title>
+<link rel="stylesheet" href="/form-base.css">
+<style>.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }</style>
+</head><body><main><h1>Book a pump check</h1>
+<form id="lead" action="/lead" method="post">
+<label for="f-name">Your name</label><input id="f-name" name="name" type="text" required autocomplete="name"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" required autocomplete="email" inputmode="email">
+<button type="submit">Send request</button>
+</form>
+<div id="live" class="sr-only" role="status" aria-live="polite"></div>
+</main><script>
+document.getElementById('lead').addEventListener('submit', function (event) {
+  event.preventDefault();
+  fetch('/lead', { method: 'POST', body: new FormData(event.target) }).then(function (r) {
+    document.getElementById('live').textContent = r.ok ? 'Thanks, we reply within one working day.' : 'Something went wrong. Please email us instead.';
+  });
+});
+</script></body></html>

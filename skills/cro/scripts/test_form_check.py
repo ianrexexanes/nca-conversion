@@ -122,6 +122,21 @@ class FormCheckTests(unittest.TestCase):
         self.assertEqual(run.data["network"]["consented"], 0)
         return run
 
+    def test_a_hidden_status_region_has_no_text_until_it_is_shown(self):
+        for answer, phrase in (("success", "Thanks"), ("error", "went wrong")):
+            run = self.run_page("form-hidden-status.html", "--simulate", answer)
+            self.assertEqual(run.code, 0, (run.out, run.err))
+            submit = run.form["submit"]
+            self.assertEqual(submit["state"], "changed", answer)
+            self.assertIn(phrase, submit["status_text"], answer)
+            self.assertEqual(len(submit["regions"]), 2, submit["regions"])
+
+    def test_a_screen_reader_only_live_region_keeps_its_text(self):
+        run = self.run_page("form-sr-live.html", "--simulate", "success")
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual(run.form["submit"]["state"], "changed")
+        self.assertIn("Thanks", run.form["submit"]["status_text"])
+
     def test_simulate_success_reaches_the_thank_you_state_and_sends_nothing(self):
         self.check_simulated("success", "Thanks")
 

@@ -59,6 +59,10 @@ const shown = (el) => {
 const REGION = '[role=alert], [role=status], [aria-live]';
 const describe = (el) => el.tagName.toLowerCase() + (el.id ? '#' + el.id : '')
   + (el.getAttribute('role') ? '[role=' + el.getAttribute('role') + ']' : '');
+const rendered = (el) => {
+  const s = getComputedStyle(el);
+  return el.getClientRects().length > 0 && s.visibility === 'visible' && s.opacity !== '0';
+};
 const regionsOf = (form) => {
   const seen = new Set();
   const found = [];
@@ -66,7 +70,7 @@ const regionsOf = (form) => {
     if (seen.has(el)) return;
     seen.add(el);
     found.push({selector: describe(el), role: el.getAttribute('role'), aria_live: el.getAttribute('aria-live'),
-                text: clean(el.innerText || el.textContent)});
+                text: rendered(el) ? clean(el.innerText || el.textContent) : ''});
   };
   form.querySelectorAll(REGION).forEach(add);
   for (let sib = form.nextElementSibling; sib; sib = sib.nextElementSibling) {

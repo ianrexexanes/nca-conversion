@@ -142,13 +142,18 @@ def decode_body(raw: bytes, header_charset: str | None) -> str:
 
 
 def fetch(url: str, timeout: float = 30.0) -> str:
+    return fetch_final(url, timeout)[0]
+
+
+def fetch_final(url: str, timeout: float = 30.0) -> tuple:
+    """(page text, the address the fetch ended on after any redirects)."""
     request = urllib.request.Request(url, headers={
         "User-Agent": CHROME_UA,
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9,de;q=0.8",
     })
     with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - operator-supplied URL
-        return decode_body(response.read(), response.headers.get_content_charset())
+        return decode_body(response.read(), response.headers.get_content_charset()), response.geturl()
 
 
 class FooterScope:

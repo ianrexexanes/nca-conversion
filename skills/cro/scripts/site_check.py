@@ -28,7 +28,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parents[1] / "conversion-page-audit" / "scripts"))
 from deck_check import parse_deck  # noqa: E402
-from page_facts import decode_body, extract_facts, fetch  # noqa: E402
+from page_facts import decode_body, extract_facts, fetch, fetch_final  # noqa: E402
 from search_check import normalise, page_text  # noqa: E402
 from wire_check import rendered, squash  # noqa: E402
 
@@ -117,6 +117,7 @@ class _SiteFacts(HTMLParser):
 class Page:
     def __init__(self, url, html):
         self.url = url
+        self.base = url  # what relative links resolve against; a live run sets it to the address the fetch ended on
         self.facts = extract_facts(html, url)
         site = _SiteFacts()
         site.feed(html)
@@ -376,9 +377,9 @@ def make_internal_link(dist, fetch_page):
             if file.is_file() or (not file.suffix and file.with_name(file.name + ".html").is_file()):
                 return None
             return "no such file in the dist folder"
-        target = urllib.parse.urljoin(page.url, href)
+        target = urllib.parse.urljoin(page.base, href)
         parts = urllib.parse.urlparse(target)
-        if parts.scheme not in ("http", "https") or parts.netloc != urllib.parse.urlparse(page.url).netloc:
+        if parts.scheme not in ("http", "https") or parts.netloc != urllib.parse.urlparse(page.base).netloc:
             return None
         target = urllib.parse.urldefrag(target)[0]
         if target not in cache:
@@ -475,7 +476,9 @@ def load_pages(args, named=(), skipped=None):
     else:
         for url in args.url:
             try:
-                pages.append(Page(url, fetch(url)))
+                html, final = fetch_final(url)
+                pages.append(Page(url, html))
+                pages[-1].base = final
             except Exception as error:  # noqa: BLE001 - the address could not be read
                 raise BadInput("cannot fetch %s: %s" % (url, error))
     return pages

@@ -14,6 +14,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parents[1] / "conversion-page-audit" / "scripts"))
 import deck_check  # noqa: E402
 import page_facts  # noqa: E402
+import site_check  # noqa: E402
 
 SCRIPT = HERE / "site_check.py"
 FIXTURES = HERE / "fixtures"
@@ -528,6 +529,13 @@ class _Recorder(BaseHTTPRequestHandler):
 
     def do_GET(self):
         _Recorder.seen.append((self.path, self.headers.get("User-Agent")))
+        if self.path == "/services":
+            self.send_response(301)
+            self.send_header("Location", "/services/")
+            self.end_headers()
+            return
+        if self.path.endswith("/"):
+            self.path += "index.html"
         target = Path(_Recorder.root) / self.path.split("?", 1)[0].lstrip("/")
         if target.is_file():
             data = target.read_bytes()
@@ -566,6 +574,26 @@ class SiteCheckUrlTests(unittest.TestCase):
         self.assertRegex(out, r"(?m)^SKIPPED \S+ SITEMAP: ")
         self.assertRegex(out, r"(?m)^SKIPPED \S+ ROBOTS: ")
         self.assertIn("--dist", out)
+
+    def test_live_links_are_read_against_the_address_the_page_ended_on(self):
+        good = page_html(CLEAN_DECK, body_extra='<a href="team.html">Team</a>')
+        bad = page_html(CLEAN_DECK, body_extra='<a href="nowhere.html">Gone</a>')
+        base = self.serve({"/services/index.html": good, "/services/team.html": page_html(CLEAN_DECK)})
+        out = run("--url", base + "/services")[1]
+        self.assertNotRegex(out, r"(?m)^FAIL \S+ LINK: ", out)  # team.html exists under /services/, the address the fetch ended on
+        base = self.serve({"/services/index.html": bad})
+        out = run("--url", base + "/services")[1]
+        self.assertRegex(out, r"(?m)^FAIL %s/services LINK: nowhere\.html" % re.escape(base), out)  # rows name the asked address
+
+    def test_a_link_to_the_host_the_page_ended_on_is_internal(self):
+        fetched = []
+        page = site_check.Page("http://example.com/", page_html(CLEAN_DECK))
+        page.base = "http://www.example.com/"  # what a redirect from example.com to www.example.com leaves
+        problem = site_check.make_internal_link(None, fetched.append)(page, "http://www.example.com/about")
+        self.assertEqual((problem, fetched), (None, ["http://www.example.com/about"]))
+        fetched.clear()
+        site_check.make_internal_link(None, fetched.append)(page, "http://example.com/about")
+        self.assertEqual(fetched, [])  # the address that was asked for is no longer the page's own host
 
     def test_an_unreachable_url_exits_2(self):
         code, out = run("--url", "http://127.0.0.1:1/index.html")

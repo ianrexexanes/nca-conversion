@@ -2717,8 +2717,8 @@ class ReferenceTextRound3Tests(unittest.TestCase):
         step = self.ref("form.md", 7)
         self.assertIn("A form that submits without a script then has no picture and no thank-you text, because the page cannot be asked "
                       "while its own request is unanswered.", step)
-        self.assertIn("When the send was answered but the page that follows it had not loaded by "
-                      "the end of the wait, it prints `WARN ... SEND` naming the HTTP status the send was answered with: the thank-you "
+        self.assertIn("When the send was answered but the page that follows it had not loaded when "
+                      "the script stopped waiting for it, it prints `WARN ... SEND` naming the HTTP status the send was answered with: the thank-you "
                       "state is not known, so check that the test lead arrived before any rerun.", step)
 
     def test_a_connection_ended_without_an_answer_is_a_fail_and_never_the_thank_you_step(self):
@@ -2749,8 +2749,14 @@ class ReferenceTextRound3Tests(unittest.TestCase):
 
     def test_a_page_the_form_moves_on_to_is_waited_for_and_a_frame_is_not(self):
         step = self.ref("form.md", 7)
-        self.assertIn("After the answer, a page the form moves on to is waited for until the end of the wait and then read; a frame "
-                      "that loads inside the page is not waited for.", step)
+        self.assertIn("The script watches the form until its text has stood still, or until the end of the wait when the form shows no "
+                      "change of its own.", step)
+        self.assertIn("A page the form moves on to in that time, or at any time before the answer has come, is waited for until the end "
+                      "of the wait and then read; a frame that loads inside the page is not waited for.", step)
+        self.assertIn("Once a changed text, for example \"Sending...\", has stood still, the script looks once more after the answer: a "
+                      "move that begins in that look is waited for up to 3 seconds, and a move that begins after it is not waited for.", step)
+        self.assertIn("The form is then read as it stood, so the status text can be the waiting text, which the report must not present "
+                      "as the thank-you step.", step)
 
     def test_a_clean_result_does_not_rule_out_a_second_sending(self):
         step = self.ref("form.md", 7)

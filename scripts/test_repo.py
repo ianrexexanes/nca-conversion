@@ -2642,8 +2642,8 @@ class ReferenceTextRound3Tests(unittest.TestCase):
 
     def test_a_consented_answer_of_400_or_more_fails_wherever_the_request_went(self):
         step = self.ref("form.md", 7)
-        self.assertIn("when the answer to the one consented request was HTTP 400 or more, wherever that request went, with the address "
-                      "and the status in the line,", step)
+        self.assertIn("when the answer to the one consented request was HTTP 400 or more, wherever that request went, with the form's host, "
+                      "or the address when the request went elsewhere, and the status in the line,", step)
 
     def test_the_simulated_success_names_where_the_status_text_came_from(self):
         step = self.ref("form.md", 3)

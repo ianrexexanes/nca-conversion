@@ -485,10 +485,13 @@ def read_outcome(page, i, submit):
     return submit["status_text"]
 
 
-def press(page, i, info, limit_ms, stop=None):
-    """Press submit once and record what followed. Returns the form's submit dict and the thank-you text."""
+def press(page, i, info, limit_ms, stop=None, into=None):
+    """Press submit once and record what followed. Returns the form's submit dict and the thank-you text.
+    into, a dict, receives the submit dict as "submit" at once, so a caller that loses the page inside press still holds it."""
     submit = {"text": info["submit"]["text"], "regions": info["regions"], "pressed": False, "validation": [],
               "state": "none", "status_text": None, "time_ms": None}
+    if into is not None:
+        into["submit"] = submit
     text = None
     if info["submit"]["found"]:
         safe_eval(page, NEUTRALISE, i, None)  # no popup and no other target: the press stays on this page, behind the route

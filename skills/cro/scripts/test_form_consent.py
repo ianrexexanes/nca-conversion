@@ -17,6 +17,7 @@ sys.path.insert(0, str(HERE))
 
 import clarity_export  # noqa: E402
 import cro_runtime  # noqa: E402
+import form_check  # noqa: E402
 import form_consent  # noqa: E402
 from form_tests import FormServer, Run, run_script, start_server  # noqa: E402
 from guard_tests import SKIP, GuardLeakPathsMixin  # noqa: E402
@@ -343,8 +344,9 @@ class FormConsentTests(unittest.TestCase):
             return real(page, i, path)
 
         run = self.closed_run(("snap_form", close_then_picture))
-        self.assertNotEqual(run.code, 3, (run.out, run.err))
+        self.assertEqual(run.code, 0, (run.out, run.err))
         self.assertEqual([p for _m, p in run.posts()], ["/lead"])
+        self.assertTrue(run.form["submit"]["pressed"], run.form["submit"])
         self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("WARN", "SEND") and "could not be read" in d and "lead arrived" in d],
                         run.lines)
         self.assertNotIn("nothing was sent", run.out + run.err)
@@ -355,15 +357,35 @@ class FormConsentTests(unittest.TestCase):
         # the page is closed in place of the press: no request leaves, the next wait on the page raises
         real = form_consent.press
 
-        def close_then_press(page, i, info, limit_ms, stop=None):
+        def close_then_press(page, i, info, limit_ms, stop=None, **keep):
             page.close()
-            return real(page, i, info, limit_ms, stop)
+            return real(page, i, info, limit_ms, stop, **keep)
 
         run = self.closed_run(("press", close_then_press))
         self.assertEqual(run.code, 3, (run.out, run.err))
         self.assertEqual(run.posts(), [])
         self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SEND") and "nothing was sent" in d], run.lines)
         self.assertEqual(run.data["forms"][0]["index"], 1)
+        self.assertFalse(run.form["submit"]["pressed"], run.form["submit"])
+
+    def test_a_page_lost_inside_the_press_still_says_it_was_pressed(self):
+        # the page is closed when the press has seen the change and not yet returned: the click is made, the form's host has not
+        # answered (form-slower answers late) and the next read of the page raises inside press
+        real = form_check.wait_for_state
+
+        def lose_the_page(page, *args, **keep):
+            found = real(page, *args, **keep)
+            page.close()
+            page.wait_for_timeout(1)
+            return found
+
+        with mock.patch.object(form_check, "wait_for_state", lose_the_page):
+            run = self.in_process(FakeTerminal(False), page="form-slower.html", loopback=form_consent.LOOPBACK)
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead-slower"])
+        self.assertNotIn("nothing was sent", run.out + run.err)
+        self.assertEqual(run.form["submit"]["pressed"], True)
+        self.assertEqual(run.form["submit"]["state"], "none")
 
     def test_a_defect_after_the_consent_was_opened_tells_the_reader_to_check_first(self):
         def broken(page, i, path):

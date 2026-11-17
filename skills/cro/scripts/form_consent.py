@@ -148,6 +148,7 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
     sender.allow_post_host = host  # open the consent now, for the press alone
     session.consent_opened = True  # for main: a send may have left if the script fails from here on
     page_error = None
+    kept = {}  # press hands its submit block here, so a page lost inside it still leaves the block
     mark = len(sender.entries)
     try:
 
@@ -159,7 +160,7 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         pressed_at = time.monotonic()
         waited = lambda: (time.monotonic() - pressed_at) * 1000  # noqa: E731
         posts = lambda: [e for e in sender.entries[mark:] if e["method"] not in NON_GET]  # noqa: E731
-        entry["submit"], text = press(page, info["i"], info, WAIT_MS, stop)
+        entry["submit"], text = press(page, info["i"], info, WAIT_MS, stop, into=kept)
         submit = entry["submit"]
         # wait for the form's host to answer before anything is judged: first for a late request, then for its answer
         pressed_back = waited()
@@ -186,6 +187,7 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         snap_form(page, info["i"], out_dir / ("form%d-consented.png" % entry["index"]))
         page.wait_for_timeout(500)
     except form_check.PlaywrightError as error:
+        entry["submit"] = kept.get("submit", entry["submit"])  # the press may have been made before the page was lost
         page_error = error  # the page cannot be read any more; what was sent is judged from the recorder
     finally:
         sender.allow_post_host = None

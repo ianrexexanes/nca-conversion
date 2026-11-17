@@ -357,6 +357,16 @@ class BlankValuesAndHostlessUrlsTest(unittest.TestCase):
             with self._env():
                 self.assertEqual(cro_runtime.pagespeed_key(), (None, "missing"), oct(mode))
 
+    def test_a_key_file_that_is_not_text_is_a_key_file_that_cannot_be_read(self):
+        self.key_file.write_bytes(b"\xff\xfe\x00 not utf-8 \x80")
+        os.chmod(self.key_file, 0o600)
+        with self._env():
+            try:
+                found = cro_runtime.pagespeed_key()
+            except UnicodeDecodeError as error:
+                self.fail("a key file that is not text raised %r" % error)
+            self.assertEqual(found, (None, "missing"))
+
     def test_is_blocked_does_not_raise_without_a_host(self):
         self.assertIsNone(cro_runtime.is_blocked("data:text/plain,hello"))
         self.assertIsNone(cro_runtime.is_blocked("about:blank"))

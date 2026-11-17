@@ -196,6 +196,17 @@ class RulingsTest(_NoKeyFile):
         self.assertEqual(json.loads(out)["source"], "pagespeed")
         self.assertNotIn("FILE-KEY-123", out + err)
 
+    def test_a_key_file_that_is_not_text_falls_back_like_a_missing_key(self):
+        cro_runtime.KEY_FILE.write_bytes(b"\xff\xfe\x00 not utf-8 \x80")
+        cro_runtime.KEY_FILE.chmod(0o600)
+        with mock.patch.object(speed_check.subprocess, "run", return_value=lighthouse_ok()):
+            try:
+                code, out, _err = run_main(["https://example.com/"], key=None)
+            except UnicodeDecodeError as error:
+                self.fail("a key file that is not text raised %r" % error)
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)["reason"], "pagespeed key missing")
+
     def test_lighthouse_command(self):
         with mock.patch.object(speed_check.subprocess, "run", return_value=lighthouse_ok()) as run:
             code, out, _err = run_main(["https://example.com/"], key=None)

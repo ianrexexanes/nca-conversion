@@ -301,7 +301,7 @@ def pagespeed_key() -> tuple[str | None, str]:
     try:
         content = KEY_FILE.read_text(encoding="utf-8").strip()
         mode = stat.S_IMODE(KEY_FILE.stat().st_mode)
-    except OSError:
+    except (OSError, ValueError):  # ValueError: UnicodeDecodeError, a key file that is not text
         return None, "missing"
     if not content:
         return None, "missing"

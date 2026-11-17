@@ -2677,6 +2677,11 @@ class ReferenceTextRound3Tests(unittest.TestCase):
         self.assertIn("Each address is checked first: it starts with `http://`, `https://` or `file://`, and a bad one stops the run "
                       "with exit 2 before a browser opens.", step)
 
+    def test_an_unchecked_headline_ratio_is_a_skipped_row_on_the_widest_view_read(self):
+        step = self.ref("check.md", 5)
+        self.assertIn("The headline ratio is read at the widest view only; when that view does not load, the widest view that did "
+                      "gets a `SKIPPED` `HEADLINE_RATIO` row that says the ratio was not checked.", step)
+
 
 if __name__ == "__main__":
     unittest.main()

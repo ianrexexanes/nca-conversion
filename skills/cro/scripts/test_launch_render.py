@@ -200,8 +200,25 @@ class LaunchRenderTests(unittest.TestCase):
 
     def test_a_failed_network_call_after_a_blocked_request_is_a_warning(self):
         _c, out, rows = self.render("post-on-load.html", 1440)
-        self.assertTrue(self.has(rows, "WARN", "PAGE_ERROR", 1440, "the guard blocked 1 request(s) on this view, so this may be its own doing: confirm in an ordinary browser"), out)
+        self.assertTrue(self.has(rows, "WARN", "PAGE_ERROR", 1440, "the guard blocked 1 fetch request(s) on this view, so this may be its own doing: confirm in an ordinary browser"), out)
         self.assertFalse(self.has(rows, "FAIL", "PAGE_ERROR", 1440), out)
+
+    def test_a_tag_host_the_guard_blocks_does_not_excuse_a_failed_call_to_the_pages_own_server(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            done = subprocess.run([sys.executable, str(SCRIPT), "%s/tag-host-and-own-failure.html" % self.base, "--out", tmp,
+                                   "--widths", "1440"], capture_output=True, text=True, timeout=180)
+            log = json.loads((Path(tmp) / "network-log.json").read_text(encoding="utf-8"))
+        tag = [e for e in log if "googletagmanager.com" in e["url"]]
+        self.assertTrue(tag and all(e["outcome"] == "blocked" for e in tag), log)
+        rows = findings(done.stdout)
+        self.assertTrue(self.has(rows, "FAIL", "PAGE_ERROR", 1440, "Failed to fetch"), done.stdout)
+        self.assertFalse(self.has(rows, "WARN", "PAGE_ERROR", 1440), done.stdout)
+
+    def test_a_blocked_fetch_does_not_excuse_a_fetch_that_failed_on_its_own(self):
+        _c, out, rows = self.render("blocked-post-and-failed-get.html", 1440)
+        errors = [r for r in rows if r[3] == "PAGE_ERROR"]
+        self.assertTrue(errors, out)
+        self.assertEqual({r[0] for r in errors}, {"FAIL"}, out)
 
     def test_a_failed_network_call_where_nothing_was_blocked_still_fails(self):
         _c, out, rows = self.render("get-fails.html", 1440)

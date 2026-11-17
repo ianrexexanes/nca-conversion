@@ -2666,6 +2666,12 @@ class ReferenceTextRound3Tests(unittest.TestCase):
         self.assertIn("`PLACEHOLDER` and `FORBIDDEN` read the title, the meta description and the page text, and the row says which "
                       "of the three held the word.", step)
 
+    def test_the_first_sentence_skips_a_date_byline_or_read_time_line(self):
+        text = self.ref("modes.md")
+        self.assertIn("The check reads the first block under the H1 that holds no time element and either ends with a full stop, `!` or `?` "
+                      "or runs to twelve words, so a date, byline, rating or read-time line is skipped; when no block does, it reads "
+                      "the first block with text of its own.", text)
+
 
 if __name__ == "__main__":
     unittest.main()

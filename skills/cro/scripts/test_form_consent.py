@@ -384,6 +384,23 @@ class FormConsentTests(unittest.TestCase):
         self.assertNotIn("Sending", run.form["submit"]["status_text"])
         self.assertGreaterEqual(run.form["submit"]["time_ms"], 1500)
 
+    def test_a_page_that_moves_on_after_the_answer_is_read_as_navigated(self):
+        run = self.consent("form-moves.html")
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead-slow"])
+        self.assertEqual(run.form["submit"]["state"], "navigated")
+        self.assertTrue((run.form["thank_you"]["url"] or "").endswith("/form-thanks.html"), run.form["thank_you"])
+        self.assertIn("Thank you", run.form["thank_you"]["text"])
+        self.assertNotIn("Sending", run.form["thank_you"]["text"])
+        self.assertGreaterEqual(run.form["submit"]["time_ms"], 1500)
+
+    def test_a_form_that_shows_no_change_keeps_the_state_none(self):
+        with mock.patch.object(form_consent, "WAIT_MS", 1500):
+            run = self.in_process(FakeTerminal(False), page="form-quiet.html", loopback=form_consent.LOOPBACK)
+        self.assertEqual(run.code, 0, run.out + run.err)
+        self.assertEqual([p for _m, p in run.posts()], ["/lead"])
+        self.assertEqual(run.form["submit"]["state"], "none")
+
     def test_a_late_post_is_waited_for(self):
         run = self.consent("form-late.html")
         self.assertEqual(run.code, 0, (run.out, run.err))

@@ -8,7 +8,7 @@ is not one address with a dot after the @. The page loads through a guarded Reco
 sends while it loads, is read or is filled can take the send. The script finds the one form and its action host, refuses a form
 that submits by GET (the guard counts only non-GET requests), fills it (the address in its email field, "Test submission,
 consented by <owner>, <date>" in the other text fields), and only then sets the Recorder's allow_post_host to that host and
-presses submit once, timing the press to the thank-you state. The guard lets exactly one non-GET request leave, to that host; a
+presses submit once, timing the press to the thank-you state. After the press it waits for the form's host to answer, closes the consent, and only then judges the send; a send the host has not answered by the end of the wait is a WARN. The guard lets exactly one non-GET request leave, to that host; a
 second is aborted. Afterwards the consented request must be to the form's own action (or the pressed control's formaction), and no
 non-GET request may show as completed, which is what a 307 or 308 redirect hop looks like; either is a FAIL SEND, exit 1. A form
 that sends anywhere else, or by GET, is SKIPPED and exit 3, with nothing sent. So is a form whose own validation refuses the fill. The yes in the chat comes first, as `form.md` step 7 says. Then, unless the action host is loopback (127.0.0.1, ::1 or localhost), the script asks at the terminal before it opens the consent: it prints the action host and goes on only when that host is typed back on standard input. With no terminal on standard input, or any other answer, the form is SKIPPED and exit 3, with nothing sent. No flag, variable or file answers for the terminal.
@@ -165,9 +165,14 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
     while any(e["outcome"] == "consented" and e["status"] is None for e in posts()) and waited() < WAIT_MS:
         page.wait_for_timeout(100)
     sender.allow_post_host = None  # the consent is closed: a later request of the page is aborted like any other
-    if submit["state"] != "navigated" and any(e["outcome"] == "consented" and e["status"] is not None for e in posts()):
-        now = form_check.safe_eval(page, form_check.SNAPSHOT, info["i"], None)
-        if now is not None and now["marked"]:
+    if submit["state"] == "changed" and any(e["outcome"] == "consented" and e["status"] is not None for e in posts()):
+        # read the page again after the answer: it may have moved on to a thank-you page, which is mid-load while no snapshot reads
+        now, looked = None, waited()
+        while now is None and waited() - looked < 3000:
+            now = form_check.safe_eval(page, form_check.SNAPSHOT, info["i"], None)
+            if now is None:
+                page.wait_for_timeout(100)
+        if now is not None:
             submit["state"], submit["time_ms"] = form_check.wait_for_state(
                 page, info["i"], None, pressed_at, waited() + 3000, resume=((now["form"], now["regions"]), submit["time_ms"]))
             text = form_check.read_outcome(page, info["i"], submit)

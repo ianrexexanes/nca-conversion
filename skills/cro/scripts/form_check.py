@@ -63,7 +63,8 @@ const rendered = (el) => {
   const s = getComputedStyle(el);
   return el.getClientRects().length > 0 && s.visibility === 'visible' && s.opacity !== '0';
 };
-const formShown = (form) => rendered(form) || [...form.querySelectorAll('input, select, textarea, button')].some(rendered);
+const faded = (el) => { for (let e = el; e; e = e.parentElement) { if (getComputedStyle(e).opacity === '0') return true; } return false; };
+const formShown = (form) => !faded(form) && (rendered(form) || [...form.querySelectorAll('input, select, textarea, button')].some(rendered));
 const formOf = (i) => {
   if (window.__formCheckMark === true && window.__formCheckIndex === i) {
     const kept = window.__formCheckForm;

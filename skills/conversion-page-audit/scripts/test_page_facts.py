@@ -130,6 +130,33 @@ class ExtractFactsTest(unittest.TestCase):
         html = '<html><body><svg><title>Logo</title></svg></body></html>'
         self.assertIsNone(extract_facts(html)["title"])
 
+    def _facts_or_fail(self, html):
+        try:
+            return extract_facts(html)
+        except Exception as error:  # a page must never end the reader
+            self.fail("extract_facts raised %s: %s" % (type(error).__name__, error))
+
+    def test_a_meta_with_a_bare_name_is_no_description(self):
+        facts = self._facts_or_fail('<meta name><meta name="description" content="Pump upkeep"><h1>Pumps</h1>')
+        self.assertEqual(facts["meta_description"], "Pump upkeep")
+        self.assertIsNone(self._facts_or_fail('<meta name><h1>Pumps</h1>')["meta_description"])
+
+    def test_a_bare_content_reads_as_the_empty_string(self):
+        facts = self._facts_or_fail('<meta name="description" content><h1>Pumps</h1>')
+        self.assertEqual(facts["meta_description"], "")
+
+    def test_a_bare_href_reads_as_the_empty_string(self):
+        facts = self._facts_or_fail('<a href>Book a call</a><a href="/x">Go</a>')
+        self.assertEqual([(l["text"], l["href"]) for l in facts["links"]], [("Book a call", ""), ("Go", "/x")])
+
+    def test_a_bare_rel_changes_nothing(self):
+        facts = self._facts_or_fail('<a rel href="/x">Book a call</a><link rel href="/y">')
+        self.assertEqual([(l["text"], l["href"]) for l in facts["links"]], [("Book a call", "/x")])
+
+    def test_a_bare_alt_is_decorative_and_an_absent_alt_stays_none(self):
+        facts = self._facts_or_fail('<img src alt><img src="/b.png">')
+        self.assertEqual([(i["src"], i["alt"]) for i in facts["images"]], [("", ""), ("/b.png", None)])
+
 
 PAGE = b"<html><head><title>Fixture</title></head><body></body></html>"
 

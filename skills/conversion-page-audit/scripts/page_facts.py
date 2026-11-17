@@ -219,7 +219,7 @@ class _Collector(HTMLParser):
         return self._scope.has_footer
 
     def handle_starttag(self, tag, attrs):
-        attrs = dict(attrs)
+        attrs = {name: "" if value is None else value for name, value in attrs}  # a bare attribute's value is ""
         self._scope.start(tag, attrs)
         in_footer = self._scope.inside
         if tag == "svg":
@@ -235,8 +235,7 @@ class _Collector(HTMLParser):
         elif tag == "img":
             self.images.append({
                 "src": attrs.get("src"),
-                # attrs["alt"] is None for a bare alt: decorative, like alt=""; an absent attribute stays None
-                "alt": "" if "alt" in attrs and attrs["alt"] is None else attrs.get("alt"),
+                "alt": attrs.get("alt"),  # a bare alt is "", decorative; an absent attribute stays None
                 "loading": attrs.get("loading"),
                 "fetchpriority": attrs.get("fetchpriority"),
             })

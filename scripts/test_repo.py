@@ -2698,6 +2698,10 @@ class ReferenceTextRound3Tests(unittest.TestCase):
                       "The row says how many `fetch` requests the guard blocked and to confirm in an ordinary browser; every other "
                       "`PAGE_ERROR` is a `FAIL`.", step)
 
+    def test_the_hallmark_lint_row_names_the_highest_installed_version(self):
+        text = (ROOT / "skills/cro/references/setup.md").read_text(encoding="utf-8")
+        self.assertIn("| `hallmark-lint` | where the lint script of the highest installed Hallmark version is, or `not found` | no |", text)
+
 
 if __name__ == "__main__":
     unittest.main()

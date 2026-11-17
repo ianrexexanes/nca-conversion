@@ -31,7 +31,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/cro/scripts/doctor.py --data-dir ${CLAUDE_P
 | `clarity-token` | where the Clarity token comes from, never the token | no |
 | `lighthouse` | `npx` is present | no |
 | `companions` | which companion plugins are on | no |
-| `hallmark-lint` | where Hallmark's lint script is, or `not found` | no |
+| `hallmark-lint` | where the lint script of the highest installed Hallmark version is, or `not found` | no |
 
 Exit 0 when the first four are `OK`, else 1.
 

@@ -128,7 +128,7 @@ GAP = re.compile(r"\[NEEDED:[^\]]*\]|\[[A-Z][A-Z0-9 _-]*(?::[^\]]*)?\]|NOT ESTAB
 # What stops a final deck: a named gap. A bracketed capital word with no colon (`[PDF]`, `[EU]`) is real copy: a WARN.
 NAMED_GAP = re.compile(r"\[NEEDED:|NOT ESTABLISHED|\[[A-Z][A-Z0-9 _-]*:")
 # Under --final a bracket with no colon fails when it holds two or more capital words, or one of these words
-# (Ian's ruling of 2026-11-17); any other single bracketed capital word, such as [PDF] or [EU], stays a WARN
+# (the owner's ruling of 2026-11-17); any other single bracketed capital word, such as [PDF] or [EU], stays a WARN
 PLACEHOLDER_WORDS = ("TBD", "TODO", "X", "NAME", "PHONE", "EMAIL", "DATE", "LOGO", "LINK", "PRICE")
 
 

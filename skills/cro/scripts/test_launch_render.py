@@ -273,6 +273,14 @@ class LaunchRenderInputTests(unittest.TestCase):
             self.bad(url, "--out", tmp, "--deck", str(VARIANTS), "--variant", "z")
             self.bad(url, "--out", tmp, "--action-color", "blue")
 
+    def test_an_action_colour_with_a_trailing_line_break_is_bad_input(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            done = subprocess.run([sys.executable, str(SCRIPT), "http://127.0.0.1:9/x.html", "--out", tmp,
+                                   "--action-color", "#abc\n"], capture_output=True, text=True, timeout=60)
+        self.assertEqual(done.returncode, 2, done.stdout + done.stderr)
+        self.assertIn("--action-color must be #rgb or #rrggbb", done.stderr)
+        self.assertNotIn("Traceback", done.stderr)
+
 
 @SKIP
 class LaunchRenderLeakPaths(GuardLeakPathsMixin, unittest.TestCase):

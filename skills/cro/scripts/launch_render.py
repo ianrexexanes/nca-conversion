@@ -31,7 +31,7 @@ from design_check import contrast, normal  # noqa: E402
 DEFAULT_WIDTHS = (375, 390, 820, 1440)
 PHONE_BELOW = 600  # render_check's two views: a phone context under this width, a desktop at or above it
 PHONE_HEIGHT, DESKTOP_HEIGHT = 844, 900
-HEX = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
+HEX = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})\Z")
 MIN_TARGET, WANT_TARGET, CIRCLE = 24, 44, 24
 SHOWN = 3  # examples named on a grouped line
 

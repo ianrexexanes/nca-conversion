@@ -327,8 +327,30 @@ class LaunchRenderInputTests(unittest.TestCase):
             done = subprocess.run([sys.executable, str(SCRIPT), "not a url", "--out", tmp],
                                   capture_output=True, text=True, timeout=60)
         self.assertEqual(done.returncode, 2, done.stdout + done.stderr)
-        self.assertIn("launch_render: the page address must start with http:// or https://", done.stderr)
+        self.assertIn("launch_render: the page address must start with http://, https:// or file://", done.stderr)
         self.assertNotIn("Traceback", done.stderr)
+
+
+    def run_address(self, address):
+        with tempfile.TemporaryDirectory() as tmp:
+            return subprocess.run([sys.executable, str(SCRIPT), address, "--out", tmp, "--widths", "1440"],
+                                  capture_output=True, text=True, timeout=120)
+
+    def test_a_local_file_address_is_read(self):
+        done = self.run_address((LAUNCH / "clean.html").resolve().as_uri())
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertNotIn("STATUS", done.stdout)
+
+    def test_the_refusal_names_all_three_forms_of_address(self):
+        done = self.run_address("not a url")
+        self.assertIn("launch_render: the page address must start with http://, https:// or file://, got 'not a url'", done.stderr)
+
+    def test_an_address_that_is_not_readable_is_still_refused(self):
+        for address in ("file://", "ftp://127.0.0.1/x", "http://[::1"):
+            with self.subTest(address=address):
+                done = self.run_address(address)
+                self.assertEqual(done.returncode, 2, done.stdout + done.stderr)
+                self.assertNotIn("Traceback", done.stdout + done.stderr)
 
 
 @SKIP

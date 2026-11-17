@@ -28,6 +28,7 @@ import cro_runtime  # noqa: E402
 from deck_check import parse_deck  # noqa: E402
 from design_check import contrast, normal  # noqa: E402
 from form_check import BadInput as AddressRefused, check_address  # noqa: E402
+from urllib.parse import urlsplit  # noqa: E402
 
 DEFAULT_WIDTHS = (375, 390, 820, 1440)
 # texts of a page error that show a failed network call; add only a text seen in a run
@@ -262,6 +263,22 @@ def one_line(text) -> str:
     return re.sub(r"\s+", " ", str(text)).strip()
 
 
+def check_page_address(url):
+    """http and https addresses by form_check's rule, and a file address with a path (0.4.0 read those too)."""
+    try:
+        check_address(url)
+        return
+    except AddressRefused:
+        pass
+    try:
+        parts = urlsplit(url)
+        local = parts.scheme == "file" and bool(parts.path)
+    except ValueError:  # an address urlsplit cannot read, such as "http://[::1"
+        local = False
+    if not local:
+        raise BadInput("the page address must start with http://, https:// or file://, got %r" % url)
+
+
 def parse_args(argv):
     parser = Parser(description="Read built pages through the analytics guard and report launch blockers.")
     parser.add_argument("urls", nargs="*", metavar="URL")
@@ -276,10 +293,7 @@ def parse_args(argv):
     if not args.urls:
         raise BadInput("no page address given")
     for url in args.urls:
-        try:
-            check_address(url)
-        except AddressRefused as error:
-            raise BadInput(str(error))
+        check_page_address(url)
     widths = []
     for part in args.widths.split(","):
         if not re.fullmatch(r"[0-9]+", part.strip()) or int(part) < 1:

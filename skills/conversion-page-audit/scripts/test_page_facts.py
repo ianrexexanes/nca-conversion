@@ -157,6 +157,19 @@ class ExtractFactsTest(unittest.TestCase):
         facts = self._facts_or_fail('<img src alt><img src="/b.png">')
         self.assertEqual([(i["src"], i["alt"]) for i in facts["images"]], [("", ""), ("/b.png", None)])
 
+    def _types_of(self, type_json):
+        block = '<script type="application/ld+json">{"@type": %s}</script>' % type_json
+        return self._facts_or_fail(block)["schema_types"]
+
+    def test_a_number_in_a_type_list_is_left_out_and_the_strings_stay(self):
+        self.assertEqual(self._types_of('["Product", 5, "Offer"]'), ["Offer", "Product"])
+
+    def test_a_nested_list_in_a_type_list_is_left_out_and_the_strings_stay(self):
+        self.assertEqual(self._types_of('["Product", ["Offer"]]'), ["Product"])
+
+    def test_an_object_in_a_type_list_is_left_out_and_the_strings_stay(self):
+        self.assertEqual(self._types_of('["Product", {"a": 1}]'), ["Product"])
+
 
 PAGE = b"<html><head><title>Fixture</title></head><body></body></html>"
 

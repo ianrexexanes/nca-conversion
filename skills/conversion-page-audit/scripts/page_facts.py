@@ -292,7 +292,7 @@ def _schema_types(blocks, notes):
         for node in _walk(data):
             value = node.get("@type")
             if isinstance(value, list):
-                types.extend(value)
+                types.extend(item for item in value if isinstance(item, str))
             elif isinstance(value, str):
                 types.append(value)
     return sorted(set(types))

@@ -220,12 +220,16 @@ def page_rows(page, deck, mapped, forbid, add, internal_link):
     for image in facts["images"]:
         if image["alt"] is None:
             add("FAIL", url, "ALT", "an image without an alt attribute: %s" % shorten(image["src"] or "(no src)"))
-    for found in sorted({m.group(0) for m in PLACEHOLDER.finditer(page.text)}):
-        add("FAIL", url, "PLACEHOLDER", "the page text holds %r" % found)
+    places = (("the title", facts["title"] or ""), ("the meta description", facts["meta_description"] or ""),
+              ("the page text", page.text))
+    for where, text in places:
+        for found in sorted({m.group(0) for m in PLACEHOLDER.finditer(text)}):
+            add("FAIL", url, "PLACEHOLDER", "%s holds %r" % (where, found))
     pattern = forbid_pattern(forbid)
     if pattern:
-        for found in sorted({m.group(0).lower() for m in pattern.finditer(page.squashed)}):
-            add("FAIL", url, "FORBIDDEN", "the page text holds %r" % found)
+        for where, text in places:
+            for found in sorted({m.group(0).lower() for m in pattern.finditer(squash(text))}):
+                add("FAIL", url, "FORBIDDEN", "%s holds %r" % (where, found))
     if deck is None:
         add("SKIPPED", url, "PARITY", "no --deck")
         add("SKIPPED", url, "FAQ_SCHEMA", "no --deck")
@@ -490,7 +494,8 @@ def write_visible_text(directory, pages):
         name = slug(page.url)
         used[name] = used.get(name, 0) + 1
         stem = name if used[name] == 1 else "%s-%d" % (name, used[name])
-        (directory / (stem + ".txt")).write_text(page.text + "\n", encoding="utf-8")
+        head = [" ".join((page.facts[key] or "").split()) for key in ("title", "meta_description")]
+        (directory / (stem + ".txt")).write_text("\n".join(head + [page.text]) + "\n", encoding="utf-8")
 
 
 def not_a_launch_page(url):

@@ -638,6 +638,46 @@ class SiteCheckTests(unittest.TestCase):
         self.assertIn("Example Co, all rights reserved.", text)
         self.assertNotIn("<", text)
 
+    def with_head(self, title=None, description=None):
+        page = page_html(CLEAN_DECK)
+        if title is not None:
+            page = re.sub(r"<title>.*?</title>", "<title>%s</title>" % title, page, count=1)
+        if description is not None:
+            page = re.sub(r'(<meta name="description" content=")[^"]*"', lambda m: m.group(1) + description + '"', page, count=1)
+        return page
+
+    def test_the_title_and_the_meta_description_are_read_for_placeholders(self):
+        out = self.site({"/index.html": self.with_head(title="Lorem ipsum")})[1]
+        self.assertRegex(out, r"(?m)^FAIL /index\.html PLACEHOLDER: the title holds ")
+        out = self.site({"/index.html": self.with_head(description="TODO write this")})[1]
+        self.assertRegex(out, r"(?m)^FAIL /index\.html PLACEHOLDER: the meta description holds ")
+        out = self.site({"/index.html": page_html(CLEAN_DECK)})[1]
+        self.assertNotIn("PLACEHOLDER", rules_in(out))
+        self.assertNotIn("FORBIDDEN", rules_in(out))
+
+    def test_a_forbidden_word_in_the_title_or_meta_description_fails(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        forbid = Path(tmp.name) / "forbid.txt"
+        forbid.write_text("Zorblatron\n", encoding="utf-8")
+        out = self.site({"/index.html": self.with_head(title="Zorblatron pumps")}, None, "--forbid", str(forbid))[1]
+        self.assertRegex(out, r"(?m)^FAIL /index\.html FORBIDDEN: the title holds ")
+        out = self.site({"/index.html": self.with_head(description="About Zorblatron")}, None, "--forbid", str(forbid))[1]
+        self.assertRegex(out, r"(?m)^FAIL /index\.html FORBIDDEN: the meta description holds ")
+
+    def test_the_text_export_starts_with_the_title_and_the_meta_description(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        page = self.with_head(title="Pump service", description="We keep pumps running")
+        self.site({"/index.html": page}, None, "--visible-text", str(Path(tmp.name) / "text"))
+        lines = (Path(tmp.name) / "text" / "index.txt").read_text(encoding="utf-8").split("\n")
+        self.assertEqual(lines[:2], ["Pump service", "We keep pumps running"])
+        self.assertIn("Cut unplanned pump downtime by half", "\n".join(lines[2:]))
+        bare = re.sub(r'<meta name="description"[^>]*>', "", page)
+        self.site({"/about.html": bare}, None, "--visible-text", str(Path(tmp.name) / "text2"))
+        lines = (Path(tmp.name) / "text2" / "about.txt").read_text(encoding="utf-8").split("\n")
+        self.assertEqual(lines[:2], ["Pump service", ""])
+
     def test_parity_and_placeholder_read_nav_and_footer(self):
         deck = deck_check.parse_deck(Path(CLEAN_DECK).read_text(encoding="utf-8"))
         code, out = self.site({"/index.html": page_html(CLEAN_DECK)}, None, "--deck", CLEAN_DECK, "--map", "/index.html=p")

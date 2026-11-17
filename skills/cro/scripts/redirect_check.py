@@ -8,6 +8,7 @@ Chrome agent page_facts.CHROME_UA. The chain ends at `to` with `status`; unless 
 earlier hop is a 301. More than five redirects, or an end that is not HTTPS, fails. Lines are `<FAIL> <from> <RULE>: <detail>`,
 then `redirect_check: <f> FAIL, <w> WARN`. Exit 1 on any FAIL, 2 on bad input.
 """
+import http.client
 import json
 import sys
 import urllib.error
@@ -45,7 +46,7 @@ def follow(url: str, max_hops: int = MAX_REDIRECTS) -> list:
         except urllib.error.HTTPError as error:
             status, location = error.code, error.headers.get("Location")
             error.close()
-        except (urllib.error.URLError, OSError, ValueError):
+        except (urllib.error.URLError, OSError, ValueError, http.client.HTTPException):
             hops.append((url, 0))
             return hops
         hops.append((url, status))

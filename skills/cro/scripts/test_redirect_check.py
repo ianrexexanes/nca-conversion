@@ -67,7 +67,7 @@ class _Chain(BaseHTTPRequestHandler):
         _Chain.agents.append(self.headers.get("User-Agent"))
         port = self.server.server_address[1]
         moves = {"/r1": "/r2", "/r2": "http://127.0.0.1:%d/final" % port, "/loop": "/loop",
-                 "/ftp": "ftp://127.0.0.1:%d/x" % _Chain.ftp_port, "/file": "file:///etc/hostname"}
+                 "/ftp": "ftp://127.0.0.1:%d/x" % _Chain.ftp_port, "/file": "file:///etc/hostname", "/space": "/thank you"}
         if self.path in moves:
             self.send_response(301)
             self.send_header("Location", moves[self.path])
@@ -123,6 +123,18 @@ class FollowTests(unittest.TestCase):
         code, out = run("--cases", str(cases))
         self.assertEqual(code, 1, out)
         self.assertNotIn("Traceback", out)
+
+    def test_a_redirect_that_cannot_be_requested_is_a_fail_row_not_a_crash(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        cases = Path(tmp.name) / "cases.json"
+        cases.write_text(json.dumps([{"from": self.base + "/space", "to": self.base + "/final", "status": 200},
+                                     {"from": self.base + "/r1", "to": self.base + "/final", "status": 200}]), encoding="utf-8")
+        code, out = run("--cases", str(cases))
+        self.assertNotIn("Traceback", out)
+        self.assertEqual(code, 1, out)
+        self.assertRegex(out, r"FAIL %s\S* REDIRECT_TARGET" % re.escape(self.base + "/space"))
+        self.assertRegex(out, r"FAIL %s\S* REDIRECT_HTTPS" % re.escape(self.base + "/r1"))
 
     def test_an_unreachable_host_ends_the_chain_with_status_0(self):
         self.assertEqual(redirect_check.follow("http://127.0.0.1:1/x"), [("http://127.0.0.1:1/x", 0)])

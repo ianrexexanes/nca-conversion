@@ -277,8 +277,9 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
     failure = sent[0].get("failure") if status is None else None  # an entry with a status is judged by its status, whatever failure says
     if failure and any(code in failure for code in HANG_UPS):
         # Chrome sends a request again by itself when the connection it used closes before any answer (HttpNetworkTransaction::ShouldResendRequest,
-        # https://chromium.googlesource.com/chromium/src/+/ca9d6916c5fedf6f0ee73dfc397cb0f65ad326b9/net/http/http_network_transaction.cc, read
-        # 2026-11-17); seen on loopback as two POSTs in the server's log for one request of the page; UNVERIFIED which connections count as reused.
+        # https://chromium.googlesource.com/chromium/src/+/refs/heads/main/net/http/http_network_transaction.cc, read 2026-11-17 on the main branch:
+        # it resends only a request on a reused keep-alive connection that has received no response yet);
+        # seen on loopback as two POSTs in the server's log for one request of the page; UNVERIFIED which connections count as reused.
         add_issue(entry, "FAIL", "SEND", "the request left and the form's host ended the connection with no answer (%s); a browser can send "
                   "such a request again by itself, so the host may have received the submission twice, once or not at all; check before any "
                   "rerun" % failure)

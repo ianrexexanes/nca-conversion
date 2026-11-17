@@ -444,15 +444,30 @@ def write_visible_text(directory, pages):
         (directory / (stem + ".txt")).write_text(page.text + "\n", encoding="utf-8")
 
 
-def load_pages(args):
+def not_a_launch_page(url):
+    """Why a --dist file is not a launch page, or None: the error page, or Google's verification file."""
+    path = urllib.parse.urlparse(url).path
+    if path.endswith("/404.html") or path == "/404/index.html":
+        return "the error page is not a launch page"
+    if re.fullmatch(r"/(?:.*/)?google[0-9a-f]{16}\.html", path):
+        return "a search engine's verification file is not a launch page"
+    return None
+
+
+def load_pages(args, named=(), skipped=None):
     pages = []
     if args.dist:
         dist = Path(args.dist)
         if not dist.is_dir():
             raise BadInput("%s is not a folder" % args.dist)
         for file in sorted(dist.rglob("*.html")):
+            url = "/" + file.relative_to(dist).as_posix()
+            why = not_a_launch_page(url)
+            if why and url not in named and skipped is not None:
+                skipped.append((url, why))
+                continue
             try:
-                pages.append(Page("/" + file.relative_to(dist).as_posix(), decode_body(file.read_bytes(), None)))
+                pages.append(Page(url, decode_body(file.read_bytes(), None)))
             except OSError as error:
                 raise BadInput("cannot read %s: %s" % (file, error.strerror or error))
         if not pages:
@@ -495,11 +510,14 @@ def main(argv=None):
                 raise BadInput("cannot read %s as UTF-8 text" % args.deck)
         forbid = read_forbid(args.forbid) if args.forbid else []
         pages_list = load_pages_list(args.pages) if args.pages else None
-        pages = load_pages(args)
+        skipped = []
+        pages = load_pages(args, {e["url"] for e in pages_list or []}, skipped)
         mapped = parse_maps(args.map, deck, {p.url for p in pages}) if deck else {}
     except BadInput as error:
         print("site_check: %s" % error, file=sys.stderr)
         return 2
+    for url, why in skipped:
+        add("SKIPPED", url, "LAUNCH_PAGE", why)
     dist = Path(args.dist) if args.dist else None
     internal_link = make_internal_link(dist, fetch)
     for page in pages:

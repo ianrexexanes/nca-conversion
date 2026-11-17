@@ -1785,6 +1785,12 @@ class CheckTests(unittest.TestCase):
         self.assertIn("deck_check.py", self.text.split("client_check.py")[0])
         self.assertIn("--visible-text", steps[0][1] + " " + steps[1][1])
 
+    def test_step_2_says_the_error_page_and_a_verification_file_are_not_launch_pages(self):
+        step = next(body for n, body in self.steps() if n == 2)
+        sentence = ("With `--dist`, the error page (`404.html`) and Google's verification file are not launch pages: each is a "
+                    "`SKIPPED` row, unless the pages list names it.")
+        self.assertIn("and `ROBOTS`. " + sentence + " `NOINDEX` is a WARN", step)
+
     def test_it_cites_the_pages_the_noindex_rule_rests_on(self):
         for url in ("developers.google.com/search/docs/crawling-indexing/block-indexing",
                     "developers.google.com/search/docs/crawling-indexing/google-special-case-crawlers", "support.google.com/google-ads",

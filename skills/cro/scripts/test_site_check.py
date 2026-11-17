@@ -264,6 +264,29 @@ class SiteCheckTests(unittest.TestCase):
         lines = [l for l in out.splitlines() if " NOINDEX:" in l]
         self.assertTrue(lines and all(l.startswith("WARN ") and "UNVERIFIED" in l for l in lines), out)
 
+    def test_the_error_page_and_a_verification_file_are_skipped_not_checked(self):
+        err = page_html(CLEAN_DECK, canonical=ORIGIN + "/404.html")
+        verify = "google-site-verification: google0123456789abcdef.html\n"
+        other = page_html(CLEAN_DECK, canonical=ORIGIN + "/other.html")
+        out = self.site({"/index.html": page_html(CLEAN_DECK), "/404.html": err, "/docs/404.html": err, "/404/index.html": err,
+                         "/google0123456789abcdef.html": verify})[1]
+        self.assertNotRegex(out, r"(?m)^(FAIL|WARN) /(docs/)?404", out)
+        self.assertNotRegex(out, r"(?m)^(FAIL|WARN) /google", out)
+        for url in ("/404.html", "/docs/404.html", "/404/index.html", "/google0123456789abcdef.html"):
+            self.assertEqual(len(re.findall(r"(?m)^SKIPPED %s " % re.escape(url), out)), 1, out)
+        out = self.site({"/index.html": page_html(CLEAN_DECK), "/other.html": other})[1]
+        self.assertRegex(out, r"(?m)^FAIL /other\.html SITEMAP: ")
+
+    def test_a_skipped_kind_of_file_is_checked_when_the_pages_list_names_it(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        listing = Path(tmp.name) / "pages.json"
+        listing.write_text(json.dumps([{"url": "/404.html", "mode": "direct", "paid": False}]), encoding="utf-8")
+        out = self.site({"/index.html": page_html(CLEAN_DECK), "/404.html": page_html(CLEAN_DECK, canonical=ORIGIN + "/404.html")},
+                        None, "--pages", str(listing))[1]
+        self.assertRegex(out, r"(?m)^FAIL /404\.html SITEMAP: ")
+        self.assertNotRegex(out, r"(?m)^SKIPPED /404\.html LAUNCH_PAGE")
+
     def test_a_pages_entry_with_no_page_is_skipped(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)

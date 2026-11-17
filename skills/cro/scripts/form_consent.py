@@ -35,6 +35,7 @@ EMAIL = re.compile(r"[^@\s]+@[^@\s.]+(\.[^@\s.]+)+")
 DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 WAIT_MS = 30000
 POST_WAIT_MS = 10000
+READ_BOUND_MS = 3000  # the limit of every read of the page once the consent is open
 GIVE_UP_MS = 2000
 LOOPBACK = ("127.0.0.1", "::1", "localhost")
 
@@ -144,6 +145,7 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
                    if typed is None else "the host typed at the terminal was not %s; nothing was sent" % host)
             add_issue(entry, "SKIPPED", "SEND", why)
             return False
+    form_check.READ_BOUND_MS, form_check.READ_MISSED = READ_BOUND_MS, False  # from here every read of the page has a limit
     sender.allow_post_marker = args.email  # only a request that carries the typed address can take the send
     sender.allow_post_host = host  # open the consent now, for the press alone
     session.consent_opened = True  # for main: a send may have left if the script fails from here on
@@ -191,7 +193,7 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
             entry["thank_you"]["text"] = text
             if entry["submit"]["state"] == "navigated":
                 entry["thank_you"]["url"] = page.url
-        if not held:
+        if not held and not form_check.READ_MISSED:  # a held page, or one that did not answer a read, is not asked for a picture
             snap_form(page, info["i"], out_dir / ("form%d-consented.png" % entry["index"]))
         page.wait_for_timeout(500)
     except form_check.PlaywrightError as error:
@@ -199,6 +201,7 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         page_error = error  # the page cannot be read any more; what was sent is judged from the recorder
     finally:
         sender.allow_post_host = None
+        form_check.READ_BOUND_MS = None
     sender.finish()
 
     after = sender.entries[mark:]

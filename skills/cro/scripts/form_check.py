@@ -456,10 +456,24 @@ def click_submit(page, i):
         return False
 
 
+READ_BOUND_MS = None  # form_consent sets it once the consent opens: every read of the page then has this limit
+READ_MISSED = False  # set when a bounded read got no answer inside its limit
+
+
 def safe_eval(page, script, arg, default):
+    """page.evaluate(script, arg), or default when it raises. With READ_BOUND_MS set, the read goes through wait_for_function, which
+    keeps its timeout while the page is held by a request in flight, where evaluate waits for the answer without a limit (observed
+    by probe on Playwright 1.62.0, UNVERIFIED beyond it; the call is documented at
+    https://playwright.dev/python/docs/api/class-page#page-wait-for-function). A read the page does not answer in time gives default."""
+    global READ_MISSED
     try:
-        return page.evaluate(script, arg)
-    except PlaywrightError:
+        if READ_BOUND_MS is None:
+            return page.evaluate(script, arg)
+        handle = page.wait_for_function("(arg) => ({value: (" + script + ")(arg)})", arg=arg, timeout=READ_BOUND_MS, polling=100)
+        return handle.json_value()["value"]
+    except PlaywrightError as error:
+        if "Timeout" in type(error).__name__:
+            READ_MISSED = True
         return default
 
 
@@ -540,7 +554,9 @@ def press(page, i, info, limit_ms, stop=None, into=None, hold=None):
         submit["pressed"] = click_submit(page, i)
     if submit["pressed"]:
         if hold is not None:
-            page.wait_for_timeout(400)  # a navigation the press starts shows in the caller's record before the page is asked
+            # A read begun in the instant a navigation starts can wait for its answer past its limit (seen in 1 of 4 runs, UNVERIFIED
+            # why), so the caller's record is given time to show the request before the first read.
+            page.wait_for_timeout(400)
         submit["state"], submit["time_ms"] = wait_for_state(page, i, before, started, limit_ms, stop, hold=hold)
         if hold is None or not hold():  # a page held by a request in flight is not asked
             submit["validation"] = [] if submit["state"] == "navigated" else safe_eval(page, VALIDATION, i, [])

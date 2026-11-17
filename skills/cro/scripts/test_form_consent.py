@@ -88,7 +88,7 @@ class AnswerServer(FormServer):
 
     def _go(self):
         path = self.path.split("?", 1)[0]
-        if path in ("/lead-hold", "/lead-hold-303", "/lead-hangup", "/page-held"):
+        if path in ("/lead-hold", "/lead-hold-long", "/lead-hold-303", "/lead-hangup", "/page-held"):
             length = int(self.headers.get("Content-Length") or 0)
             body = self.rfile.read(length).decode("utf-8", "replace") if length else ""
             with FormServer.lock:
@@ -100,7 +100,7 @@ class AnswerServer(FormServer):
                 elif path == "/lead-hold-303":
                     self._send(303, b"", None, {"Location": "/page-held"})
                 else:
-                    time.sleep(HOLD_SECONDS)
+                    time.sleep(30.0 if path == "/lead-hold-long" else HOLD_SECONDS)
                     self._send(200, self.PAGE, "text/html; charset=utf-8")
             except OSError:
                 pass
@@ -242,6 +242,13 @@ class HeldAnswerTests(unittest.TestCase):
         self.assertIs(run.form["submit"]["pressed"], True)
         self.assertEqual(run.data["network"]["consented"], 1)
 
+    def test_a_page_blocked_by_a_synchronous_request_to_a_slow_host_still_ends_the_run(self):
+        run, _took = self.bounded_run("form-sync-xhr.html", bound=self.WAIT / 1000 + 20)
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead-hold-long"])
+        self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("WARN", "SEND") and "had not answered" in d], run.lines)
+        self.assertIs(run.form["submit"]["pressed"], True)
+
     def test_a_page_after_the_send_that_the_host_holds_past_the_wait_ends_the_run_with_the_warning(self):
         run, _took = self.bounded_run("form-hold-page.html")
         self.assertEqual(run.code, 0, (run.out, run.err))
@@ -264,6 +271,7 @@ class HangUpTests(HeldAnswerTests):
 
     test_a_post_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None  # inherited tests run once, in their own class
     test_a_page_after_the_send_that_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None
+    test_a_page_blocked_by_a_synchronous_request_to_a_slow_host_still_ends_the_run = None
 
 
 class FakeTerminal:

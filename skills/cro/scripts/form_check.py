@@ -63,6 +63,7 @@ const rendered = (el) => {
   const s = getComputedStyle(el);
   return el.getClientRects().length > 0 && s.visibility === 'visible' && s.opacity !== '0';
 };
+const formShown = (form) => rendered(form) || [...form.querySelectorAll('input, select, textarea, button')].some(rendered);
 const formOf = (i) => {
   if (window.__formCheckMark === true && window.__formCheckIndex === i) {
     const kept = window.__formCheckForm;
@@ -170,7 +171,7 @@ return [...document.querySelectorAll('form')].map((form, i) => {
 }"""
 SNAPSHOT = "(i) => {" + HELPERS + r"""
 const form = formOf(i);
-return {marked: window.__formCheckMark === true, form: form ? clean(form.innerText) : null,
+return {marked: window.__formCheckMark === true, form: form && formShown(form) ? clean(form.innerText) : null,
         regions: form ? regionsOf(form).map((r) => r.text) : []};
 }"""
 REGIONS = "(i) => {" + HELPERS + "const form = formOf(i); return form ? regionsOf(form) : [];}"
@@ -180,7 +181,7 @@ if (!form) return [];
 return [...form.querySelectorAll('input, select, textarea')].filter((e) => e.willValidate && !e.validity.valid)
   .map((e) => ({field: e.getAttribute('name') || e.id || e.tagName.toLowerCase(), message: e.validationMessage}));
 }"""
-FORM_TEXT = "(i) => {" + HELPERS + "const form = formOf(i); return form ? clean(form.innerText).slice(0, 600) : null;}"
+FORM_TEXT = "(i) => {" + HELPERS + "const form = formOf(i); return form && formShown(form) ? clean(form.innerText).slice(0, 600) : null;}"
 PAGE_TEXT = r"""() => {
 const main = document.querySelector('main, [role=main]') || document.body;
 return (main.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 600);
@@ -432,8 +433,9 @@ def install_action_route(page, recorder, infos, simulate):
 
 
 def click_submit(page, i):
-    """Press the form's submit control once. Returns whether a click landed. The click returns once it is made (no_wait_after),
-    so a form that answers late does not time it out; when it raises anyway, the page says whether it landed, and a second
+    """Press the form's submit control once. Returns True when the click was made or cannot be shown to have
+    failed (the page cannot be asked, or its mark is gone), False when the page is closed or the click by script fails.
+    The click returns once it is made (no_wait_after), so a form that answers late does not time it out; when it raises anyway, the page says whether it landed, and a second
     click by script is made only when the page saw neither a click on the control nor a submit of the form."""
     button = page.locator("form").nth(i).locator(CONTROL).first
     try:
@@ -461,8 +463,8 @@ def safe_eval(page, script, arg, default):
 
 
 def wait_for_state(page, i, before, started, limit_ms, stop=None, resume=None):
-    """After a press: "navigated" when the document is replaced, "changed" when the form's text or a region's text changes
-    against the snapshot taken before the press, else "none" at the limit. A change is waited out: the wait goes on until the
+    """After a press: "navigated" when the document is replaced, "changed" when the form's text or a region's text changes, or the form stops
+    being shown, against the snapshot taken before the press, else "none" at the limit. A change is waited out: the wait goes on until the
     text has stayed the same for SETTLE_MS, so a button that says "Sending" is not the answer. Returns (state, milliseconds
     from the press to the state, or for "changed" to the last change seen). stop(elapsed_ms) ends the wait early.
     resume=(snapshot pair, ms of the last change) goes on from a state that has changed already."""
@@ -496,7 +498,7 @@ def wait_for_state(page, i, before, started, limit_ms, stop=None, resume=None):
 def read_outcome(page, i, submit):
     """Read the regions and the status text as the page shows them now into submit, with status_source: "region" for a shown
     region's text, "form" for the form's own text after a change, "page" for the page's text after a navigation or when the
-    form is gone, "none" (and no text) when nothing changed. Returns the text."""
+    form is gone or no longer shown, "none" (and no text) when nothing changed. Returns the text."""
     if submit["state"] != "navigated":
         submit["regions"] = safe_eval(page, REGIONS, i, submit["regions"])
     shown = [r["text"] for r in submit["regions"] if r["text"]]

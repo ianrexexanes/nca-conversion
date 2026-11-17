@@ -157,6 +157,15 @@ class FormCheckTests(unittest.TestCase):
         self.assertEqual(moved["submit"].get("status_source"), "page", moved["submit"])
         self.assertEqual(moved["thank_you"]["text"], moved["submit"]["status_text"])
 
+    def test_a_form_hidden_on_success_reads_the_thank_you_from_the_page(self):
+        run = self.run_page("form-hidden-on-success.html", "--simulate", "success")
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        submit = run.form["submit"]
+        self.assertEqual(submit["state"], "changed", submit)
+        self.assertEqual(submit.get("status_source"), "page", submit)
+        self.assertIn("Thanks, we will reply within one day.", submit["status_text"] or "")
+        self.assertEqual(run.form["thank_you"]["text"], submit["status_text"])
+
     def test_a_press_that_changes_nothing_reports_no_outcome_text(self):
         run = self.run_page("form-quiet.html")
         self.assertEqual(run.code, 0, (run.out, run.err))

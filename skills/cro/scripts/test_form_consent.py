@@ -137,6 +137,19 @@ class SinglePressTests(unittest.TestCase):
         self.assertEqual(run.form["submit"]["state"], "navigated")
         self.assertEqual(len([e for e in run.log if e["method"] not in cro_runtime.ALLOWED_METHODS]), 1, run.log)
 
+    def test_a_form_hidden_after_the_send_reads_the_thank_you_from_the_page(self):
+        run = run_script(SCRIPT, "%s/form-hidden-on-success.html" % self.base, *GOOD, tmp=self.tmp.name)
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertIn("Thanks, we will reply within one day.", run.form["thank_you"]["text"] or "")
+
+    def test_a_click_that_raised_after_it_landed_is_not_made_twice(self):
+        run = run_script(SCRIPT, "%s/form-busy-click.html" % self.base, *GOOD, tmp=self.tmp.name)
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead"])
+        self.assertIs(run.form["submit"]["pressed"], True)
+        # a second click would show as a second request in the log, aborted by the guard though it never reaches the server
+        self.assertEqual(len([e for e in run.log if e["method"] not in cro_runtime.ALLOWED_METHODS]), 1, run.log)
+
     def test_a_submit_control_covered_by_another_element_is_still_pressed_once(self):
         run = run_script(SCRIPT, "%s/form-covered-submit.html" % self.base, *GOOD, tmp=self.tmp.name)
         self.assertEqual([p for _m, p in run.posts()], ["/lead-303"], (run.out, run.err))

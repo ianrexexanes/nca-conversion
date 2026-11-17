@@ -200,6 +200,8 @@ class Recorder:
 
     def on_failed(self, request):
         found = self.entry(request)
+        if found["outcome"] == "consented":
+            found["failure"] = request.failure  # the request left and the browser got no answer; the outcome stays "consented"
         if found["outcome"] is not None:
             return
         rule = is_blocked(request.url)

@@ -461,6 +461,22 @@ class GuardStackTest(unittest.TestCase):
         self.assertEqual((first.action, second.action, other.action), ("continue", "abort", "abort"))
         self.assertEqual([e["outcome"] for e in rec.entries if e["method"] == "POST"], ["consented", "blocked", "blocked"])
 
+    def test_a_consented_request_that_fails_keeps_its_outcome_and_gains_the_failure(self):
+        rec = cro_runtime.Recorder(allow_post_host="forms.example.test")
+        sent, other, tracker = (FakeRoute("POST", "https://forms.example.test/f"), FakeRoute("POST", "https://other.example.test/f"),
+                                FakeRoute("GET", "https://forms.example.test/page"))
+        for r in (sent, other, tracker):
+            rec.on_route(r)
+            r.request.failure = "net::ERR_EMPTY_RESPONSE"
+            rec.on_failed(r.request)
+        by_url = {e["url"]: e for e in rec.entries}
+        consented = by_url["https://forms.example.test/f"]
+        self.assertEqual(consented["outcome"], "consented")
+        self.assertEqual(consented.get("failure"), "net::ERR_EMPTY_RESPONSE")
+        for url, outcome in (("https://other.example.test/f", "blocked"), ("https://forms.example.test/page", "failed")):
+            self.assertEqual(by_url[url]["outcome"], outcome, url)
+            self.assertNotIn("failure", by_url[url], url)
+
     def test_guarded_helpers_add_every_layer(self):
         calls = []
         context = Recording(calls)

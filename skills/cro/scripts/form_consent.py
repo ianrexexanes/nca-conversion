@@ -8,8 +8,9 @@ is not one address with a dot after the @. The page loads through a guarded Reco
 sends while it loads, is read or is filled can take the send. The script finds the one form and its action host, refuses a form
 that submits by GET (the guard counts only non-GET requests), fills it (the address in its email field, "Test submission,
 consented by <owner>, <date>" in the other text fields), and only then sets the Recorder's allow_post_host to that host and
-presses submit once, timing the press to the thank-you state. After the press it waits for the form's host to answer, closes the consent, and only then judges the send; a send the host has not answered by the end of the wait is a WARN. So is a page that cannot be read after the press when the request has left: the thank-you state is not known, so check that the test lead arrived before any rerun. A failure of the script after the consent was opened prints a line on standard error to the same effect. The guard lets exactly one non-GET request leave, to that host; a
-second is aborted. Afterwards the consented request must be to the form's own action (or the pressed control's formaction), and no
+presses submit once, timing the press to the thank-you state. After the press it waits for the form's host to answer, closes the consent, and only then judges the send; a send the host has not answered by the end of the wait is a WARN. So is a page that cannot be read after the press when the request has left: the thank-you state is not known, so check that the test lead arrived before any rerun. A failure of the script after the consent was opened prints a line on standard error to the same effect. The guard lets exactly one non-GET request leave the page, to that host; a
+second is aborted. A resend inside the browser's network stack after a connection that closed with no answer is below the guard: it is
+reported afterwards (a FAIL SEND for a host that ended the connection), like the redirect that keeps the method. Afterwards the consented request must be to the form's own action (or the pressed control's formaction), and no
 non-GET request may show as completed, which is what a 307 or 308 redirect hop looks like; either is a FAIL SEND, exit 1. A form
 that sends anywhere else, or by GET, is SKIPPED and exit 3, with nothing sent. So is a form whose own validation refuses the fill. The yes in the chat comes first, as `form.md` step 7 says. Then, unless the action host is loopback (127.0.0.1, ::1 or localhost), the script asks at the terminal before it opens the consent: it prints the action host and goes on only when that host is typed back on standard input. With no terminal on standard input, or any other answer, the form is SKIPPED and exit 3, with nothing sent. No flag, variable or file answers for the terminal.
 Exit 0 when the send went through, 1 on a FAIL, 2 on bad input, 3 when nothing was sent. The browser is closed last, with
@@ -155,6 +156,8 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         def stop(elapsed):
             posts = [e for e in sender.entries[mark:] if e["method"] not in cro_runtime.ALLOWED_METHODS]
             sent = any(e["outcome"] == "consented" for e in posts)
+            if any(e["outcome"] == "consented" and "failure" in e for e in posts):
+                return True  # the form's host ended the connection: no answer is coming
             return not sent and any(e["outcome"] == "blocked" for e in posts) and elapsed >= GIVE_UP_MS
 
         pressed_at = time.monotonic()
@@ -169,7 +172,7 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         own = lambda: [e for e in posts() if host_of(e["url"]) == host]  # noqa: E731  (a request elsewhere is not the form's)
         while submit["state"] != "navigated" and not own() and waited() - pressed_back < POST_WAIT_MS:
             page.wait_for_timeout(100)
-        while any(e["outcome"] == "consented" and e["status"] is None for e in posts()) and waited() < WAIT_MS:
+        while any(e["outcome"] == "consented" and e["status"] is None and "failure" not in e for e in posts()) and waited() < WAIT_MS:
             page.wait_for_timeout(100)
         sender.allow_post_host = None  # the consent is closed: a later request of the page is aborted like any other
         held = in_flight()  # while one is in flight the page's calls wait for it: the page is not asked
@@ -184,9 +187,10 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
                 submit["state"], submit["time_ms"] = form_check.wait_for_state(
                     page, info["i"], None, pressed_at, waited() + 3000, resume=((now["form"], now["regions"]), submit["time_ms"]))
                 text = form_check.read_outcome(page, info["i"], submit)
-        entry["thank_you"]["text"] = text
-        if entry["submit"]["state"] == "navigated":
-            entry["thank_you"]["url"] = page.url
+        if not page.url.startswith("chrome-error://"):  # the browser's own error page is not the form's thank-you step
+            entry["thank_you"]["text"] = text
+            if entry["submit"]["state"] == "navigated":
+                entry["thank_you"]["url"] = page.url
         if not held:
             snap_form(page, info["i"], out_dir / ("form%d-consented.png" % entry["index"]))
         page.wait_for_timeout(500)
@@ -244,7 +248,11 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         add_issue(entry, "WARN", "SEND", "the one consented request went to %s, not to the form's action address %s, most likely the "
                   "page's script sending the form there; check that the test lead arrived before any rerun" % (sent[0]["url"], action))
     status = sent[0]["status"]
-    if status is None and page_error is None:
+    if status is None and sent[0].get("failure"):
+        add_issue(entry, "FAIL", "SEND", "the request left and the form's host ended the connection with no answer (%s); a browser can send "
+                  "such a request again by itself, so the host may have received the submission twice, once or not at all; check before any "
+                  "rerun" % sent[0]["failure"])
+    elif status is None and page_error is None:
         add_issue(entry, "WARN", "SEND", "the form's host had not answered %d seconds after the press, so whether the test lead arrived "
                   "is not known; check before any rerun" % round(waited() / 1000))
     elif status is not None and status >= 400:

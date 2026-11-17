@@ -212,14 +212,15 @@ class HeldAnswerTests(unittest.TestCase):
         cls.tmp = tempfile.TemporaryDirectory()
         cls.addClassCleanup(cls.tmp.cleanup)
 
-    def bounded_run(self, page):
+    def bounded_run(self, page, wait=None, bound=None):
+        wait = wait or self.WAIT
         folder = tempfile.mkdtemp(dir=self.tmp.name)
         with FormServer.lock:
             mark = len(FormServer.requests)
         out, err, result = io.StringIO(), io.StringIO(), []
 
         def go():
-            with mock.patch.object(form_consent, "WAIT_MS", self.WAIT), mock.patch.object(form_consent, "POST_WAIT_MS", 1000), \
+            with mock.patch.object(form_consent, "WAIT_MS", wait), mock.patch.object(form_consent, "POST_WAIT_MS", 1000), \
                     mock.patch.object(form_consent, "LOOPBACK", form_consent.LOOPBACK), mock.patch.object(sys, "stdin", FakeTerminal(False)), \
                     contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
                 result.append(form_consent.main(["%s/%s" % (self.base, page), "--out", folder, *GOOD]))
@@ -227,8 +228,8 @@ class HeldAnswerTests(unittest.TestCase):
         thread = threading.Thread(target=go, daemon=True)
         started = time.monotonic()
         thread.start()
-        thread.join(self.WAIT / 1000 + 10)
-        self.assertFalse(thread.is_alive(), "the run did not end within the wait plus 10 seconds")
+        thread.join(bound or wait / 1000 + 10)
+        self.assertFalse(thread.is_alive(), "the run did not end within its bound")
         with FormServer.lock:
             seen = list(FormServer.requests[mark:])
         return Run(result[0], out.getvalue(), err.getvalue(), seen, folder), time.monotonic() - started
@@ -247,6 +248,22 @@ class HeldAnswerTests(unittest.TestCase):
         self.assertEqual([p for _m, p in run.posts()], ["/lead-hold-303"])
         self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("WARN", "SEND") and "had not loaded" in d and "303" in d], run.lines)
         self.assertIs(run.form["submit"]["pressed"], True)
+
+
+class HangUpTests(HeldAnswerTests):
+    """S06: a host that ends the connection on the POST with no answer. The wait is 20 seconds and the run must end in under 10."""
+
+    def test_a_host_that_hangs_up_on_the_post_is_a_fail_and_the_error_page_is_not_the_thank_you(self):
+        run, _took = self.bounded_run("form-hangup.html", wait=20000, bound=10)
+        self.assertEqual(run.code, 1, (run.out, run.err))
+        self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("FAIL", "SEND") and "ended the connection" in d and "ERR_" in d],
+                        run.lines)
+        self.assertNotIn("had not answered", run.out)
+        self.assertIsNone(run.form["thank_you"]["url"])
+        self.assertIsNone(run.form["thank_you"]["text"])
+
+    test_a_post_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None  # inherited tests run once, in their own class
+    test_a_page_after_the_send_that_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None
 
 
 class FakeTerminal:

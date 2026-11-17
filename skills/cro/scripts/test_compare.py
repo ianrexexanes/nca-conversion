@@ -208,6 +208,31 @@ class CompareTests(Base):
         self.assertIn('H1: "Lanterns made by hand" -> "A new headline"', lines)
         self.assertNotIn("The result cannot be put down to either change.", lines)
 
+    def test_nested_text_reading_change_is_not_compared_as_a_page_change(self):
+        # the same unchanged page: 0.3.0 read <h1>Grow <a>faster</a></h1> as "Grow", 0.4.0 reads "Grow faster"
+        def read_by(version, h1, h2, extra_link):
+            def facts(d):
+                d["headings"] = [{"level": 1, "text": h1, "in_footer": False}, {"level": 2, "text": h2, "in_footer": False}]
+                d["links"] = [{"text": "Shop lanterns", "href": "/shop", "kind": "a", "in_footer": False}] + extra_link
+            return {"score.json": lambda d: d.update(plugin_version=version), "facts.json": facts}
+        pump = [{"text": "Pump checks", "href": "/pumps", "kind": "a", "in_footer": False}]
+        old = self.variant(BEFORE, "before-030", **read_by("0.3.0", "Grow", "Sizes", []))
+        new = self.variant(AFTER, "after-040", **read_by("0.4.0", "Grow faster", "Sizes of lanterns", pump))
+        lines = self.lines(old, new)
+        for label in ("H1", "H2 list", "Button labels"):
+            self.assertEqual([l for l in lines if l.startswith(label + ":")],
+                             [label + ": not compared: facts from before 0.4.0 read nested text differently"], label)
+        self.assertFalse([l for l in lines if "Grow" in l or "Pump checks" in l], lines)
+        self.assertNotIn("The result cannot be put down to either change.", lines)
+        self.assertIn("Facts: no change in what was compared", lines)
+        same = self.variant(BEFORE, "before-040", **read_by("0.4.0", "Grow", "Sizes", []))
+        lines = self.lines(same, new)  # both sides on this version: a real change is still reported
+        self.assertIn('H1: "Grow" -> "Grow faster"', lines)
+        self.assertIn('Button labels: added "Pump checks"', lines)
+        self.assertIn("The result cannot be put down to either change.", lines)
+        both_old = self.variant(AFTER, "after-030", **read_by("0.3.1", "Grow faster", "Sizes", pump))
+        self.assertIn('H1: "Grow" -> "Grow faster"', self.lines(old, both_old))  # both before 0.4.0: compared as today
+
 
 def BEFORE_COPY(case):
     return case.variant(BEFORE, "before-copy")

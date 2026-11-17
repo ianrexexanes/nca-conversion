@@ -144,6 +144,13 @@ def _anchors(sheet):
     return "0.2.x" if tuple(int(p) for p in version.split(".")) < (0, 3, 0) else "0.3.0"
 
 
+def _nested_text_reading(sheet):
+    """True when the facts beside this sheet were read by 0.4.0 or later, which gives a nested element's text to every element around it.
+    A sheet with no plugin_version reads as 0.2.x, as in _anchors."""
+    version = sheet.get("plugin_version")
+    return version is not None and tuple(int(p) for p in version.split(".")) >= (0, 4, 0)
+
+
 def score_block(b, a, speed_b=None, speed_a=None):
     out = []
     changed = False
@@ -288,7 +295,7 @@ def _button_labels(facts):
     return seen
 
 
-def facts_block(b, a):
+def facts_block(b, a, sheets=None):
     if b is None and a is None:
         return []
     if b is None or a is None:
@@ -300,19 +307,28 @@ def facts_block(b, a):
         if vb != va:
             out.append(f"{label}: {_quoted(vb)} -> {_quoted(va)}")
             changed = True
+    # no subtraction across a change of method: 0.4.0 reads nested text differently, so these are not compared across it
+    method = "facts from before 0.4.0 read nested text differently"
+    shifted = sheets is not None and _nested_text_reading(sheets[0]) != _nested_text_reading(sheets[1])
     h1b, h1a = " | ".join(_headings(b, 1)) or None, " | ".join(_headings(a, 1)) or None
-    h1_changed = h1b != h1a
-    if h1_changed:
+    h1_changed = h1b != h1a and not shifted
+    if shifted:
+        out.append(f"H1: not compared: {method}")
+    elif h1_changed:
         out.append(f"H1: {_quoted(h1b)} -> {_quoted(h1a)}")
         changed = True
     h2b, h2a = _headings(b, 2), _headings(a, 2)
-    if h2b != h2a:
+    if shifted:
+        out.append(f"H2 list: not compared: {method}")
+    elif h2b != h2a:
         added, removed = _surplus(h2a, h2b), _surplus(h2b, h2a)
         out.append("H2 list: " + (_added_removed(added, removed) if added or removed else "same headings in a new order"))
         changed = True
     buttons_changed = False
     if "links" not in b or "links" not in a:
         out.append("Button labels: not compared: facts from before 0.3.0 hold no links")
+    elif shifted:
+        out.append(f"Button labels: not compared: {method}")
     else:
         lb, la = _button_labels(b), _button_labels(a)
         if set(lb) != set(la):
@@ -332,7 +348,7 @@ def compare(b, a):
     lines = score_block(b["sheet"], a["sheet"], b["speed"], a["speed"])
     lines += speed_block(b["speed"], a["speed"])
     lines += search_block(b["search"], a["search"])
-    lines += facts_block(b["facts"], a["facts"])
+    lines += facts_block(b["facts"], a["facts"], (b["sheet"], a["sheet"]))
     return lines
 
 

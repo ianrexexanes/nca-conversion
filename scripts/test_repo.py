@@ -2036,6 +2036,9 @@ class CompareTests(unittest.TestCase):
         self.assertIn("A footer heading counts in the H2 list on every facts file, because facts from before 0.3.0 cannot say "
                       "which headings sit in a footer and both sides are read the same way.", self.text)
 
+    def test_facts_lines_are_not_compared_across_the_040_change_of_reading(self):
+        self.assertIn("When one side was read before 0.4.0 and the other by 0.4.0 or later, the H1, the H2 list and the button labels are not compared, because 0.4.0 reads nested text differently.", self.text)
+
     def test_the_version_note_warns_that_021_changed_factor_10(self):
         self.assertIn("a sheet without `plugin_version` reads as the oldest anchors, and the line says which sheet it is. "
                       "When both sheets lack it, a caution says 0.2.1 changed factor 10's anchors, so a change in factor 10 may come from the version.", self.text)

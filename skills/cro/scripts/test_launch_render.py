@@ -89,6 +89,12 @@ class LaunchRenderTests(unittest.TestCase):
         self.assertTrue(self.has(rows, "SKIPPED", "HEADLINE_RATIO", 375, "did not load"), done.stdout)
         self.assertTrue(self.has(rows, "FAIL", "STATUS", 1440), done.stdout)
 
+    def test_forty_small_footer_links_are_one_warning_row_for_the_view(self):
+        _c, out, rows = self.render("forty-footer-links.html", 390)
+        small = [r for r in rows if r[0] == "WARN" and r[3] == "TARGET" and r[2] == 390]
+        self.assertEqual(len(small), 1, out)
+        self.assertIn("40", small[0][4], out)
+
     def test_horizontal_scroll_fails(self):
         code, out, rows = self.render("wide.html", 375)
         self.assertTrue(self.has(rows, "FAIL", "SCROLL", 375), out)

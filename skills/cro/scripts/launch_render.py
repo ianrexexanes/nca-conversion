@@ -373,7 +373,7 @@ def spacing_exception(targets, i):
 
 
 def target_findings(targets):
-    rows = []
+    rows, under = [], []
     for i, t in enumerate(targets):
         if t["inline"]:
             continue
@@ -381,7 +381,9 @@ def target_findings(targets):
         if small(t) and not spacing_exception(targets, i):
             rows.append(("FAIL", "TARGET", "%s is under %d by %d CSS px and a %d px circle on it meets another target" % (size, MIN_TARGET, MIN_TARGET, CIRCLE)))
         elif round(t["w"], 2) < WANT_TARGET or round(t["h"], 2) < WANT_TARGET:
-            rows.append(("WARN", "TARGET", "%s is under %d by %d CSS px" % (size, WANT_TARGET, WANT_TARGET)))
+            under.append(size)
+    if under:
+        rows.append(("WARN", "TARGET", "%d target(s) under %d by %d CSS px: %s" % (len(under), WANT_TARGET, WANT_TARGET, listing(under))))
     return rows
 
 

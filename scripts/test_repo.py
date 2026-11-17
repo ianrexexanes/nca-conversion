@@ -2716,17 +2716,19 @@ class ReferenceTextRound3Tests(unittest.TestCase):
     def test_a_late_answer_and_a_late_page_after_the_send_are_told_apart(self):
         step = self.ref("form.md", 7)
         self.assertIn("A form that submits without a script then has no picture and no thank-you text, because the page cannot be asked "
-                      "while its own request is unanswered. When the send was answered but the page that follows it had not loaded by "
+                      "while its own request is unanswered.", step)
+        self.assertIn("When the send was answered but the page that follows it had not loaded by "
                       "the end of the wait, it prints `WARN ... SEND` naming the HTTP status the send was answered with: the thank-you "
                       "state is not known, so check that the test lead arrived before any rerun.", step)
 
     def test_a_connection_ended_without_an_answer_is_a_fail_and_never_the_thank_you_step(self):
         step = self.ref("form.md", 7)
-        self.assertIn("when the form's host ended the connection on the consented request without an answer, with the browser's "
-                      "failure text in the line, ", step)
+        self.assertIn("when the form's host ended the connection on the consented request without an answer (an empty response, a "
+                      "reset connection or a closed connection), with the browser's failure text in the line, ", step)
         self.assertIn("After a connection that ended without an answer, a browser can send the request a second time by itself, below "
                       "the guard, so the host may have received the submission twice, once or not at all: the line says so, and the "
-                      "report must say it too. The browser's own error page is never reported as the thank-you step: `thank_you.url` "
+                      "report must say it too.", step)
+        self.assertIn("The browser's own error page is never reported as the thank-you step: `thank_you.url` "
                       "and `thank_you.text` stay null.", step)
 
     def test_a_send_that_does_not_end_is_stopped_with_ctrl_c_and_checked(self):
@@ -2744,6 +2746,32 @@ class ReferenceTextRound3Tests(unittest.TestCase):
         text = self.ref("compare.md")
         self.assertIn("A changed keyword is a new test. When one side was read before 0.4.1 and the other by 0.4.1 or later, the "
                       "first-sentence line is not compared, because 0.4.1 reads the first sentence differently.", text)
+
+    def test_a_page_the_form_moves_on_to_is_waited_for_and_a_frame_is_not(self):
+        step = self.ref("form.md", 7)
+        self.assertIn("After the answer, a page the form moves on to is waited for until the end of the wait and then read; a frame "
+                      "that loads inside the page is not waited for.", step)
+
+    def test_a_clean_result_does_not_rule_out_a_second_sending(self):
+        step = self.ref("form.md", 7)
+        self.assertIn("The script cannot see that second sending. When the retry is answered, the run reads as one clean send, so a "
+                      "clean result does not rule out that the host received the submission twice: if the owner finds the test lead "
+                      "twice, say that this is the likely cause.", step)
+
+    def test_a_cancelled_consented_request_is_a_warn(self):
+        step = self.ref("form.md", 7)
+        self.assertIn("When the consented request was cancelled before an answer came, most likely by the page itself, it prints "
+                      "`WARN ... SEND` with exit 0: whether the test lead arrived is not known, so check before any rerun.", step)
+
+    def test_any_other_failed_consented_request_is_a_fail(self):
+        step = self.ref("form.md", 7)
+        self.assertIn("When the browser reports the consented request as failed in any other way, it prints `FAIL ... SEND` with exit 1 "
+                      "and the browser's failure text: whether the request reached the form's host is not known, so check before any "
+                      "rerun.", step)
+
+    def test_the_report_says_the_time_can_read_late(self):
+        step = self.ref("form.md", 8)
+        self.assertIn("The time can read up to 0.4 seconds late when the form shows its change before its request starts.", step)
 
 
 if __name__ == "__main__":

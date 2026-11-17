@@ -286,7 +286,7 @@ def _schema_types(blocks, notes):
     for block in blocks:
         try:
             data = json.loads(block)
-        except ValueError:
+        except (ValueError, RecursionError):  # not JSON, or nested too deep to read
             notes.append("A JSON-LD block failed to parse; its types could not be read.")
             continue
         for node in _walk(data):

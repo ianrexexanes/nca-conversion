@@ -170,6 +170,14 @@ class ExtractFactsTest(unittest.TestCase):
     def test_an_object_in_a_type_list_is_left_out_and_the_strings_stay(self):
         self.assertEqual(self._types_of('["Product", {"a": 1}]'), ["Product"])
 
+    def test_a_json_ld_block_nested_too_deep_is_a_block_that_cannot_be_read(self):
+        deep = "[" * 100000 + "]" * 100000
+        html = ('<script type="application/ld+json">%s</script>'
+                '<script type="application/ld+json">{"@type": "Product"}</script>' % deep)
+        facts = self._facts_or_fail(html)
+        self.assertEqual(facts["schema_types"], ["Product"])
+        self.assertEqual(sum("failed to parse" in note for note in facts["notes"]), 1)
+
 
 PAGE = b"<html><head><title>Fixture</title></head><body></body></html>"
 

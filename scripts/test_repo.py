@@ -1923,6 +1923,12 @@ class FormTests(unittest.TestCase):
                       "When the host has not answered by the end of the wait, it prints `WARN ... SEND` with exit 0: whether the test lead "
                       "arrived is not known, so check before any rerun.", self.text)
 
+    def test_it_says_what_a_page_lost_after_the_press_and_a_failure_after_the_consent_print(self):
+        self.assertIn("When the page cannot be read after the press but the consented request has left, it prints `WARN ... SEND` with "
+                      "exit 0: the thank-you state is not known, so check that the test lead arrived before any rerun. When the script "
+                      "fails after the consent was opened, it prints a line on standard error that a submission may have been sent: "
+                      "check before any rerun.", self.text)
+
     def test_it_says_a_form_without_a_script_is_not_simulated(self):
         self.assertIn("say that this form could not be simulated and give the reason. A form that submits without a script prints "
                       "`SKIPPED ... SIMULATE` too, because the simulated reply would replace the page: say that its success and error "

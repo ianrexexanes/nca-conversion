@@ -484,6 +484,58 @@ class SiteCheckTests(unittest.TestCase):
         self.assertNotRegex(out, r"(?m)^FAIL /index\.html SITEMAP")
         self.assertRegex(out, r"(?m)^site_check: \d+ FAIL, \d+ WARN$")
 
+    def test_a_sitemap_with_an_unknown_encoding_is_a_row_not_a_traceback(self):
+        bogus = '<?xml version="1.0" encoding="bogus"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"/>'
+        about = page_html(CLEAN_DECK, canonical=ORIGIN + "/about.html", body_extra='<a href="/gone.html">Gone</a>')
+        out = self.site({"/index.html": page_html(CLEAN_DECK), "/about.html": about}, {"sitemap.xml": bogus})[1]
+        self.assertNotIn("Traceback", out)
+        self.assertRegex(out, r"(?m)^FAIL sitemap\.xml SITEMAP: sitemap\.xml is not valid XML: unknown encoding")
+        self.assertRegex(out, r"(?m)^FAIL /about\.html LINK: /gone\.html")  # the other rules still run
+        self.assertRegex(out, r"(?m)^site_check: \d+ FAIL, \d+ WARN$")
+
+    def test_a_sitemap_or_robots_file_that_cannot_be_read_is_a_row(self):
+        # A file of mode 000 is readable by root, and a folder in its place is simply "not there", so the refusal is
+        # injected at the read itself: the same PermissionError the operating system raises, for any user.
+        import contextlib
+        import io
+        from unittest import mock
+        real_parse, real_read_text = site_check.ET.parse, Path.read_text
+
+        def refuse(name):
+            def parse(file, *a, **k):
+                if Path(file).name == name:
+                    raise PermissionError(13, "Permission denied", str(file))
+                return real_parse(file, *a, **k)
+
+            def read_text(self, *a, **k):
+                if self.name == name:
+                    raise PermissionError(13, "Permission denied", str(self))
+                return real_read_text(self, *a, **k)
+            return parse, read_text
+
+        about = page_html(CLEAN_DECK, canonical=ORIGIN + "/about.html", body_extra='<a href="/gone.html">Gone</a>')
+        index = {"sitemap.xml": None, "sitemap-index.xml": sitemap_index([ORIGIN + "/sitemap-pages.xml"]),
+                 "sitemap-pages.xml": urlset([ORIGIN + "/", ORIGIN + "/about.html"])}
+        cases = (("sitemap.xml", None, "SITEMAP"), ("sitemap-pages.xml", index, "SITEMAP"), ("robots.txt", None, "ROBOTS"))
+        for name, files, rule in cases:
+            tmp = tempfile.TemporaryDirectory()
+            self.addCleanup(tmp.cleanup)
+            dist = write_site(Path(tmp.name) / "dist", {"/index.html": page_html(CLEAN_DECK), "/about.html": about},
+                              dict({"sitemap.xml": urlset([ORIGIN + "/", ORIGIN + "/about.html"])}, **(files or {})))
+            parse, read_text = refuse(name)
+            buffer = io.StringIO()
+            with mock.patch.object(site_check.ET, "parse", parse), mock.patch.object(Path, "read_text", read_text), \
+                    contextlib.redirect_stdout(buffer):
+                try:
+                    code = site_check.main(["--dist", str(dist)])
+                except Exception as error:  # noqa: BLE001 - the script must not end in a traceback
+                    self.fail("%s: the script ended in %r" % (name, error))
+            out = buffer.getvalue()
+            self.assertRegex(out, r"(?m)^FAIL %s %s: %s cannot be read: Permission denied$" % (re.escape(name), rule, re.escape(name)), out)
+            self.assertRegex(out, r"(?m)^FAIL /about\.html LINK: /gone\.html", out)  # the other rules still run
+            self.assertRegex(out, r"(?m)^site_check: \d+ FAIL, \d+ WARN$")
+            self.assertEqual(code, 1, out)
+
     def test_head_rules_fire_on_their_own(self):
         good = page_html(CLEAN_DECK)
         cases = {

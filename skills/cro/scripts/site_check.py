@@ -328,8 +328,12 @@ def load_sitemap(dist, add):
                 add("WARN", child.name, "SITEMAP", "a sitemap index inside a sitemap index; only one level is read")
             else:
                 urls.extend(parseable(child.name, child_locs))
-    except ET.ParseError as error:
+    except (ET.ParseError, LookupError) as error:  # LookupError: an XML encoding Python does not know
         add("FAIL", top.name, "SITEMAP", "%s is not valid XML: %s" % (top.name, error))
+        return None
+    except OSError as error:
+        name = Path(error.filename).name if error.filename else top.name
+        add("FAIL", name, "SITEMAP", "%s cannot be read: %s" % (name, error.strerror or error))
         return None
     return urls
 
@@ -379,7 +383,11 @@ def site_files(dist, pages, add):
     if not robots.is_file():
         add("FAIL", "robots.txt", "ROBOTS", "robots.txt is not in the dist folder")
         return
-    text = robots.read_text(encoding="utf-8", errors="replace")
+    try:
+        text = robots.read_text(encoding="utf-8", errors="replace")
+    except OSError as error:
+        add("FAIL", "robots.txt", "ROBOTS", "robots.txt cannot be read: %s" % (error.strerror or error))
+        return
     for url in urls or []:
         parsed = urllib.parse.urlparse(url)
         if not robots_allows(text, (parsed.path or "/") + ("?" + parsed.query if parsed.query else "")):

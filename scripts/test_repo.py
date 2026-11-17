@@ -2628,5 +2628,18 @@ class EvidenceRulesTextTests(unittest.TestCase):
         self.assertIn("### A tag behind a consent banner is not checked, not missing", text)
 
 
+class ReferenceTextRound3Tests(unittest.TestCase):
+    """The reference sentences that say what a script does, as the 0.4.1 fixes left it."""
+
+    def ref(self, name, n=None):
+        raw = (ROOT / "skills/cro/references" / name).read_text(encoding="utf-8")
+        return flat(step_of(raw, n) if n else raw)
+
+    def test_the_consented_press_is_made_once_and_pressed_means_a_click_landed(self):
+        step = self.ref("form.md", 7)
+        self.assertIn("The press is made once: a second press by script is made only when the first did not land, "
+                      "and `pressed` in `form.json` is true whenever a click landed.", step)
+
+
 if __name__ == "__main__":
     unittest.main()

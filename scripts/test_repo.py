@@ -2713,6 +2713,22 @@ class ReferenceTextRound3Tests(unittest.TestCase):
         self.assertIn("takes the lettered form, `<ns>.hero.<v>.<slot>`, where `<v>` is one lowercase letter", text)
         self.assertIn("A key with fewer than three parts is an `UNKNOWN_KEY` WARN.", text)
 
+    def test_a_late_answer_and_a_late_page_after_the_send_are_told_apart(self):
+        step = self.ref("form.md", 7)
+        self.assertIn("A form that submits without a script then has no picture and no thank-you text, because the page cannot be asked "
+                      "while its own request is unanswered. When the send was answered but the page that follows it had not loaded by "
+                      "the end of the wait, it prints `WARN ... SEND` naming the HTTP status the send was answered with: the thank-you "
+                      "state is not known, so check that the test lead arrived before any rerun.", step)
+
+    def test_a_connection_ended_without_an_answer_is_a_fail_and_never_the_thank_you_step(self):
+        step = self.ref("form.md", 7)
+        self.assertIn("when the form's host ended the connection on the consented request without an answer, with the browser's "
+                      "failure text in the line, ", step)
+        self.assertIn("After a connection that ended without an answer, a browser can send the request a second time by itself, below "
+                      "the guard, so the host may have received the submission twice, once or not at all: the line says so, and the "
+                      "report must say it too. The browser's own error page is never reported as the thank-you step: `thank_you.url` "
+                      "and `thank_you.text` stay null.", step)
+
 
 if __name__ == "__main__":
     unittest.main()

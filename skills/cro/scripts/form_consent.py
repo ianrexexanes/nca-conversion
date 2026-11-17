@@ -37,6 +37,7 @@ WAIT_MS = 30000
 POST_WAIT_MS = 10000
 READ_BOUND_MS = 3000  # the limit of every read of the page once the consent is open
 GIVE_UP_MS = 2000
+HANG_UPS = ("ERR_EMPTY_RESPONSE", "ERR_CONNECTION_RESET", "ERR_CONNECTION_CLOSED")  # the browser's words for a connection that ended with no answer
 LOOPBACK = ("127.0.0.1", "::1", "localhost")
 
 
@@ -158,8 +159,8 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         def stop(elapsed):
             posts = [e for e in sender.entries[mark:] if e["method"] not in cro_runtime.ALLOWED_METHODS]
             sent = any(e["outcome"] == "consented" for e in posts)
-            if any(e["outcome"] == "consented" and "failure" in e for e in posts):
-                return True  # the form's host ended the connection: no answer is coming
+            if any(e["outcome"] == "consented" and e["status"] is None and "failure" in e for e in posts):
+                return True  # the request failed with no answer: none is coming
             return not sent and any(e["outcome"] == "blocked" for e in posts) and elapsed >= GIVE_UP_MS
 
         pressed_at = time.monotonic()
@@ -268,10 +269,17 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         add_issue(entry, "WARN", "SEND", "the one consented request went to %s, not to the form's action address %s, most likely the "
                   "page's script sending the form there; check that the test lead arrived before any rerun" % (sent[0]["url"], action))
     status = sent[0]["status"]
-    if status is None and sent[0].get("failure"):
+    failure = sent[0].get("failure") if status is None else None  # an entry with a status is judged by its status, whatever failure says
+    if failure and any(code in failure for code in HANG_UPS):
         add_issue(entry, "FAIL", "SEND", "the request left and the form's host ended the connection with no answer (%s); a browser can send "
                   "such a request again by itself, so the host may have received the submission twice, once or not at all; check before any "
-                  "rerun" % sent[0]["failure"])
+                  "rerun" % failure)
+    elif failure and "ERR_ABORTED" in failure:
+        add_issue(entry, "WARN", "SEND", "the consented request was cancelled before an answer came (%s), most likely by the page itself, so "
+                  "whether the test lead arrived is not known; check before any rerun" % failure)
+    elif failure:
+        add_issue(entry, "FAIL", "SEND", "the browser reports the consented request as failed (%s), so whether it reached the form's host is "
+                  "not known; check before any rerun" % failure)
     elif status is None and page_error is None:
         add_issue(entry, "WARN", "SEND", "the form's host had not answered %d seconds after the press, so whether the test lead arrived "
                   "is not known; check before any rerun" % round(waited() / 1000))

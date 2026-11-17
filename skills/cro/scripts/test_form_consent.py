@@ -302,6 +302,24 @@ class FollowUpTests(HeldAnswerTests):
         self.assertFalse([d for lv, _f, r, d in run.lines if lv == "WARN"], run.lines)
         self.assertNotIn("had not loaded", run.out + run.err)
 
+    def test_a_request_the_page_cancels_itself_is_a_warning_and_not_a_hang_up(self):
+        run, _took = self.bounded_run("form-aborts-own-request.html", wait=20000, bound=10)
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead-hold"])
+        self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("WARN", "SEND") and "was cancelled before an answer came" in d
+                         and "ERR_ABORTED" in d and "most likely by the page itself" in d and "check before any rerun" in d], run.lines)
+        self.assertEqual([d for lv, _f, _r, d in run.lines if lv == "FAIL"], [], run.lines)
+        self.assertNotIn("ended the connection", run.out)
+        self.assertNotIn("had not answered", run.out)
+
+    def test_a_request_the_browser_refuses_is_named_as_failed_and_not_as_a_hang_up(self):
+        run, _took = self.bounded_run("form-unsafe-port.html", wait=20000, bound=10)
+        self.assertEqual(run.code, 1, (run.out, run.err))
+        self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("FAIL", "SEND") and "the browser reports the consented request as failed" in d
+                         and "ERR_" in d and "check before any rerun" in d], run.lines)
+        self.assertNotIn("ended the connection", run.out)
+        self.assertNotIn("had not answered", run.out)
+
     test_a_post_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None  # inherited tests run once, in their own class
     test_a_page_after_the_send_that_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None
     test_a_page_blocked_by_a_synchronous_request_to_a_slow_host_still_ends_the_run = None

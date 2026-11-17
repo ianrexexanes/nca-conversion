@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form fixture</title>
+<link rel="stylesheet" href="/form-base.css">
+</head><body><main><h1>Book a pump check</h1>
+<form id="slow-then-moves" action="/lead-1500" method="post">
+<label for="f-name">Your name</label><input id="f-name" name="name" type="text" required autocomplete="name"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" required autocomplete="email" inputmode="email">
+<button type="submit">Send request</button>
+</form>
+</main><script>
+// Stops the default, shows "Sending...", posts by script to a host that answers after 1.5 s, then moves to a thank-you page the server answers after 0.6 s.
+var form = document.querySelector("form");
+form.addEventListener("submit", function (event) {
+  event.preventDefault();
+  form.querySelector("button").textContent = "Sending...";
+  fetch(form.getAttribute("action"), { method: "POST", body: new FormData(form) }).then(function () {
+    location = "/thanks-slow";
+  });
+});
+</script></body></html>

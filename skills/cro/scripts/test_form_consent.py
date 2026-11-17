@@ -82,7 +82,7 @@ class BadInputTests(unittest.TestCase):
 
 class AnswerServer(FormServer):
     """The recording server with the extra answers these tests need: a POST that answers after 6 seconds, and answers of 200 and 500."""
-    ANSWERS = {"/lead-6s": (200, 6.0), "/lead-elsewhere-500": (500, 0), "/lead-elsewhere-200": (200, 0), "/api/lead": (200, 0)}
+    ANSWERS = {"/lead-1500": (200, 1.5), "/lead-6s": (200, 6.0), "/lead-elsewhere-500": (500, 0), "/lead-elsewhere-200": (200, 0), "/api/lead": (200, 0)}
 
     PAGE = b"<!doctype html><title>Thanks</title><main><h1>Thank you</h1><p>We reply within one working day.</p></main>"
 
@@ -117,6 +117,12 @@ class AnswerServer(FormServer):
                                "text/html; charset=utf-8")
                 else:
                     self._send(status, b'{"ok": true}', "application/json", {"Access-Control-Allow-Origin": "*"})
+            except OSError:
+                pass
+        elif self.command == "GET" and path == "/thanks-slow":
+            time.sleep(0.6)
+            try:
+                self._send(200, self.PAGE, "text/html; charset=utf-8")
             except OSError:
                 pass
         else:
@@ -285,6 +291,16 @@ class FollowUpTests(HeldAnswerTests):
         self.assertFalse([d for lv, _f, r, d in run.lines if lv == "WARN"], run.lines)
         self.assertNotIn("had not loaded", run.out + run.err)
         self.assertTrue((Path(run.dir) / "form1-consented.png").is_file(), sorted(p.name for p in Path(run.dir).iterdir()))
+
+    def test_a_thank_you_page_that_is_slow_to_answer_is_waited_for_and_read(self):
+        run, _took = self.bounded_run("form-moves-to-slow-thanks.html", wait=8000, bound=30)
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead-1500"])
+        self.assertEqual(run.form["submit"]["state"], "navigated", run.form["submit"])
+        self.assertTrue((run.form["thank_you"]["url"] or "").endswith("/thanks-slow"), run.form["thank_you"])
+        self.assertIn("We reply within one working day", run.form["thank_you"]["text"] or "")
+        self.assertFalse([d for lv, _f, r, d in run.lines if lv == "WARN"], run.lines)
+        self.assertNotIn("had not loaded", run.out + run.err)
 
     test_a_post_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None  # inherited tests run once, in their own class
     test_a_page_after_the_send_that_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None

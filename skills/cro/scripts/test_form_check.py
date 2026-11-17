@@ -3,6 +3,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -38,6 +39,20 @@ class TripwireTests(unittest.TestCase):
         self.assertEqual(self.sent(("https://forms.example.com/x", "POST", "fetch", "blocked"), (self.ACTION, "GET", "document", "blocked"),
                                    ("wss://forms.example.com/s", "GET", "websocket", None), ("https://forms.example.com/page", "GET", "document", "completed"),
                                    ("https://forms.example.com/page", "OPTIONS", "fetch", "completed")), [])
+
+
+class WaitForStateStopTests(unittest.TestCase):
+    """form_check.wait_for_state over a stand-in page, no browser."""
+
+    class Page:
+        def wait_for_timeout(self, ms):
+            time.sleep(ms / 1000)
+
+    def test_a_stop_ends_the_wait_while_the_page_is_held(self):
+        started = time.monotonic()
+        result = form_check.wait_for_state(self.Page(), 0, None, started, 3000, stop=lambda elapsed: True, hold=lambda: True)
+        self.assertEqual(result[0], "none")
+        self.assertLess(time.monotonic() - started, 1.0)
 
 
 @SKIP

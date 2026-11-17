@@ -188,7 +188,9 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         while any(e["outcome"] == "consented" and e["status"] is None and "failure" not in e for e in posts()) and waited() < WAIT_MS:
             page.wait_for_timeout(100)
         sender.allow_post_host = None  # the consent is closed: a later request of the page is aborted like any other
-        held = in_flight()  # while one is in flight the page's calls wait for it: the page is not asked
+        while in_flight() and waited() < WAIT_MS:  # a page that moves on after the answer: its navigation is waited for, without asking the page
+            page.wait_for_timeout(100)
+        held = in_flight()  # still in flight after that: the page's calls wait for it, so the page is not asked
         if not held and submit["state"] == "changed" and any(e["outcome"] == "consented" and e["status"] is not None for e in posts()):
             # read the page again after the answer: it may have moved on to a thank-you page, which is mid-load while no snapshot reads
             now, looked = None, waited()
@@ -198,7 +200,7 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
                     page.wait_for_timeout(100)
             if now is not None:
                 submit["state"], submit["time_ms"] = form_check.wait_for_state(
-                    page, info["i"], None, pressed_at, waited() + 3000, resume=((now["form"], now["regions"]), submit["time_ms"]))
+                    page, info["i"], None, pressed_at, waited() + 3000, resume=((now["form"], now["regions"]), submit["time_ms"]), hold=in_flight)
                 text = form_check.read_outcome(page, info["i"], submit)
         if not page.url.startswith("chrome-error://"):  # the browser's own error page is not the form's thank-you step
             entry["thank_you"]["text"] = text

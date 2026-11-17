@@ -493,7 +493,7 @@ def wait_for_state(page, i, before, started, limit_ms, stop=None, resume=None, h
     while True:
         elapsed = (time.monotonic() - started) * 1000
         if hold is not None and hold():
-            if elapsed >= limit_ms:
+            if elapsed >= limit_ms or (stop is not None and stop(elapsed)):
                 break
             page.wait_for_timeout(100)
             continue

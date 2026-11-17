@@ -2672,6 +2672,11 @@ class ReferenceTextRound3Tests(unittest.TestCase):
                       "or runs to twelve words, so a date, byline, rating or read-time line is skipped; when no block does, it reads "
                       "the first block with text of its own.", text)
 
+    def test_the_launch_render_checks_each_address_before_a_browser_opens(self):
+        step = self.ref("check.md", 5)
+        self.assertIn("Each address is checked first: it starts with `http://`, `https://` or `file://`, and a bad one stops the run "
+                      "with exit 2 before a browser opens.", step)
+
 
 if __name__ == "__main__":
     unittest.main()

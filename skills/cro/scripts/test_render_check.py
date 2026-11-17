@@ -177,6 +177,57 @@ class SlowLoadEventTest(unittest.TestCase):
 
 
 @SKIP
+class _RedirectPages(BaseHTTPRequestHandler):
+    def do_GET(self):
+        path = self.path.split("?")[0]
+        if path == "/nowhere":
+            self.send_response(301)
+            body = b""
+        elif path == "/moved":
+            self.send_response(301)
+            self.send_header("Location", "/landed")
+            body = b""
+        else:
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            body = b"<!doctype html><title>landed</title><h1>Pump maintenance</h1><p>Landed.</p>"
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, *args):
+        pass
+
+
+@SKIP
+class RedirectTest(_LocalPages):
+    script = SCRIPT
+
+    @classmethod
+    def setUpClass(cls):
+        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), _RedirectPages)
+        cls.server.daemon_threads = True
+        cls.base = "http://127.0.0.1:%d" % cls.server.server_address[1]
+        threading.Thread(target=cls.server.serve_forever, daemon=True).start()
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.addClassCleanup(cls.tmp.cleanup)
+        cls.addClassCleanup(cls.server.server_close)
+        cls.addClassCleanup(cls.server.shutdown)
+
+    def test_a_redirect_that_leads_nowhere_is_a_page_that_did_not_load(self):
+        done, render = self.facts("/nowhere", "nowhere")
+        self.assertEqual(done.returncode, 3, done.stderr)
+        self.assertEqual(render["status"], 301)
+        self.assertEqual(len(render["could_not_check"]), 1)
+        self.assertIn("301", render["could_not_check"][0])
+
+    def test_a_redirect_the_browser_follows_is_still_a_rendered_page(self):
+        done, render = self.facts("/moved", "moved")
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertEqual(render["status"], 200)
+        self.assertEqual(render["could_not_check"], [])
+
+
 class RenderFactsTest(_LocalPages):
     script = SCRIPT
 

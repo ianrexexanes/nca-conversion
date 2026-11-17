@@ -104,7 +104,7 @@ def read_pass(recorder, browser, major, name, width, height, mobile, timeout_ms,
     response = page.goto(out["url"], wait_until="domcontentloaded", timeout=timeout_ms)
     status = response.status if response else None
     result = {"status": status, "final_url": page.url, "view": None}
-    if status is not None and status >= 400:
+    if status is not None and status >= 300:
         return result
     try:
         page.wait_for_load_state("load", timeout=min(timeout_ms / 3, 15000))

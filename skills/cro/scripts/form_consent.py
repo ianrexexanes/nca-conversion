@@ -146,46 +146,56 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
             return False
     sender.allow_post_marker = args.email  # only a request that carries the typed address can take the send
     sender.allow_post_host = host  # open the consent now, for the press alone
+    session.consent_opened = True  # for main: a send may have left if the script fails from here on
+    page_error = None
     mark = len(sender.entries)
+    try:
 
-    def stop(elapsed):
-        posts = [e for e in sender.entries[mark:] if e["method"] not in NON_GET]
-        sent = any(e["outcome"] == "consented" for e in posts)
-        return not sent and any(e["outcome"] == "blocked" for e in posts) and elapsed >= GIVE_UP_MS
+        def stop(elapsed):
+            posts = [e for e in sender.entries[mark:] if e["method"] not in NON_GET]
+            sent = any(e["outcome"] == "consented" for e in posts)
+            return not sent and any(e["outcome"] == "blocked" for e in posts) and elapsed >= GIVE_UP_MS
 
-    pressed_at = time.monotonic()
-    waited = lambda: (time.monotonic() - pressed_at) * 1000  # noqa: E731
-    posts = lambda: [e for e in sender.entries[mark:] if e["method"] not in NON_GET]  # noqa: E731
-    entry["submit"], text = press(page, info["i"], info, WAIT_MS, stop)
-    submit = entry["submit"]
-    # wait for the form's host to answer before anything is judged: first for a late request, then for its answer
-    pressed_back = waited()
-    own = lambda: [e for e in posts() if host_of(e["url"]) == host]  # noqa: E731  (a request elsewhere is not the form's)
-    while submit["state"] != "navigated" and not own() and waited() - pressed_back < POST_WAIT_MS:
-        page.wait_for_timeout(100)
-    while any(e["outcome"] == "consented" and e["status"] is None for e in posts()) and waited() < WAIT_MS:
-        page.wait_for_timeout(100)
-    sender.allow_post_host = None  # the consent is closed: a later request of the page is aborted like any other
-    if submit["state"] == "changed" and any(e["outcome"] == "consented" and e["status"] is not None for e in posts()):
-        # read the page again after the answer: it may have moved on to a thank-you page, which is mid-load while no snapshot reads
-        now, looked = None, waited()
-        while now is None and waited() - looked < 3000:
-            now = form_check.safe_eval(page, form_check.SNAPSHOT, info["i"], None)
-            if now is None:
-                page.wait_for_timeout(100)
-        if now is not None:
-            submit["state"], submit["time_ms"] = form_check.wait_for_state(
-                page, info["i"], None, pressed_at, waited() + 3000, resume=((now["form"], now["regions"]), submit["time_ms"]))
-            text = form_check.read_outcome(page, info["i"], submit)
-    entry["thank_you"]["text"] = text
-    if entry["submit"]["state"] == "navigated":
-        entry["thank_you"]["url"] = page.url
-    snap_form(page, info["i"], out_dir / ("form%d-consented.png" % entry["index"]))
-    page.wait_for_timeout(500)
+        pressed_at = time.monotonic()
+        waited = lambda: (time.monotonic() - pressed_at) * 1000  # noqa: E731
+        posts = lambda: [e for e in sender.entries[mark:] if e["method"] not in NON_GET]  # noqa: E731
+        entry["submit"], text = press(page, info["i"], info, WAIT_MS, stop)
+        submit = entry["submit"]
+        # wait for the form's host to answer before anything is judged: first for a late request, then for its answer
+        pressed_back = waited()
+        own = lambda: [e for e in posts() if host_of(e["url"]) == host]  # noqa: E731  (a request elsewhere is not the form's)
+        while submit["state"] != "navigated" and not own() and waited() - pressed_back < POST_WAIT_MS:
+            page.wait_for_timeout(100)
+        while any(e["outcome"] == "consented" and e["status"] is None for e in posts()) and waited() < WAIT_MS:
+            page.wait_for_timeout(100)
+        sender.allow_post_host = None  # the consent is closed: a later request of the page is aborted like any other
+        if submit["state"] == "changed" and any(e["outcome"] == "consented" and e["status"] is not None for e in posts()):
+            # read the page again after the answer: it may have moved on to a thank-you page, which is mid-load while no snapshot reads
+            now, looked = None, waited()
+            while now is None and waited() - looked < 3000:
+                now = form_check.safe_eval(page, form_check.SNAPSHOT, info["i"], None)
+                if now is None:
+                    page.wait_for_timeout(100)
+            if now is not None:
+                submit["state"], submit["time_ms"] = form_check.wait_for_state(
+                    page, info["i"], None, pressed_at, waited() + 3000, resume=((now["form"], now["regions"]), submit["time_ms"]))
+                text = form_check.read_outcome(page, info["i"], submit)
+        entry["thank_you"]["text"] = text
+        if entry["submit"]["state"] == "navigated":
+            entry["thank_you"]["url"] = page.url
+        snap_form(page, info["i"], out_dir / ("form%d-consented.png" % entry["index"]))
+        page.wait_for_timeout(500)
+    except form_check.PlaywrightError as error:
+        page_error = error  # the page cannot be read any more; what was sent is judged from the recorder
+    finally:
+        sender.allow_post_host = None
     sender.finish()
 
     after = sender.entries[mark:]
     sent = [e for e in after if e["outcome"] == "consented"]
+    if page_error is not None and sent:
+        add_issue(entry, "WARN", "SEND", "the page could not be read after the press (%s), so the thank-you state is not known; check that "
+                  "the test lead arrived before any rerun" % first_line(page_error))
     ours = {a for a in (form_check.address(info["action"]), form_check.address(action)) if a}
     ok = True
     sent_at = after.index(sent[0]) if sent else len(after)
@@ -261,6 +271,11 @@ def main(argv=None):
         except form_check.PlaywrightError as error:
             print("form_consent: the page could not be read: %s" % first_line(error), file=sys.stderr)
             code = 3
+        except Exception:
+            if getattr(session, "consent_opened", False):
+                print("form_consent: the script failed after the consent was opened; a submission may have been sent, check that the test "
+                      "lead arrived before any rerun", file=sys.stderr)
+            raise
         lines, fails, warns = count_issues(doc)
         if not sent_ok and not fails and not code:
             code = 3

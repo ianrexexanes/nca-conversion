@@ -330,6 +330,53 @@ class FormConsentTests(unittest.TestCase):
         self.assertEqual(run.data["network"]["consented"], 0)
         self.assertEqual(run.posts(), [])
 
+    def closed_run(self, patched):
+        with mock.patch.object(form_consent, patched[0], patched[1]):
+            return self.in_process(FakeTerminal(False), loopback=form_consent.LOOPBACK)
+
+    def test_a_page_that_closes_after_the_send_is_never_reported_as_nothing_sent(self):
+        # the page is closed once the consented request has been answered, before the picture: the next wait on the page raises
+        real = form_consent.snap_form
+
+        def close_then_picture(page, i, path):
+            page.close()
+            return real(page, i, path)
+
+        run = self.closed_run(("snap_form", close_then_picture))
+        self.assertNotEqual(run.code, 3, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead"])
+        self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("WARN", "SEND") and "could not be read" in d and "lead arrived" in d],
+                        run.lines)
+        self.assertNotIn("nothing was sent", run.out + run.err)
+        self.assertEqual(run.data["network"]["consented"], 1)
+        self.assertEqual(run.data["forms"][0]["index"], 1)
+
+    def test_a_page_that_closes_before_any_request_leaves_is_nothing_sent(self):
+        # the page is closed in place of the press: no request leaves, the next wait on the page raises
+        real = form_consent.press
+
+        def close_then_press(page, i, info, limit_ms, stop=None):
+            page.close()
+            return real(page, i, info, limit_ms, stop)
+
+        run = self.closed_run(("press", close_then_press))
+        self.assertEqual(run.code, 3, (run.out, run.err))
+        self.assertEqual(run.posts(), [])
+        self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SEND") and "nothing was sent" in d], run.lines)
+        self.assertEqual(run.data["forms"][0]["index"], 1)
+
+    def test_a_defect_after_the_consent_was_opened_tells_the_reader_to_check_first(self):
+        def broken(page, i, path):
+            raise RuntimeError("defect")
+
+        err = io.StringIO()
+        folder = tempfile.mkdtemp(dir=self.tmp.name)
+        with mock.patch.object(form_consent, "snap_form", broken), mock.patch.object(sys, "stdin", FakeTerminal(False)), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+            with self.assertRaises(RuntimeError):
+                form_consent.main(["%s/form-lead.html" % self.base, "--out", folder, *GOOD])
+        self.assertIn("a submission may have been sent", err.getvalue())
+
     def test_a_307_after_the_consented_post_is_a_fail(self):
         run = self.consent("form-307.html")
         self.assertEqual(run.code, 1, (run.err, run.lines))

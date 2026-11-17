@@ -581,6 +581,12 @@ class SiteCheckTests(unittest.TestCase):
         code, out = self.site({"/index.html": page_html(CLEAN_DECK)}, None, "--pages", str(bad))
         self.assertEqual(code, 2, out)
 
+    def test_an_empty_dist_is_bad_input(self):
+        for extra in ((), ("--deck", "/nonexistent-deck-for-site-check.md")):
+            code, out = run("--dist", "", *extra)
+            self.assertEqual(code, 2, out)
+            self.assertRegex(out, r"\Asite_check: [^\n]*--dist[^\n]*\n\Z")  # one line, and the empty folder is what it names
+
     def test_a_pages_entry_with_a_wrong_type_is_bad_input(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)

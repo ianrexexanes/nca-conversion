@@ -492,7 +492,7 @@ def not_a_launch_page(url):
 
 def load_pages(args, named=(), skipped=None):
     pages = []
-    if args.dist:
+    if args.dist is not None:
         dist = Path(args.dist)
         if not dist.is_dir():
             raise BadInput("%s is not a folder" % args.dist)
@@ -538,6 +538,8 @@ def main(argv=None):
             rows.append(row)
 
     try:
+        if args.dist == "":
+            raise BadInput("--dist needs a folder, not an empty value")
         if args.map and not args.deck:
             raise BadInput("--map needs --deck")
         deck = None

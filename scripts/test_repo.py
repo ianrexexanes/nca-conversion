@@ -2729,6 +2729,12 @@ class ReferenceTextRound3Tests(unittest.TestCase):
                       "report must say it too. The browser's own error page is never reported as the thank-you step: `thank_you.url` "
                       "and `thank_you.text` stay null.", step)
 
+    def test_a_send_that_does_not_end_is_stopped_with_ctrl_c_and_checked(self):
+        step = self.ref("form.md", 7)
+        self.assertIn("If the command is still running a minute after the host was typed, or a minute after it started when no host is "
+                      "asked, the page is holding it. The user stops it with Ctrl+C, the script prints the same line, and the same "
+                      "check applies.", step)
+
 
 if __name__ == "__main__":
     unittest.main()

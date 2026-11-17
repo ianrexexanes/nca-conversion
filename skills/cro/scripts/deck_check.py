@@ -226,13 +226,17 @@ def check_namespace(deck, ns, part, final, add):
             sections.append(parts[1])
     for k in keys:
         parts = k.split(".")
-        if len(parts) < 3 or parts[1] in ("page", "meta", "cta"):
+        if len(parts) < 3:
+            add("WARN", k, "UNKNOWN_KEY", "a key needs a section and a slot, as in %s.hero.h1" % ns)
+            continue
+        if parts[1] in ("page", "meta", "cta"):
             continue
         if parts[1] not in SECTIONS:
             add("WARN", k, "UNKNOWN_KEY", "%r is not a section of the grammar" % parts[1])
         elif parts[1] == "hero":
-            slot = parts[3] if len(parts) == 4 and len(parts[2]) == 1 else parts[2]
-            if len(parts) > 4 or not HERO_SLOT.fullmatch(slot):
+            # a variant is one lowercase letter; a four-part hero key is <ns>.hero.<variant>.<slot> and nothing else
+            variant_ok = len(parts) == 3 or (len(parts) == 4 and re.fullmatch(r"[a-z]", parts[2]))
+            if len(parts) > 4 or not variant_ok or not HERO_SLOT.fullmatch(parts[-1]):
                 add("WARN", k, "UNKNOWN_KEY", "%r is not a hero slot of the grammar" % ".".join(parts[2:]))
     variants = deck.variants(ns)
     button = values.get(ns + ".cta.button")

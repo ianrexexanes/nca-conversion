@@ -204,6 +204,24 @@ class DeckCheckTest(unittest.TestCase):
         for name in ("deck-clean-direct.md", "deck-clean-search.md", "deck-variants.md"):
             self.assertNotIn("UNKNOWN_KEY", rules(read(name), final=True), name)
 
+    def test_a_hero_key_reads_its_variant_as_one_lowercase_letter(self):
+        deck = read("deck-variants.md")
+        for line, key in (("p.hero.9.h1: Planned maintenance", "p.hero.9.h1"),
+                          ("p.hero.benefit1.extra: Planned maintenance", "p.hero.benefit1.extra")):
+            got = [f[:3] for f in findings(add_line(deck, line), final=True) if f[2] == "UNKNOWN_KEY"]
+            self.assertEqual(got, [("WARN", key, "UNKNOWN_KEY")], key)
+
+    def test_a_variant_letter_and_the_shared_hero_key_do_not_warn(self):
+        deck = read("deck-variants.md")
+        for line in ("p.hero.b.h1: Planned maintenance", "p.hero.h1: Planned maintenance"):
+            self.assertNotIn("UNKNOWN_KEY", rules(add_line(deck, line), final=True), line)
+
+    def test_a_key_of_two_parts_warns_as_unknown(self):
+        text = add_line(read("deck-variants.md"), "p.headline: Planned maintenance")
+        got = [f[:3] for f in findings(text, final=True) if f[2] == "UNKNOWN_KEY"]
+        self.assertEqual(got, [("WARN", "p.headline", "UNKNOWN_KEY")])
+        self.assertEqual(fails(text, final=True), set())
+
     def test_a_symbol_is_not_a_word(self):
         self.assertIsNone(level_of("BUTTON_WORDS", with_button("Book my free pump check →")))
 

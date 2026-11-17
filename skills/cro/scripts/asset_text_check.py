@@ -26,6 +26,14 @@ def latin(data):
     return data.decode("latin-1")
 
 
+def utf8_or_latin(data):
+    """Text whose format is UTF-8 or names no encoding (XMP, JPEG COM and APP1, WebP, GIF comments): UTF-8 first, Latin-1 when the bytes are not valid UTF-8."""
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        return latin(data)
+
+
 def png_text(data):
     pos = 8
     while pos + 8 <= len(data):
@@ -45,7 +53,7 @@ def png_text(data):
                 translated, text = rest.split(b"\x00", 1)
                 if flag:
                     text = zlib.decompress(text)
-                yield " ".join([latin(key), latin(translated), text.decode("utf-8", "replace")])
+                yield " ".join([latin(key), utf8_or_latin(translated), text.decode("utf-8", "replace")])
         except (ValueError, IndexError, zlib.error):  # a malformed chunk is skipped, as the others are
             continue
         if kind == b"IEND":
@@ -66,7 +74,7 @@ def jpeg_text(data):
             break
         size = struct.unpack(">H", data[pos + 2:pos + 4])[0]
         if marker in (0xFE, 0xE1):
-            yield latin(data[pos + 4:pos + 2 + size].replace(b"\x00", b" "))
+            yield utf8_or_latin(data[pos + 4:pos + 2 + size].replace(b"\x00", b" "))
         pos += 2 + size
 
 
@@ -75,7 +83,7 @@ def webp_text(data):
     while pos + 8 <= len(data):
         kind, size = struct.unpack("<4sI", data[pos:pos + 8])
         if kind in (b"EXIF", b"XMP "):
-            yield latin(data[pos + 8:pos + 8 + size].replace(b"\x00", b" "))
+            yield utf8_or_latin(data[pos + 8:pos + 8 + size].replace(b"\x00", b" "))
         pos += 8 + size + (size & 1)
 
 
@@ -96,7 +104,7 @@ def gif_text(data):
                 pos += 1 + data[pos]
             pos += 1
             if label == 0xFE:
-                yield latin(text)
+                yield utf8_or_latin(text)
         elif block == 0x2C and pos + 10 <= len(data):
             pos += 10
             if data[pos - 1] & 0x80:
@@ -120,7 +128,7 @@ def carried_text(data):
         parts += webp_text(data)
     elif data[:3] == b"GIF":
         parts += gif_text(data)
-    parts += [latin(m) for m in XMP.findall(data)]
+    parts += [utf8_or_latin(m) for m in XMP.findall(data)]
     return parts
 
 

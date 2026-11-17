@@ -128,6 +128,35 @@ class AssetTextCheckTests(unittest.TestCase):
         code, out = run("--dir", str(root))
         self.assertEqual(code, 0, out)  # without the list the same file is clean
 
+    def forbidden(self, files, words):
+        tmp, root = self.folder(files)
+        forbid = Path(tmp) / "forbid.txt"
+        forbid.write_text("\n".join(words) + "\n", encoding="utf-8")
+        return run("--dir", str(root), "--forbid", str(forbid))
+
+    def test_xmp_and_other_utf8_text_is_read_as_utf8(self):
+        words = "Die günstigste Lösung"
+        gif_utf8 = gif()[:13] + b"\x21\xfe" + bytes([len(words.encode())]) + words.encode() + b"\x00" + gif()[13:]
+        itxt = b"Description\x00\x00\x00de\x00" + "Lösung".encode() + b"\x00" + b"plain"
+        marked = {"a.jpg": jpeg(app1=words), "b.webp": webp(xmp_text=words), "c.jpg": jpeg(com=words), "d.gif": gif_utf8,
+                  "e.png": png(extra=[(b"iTXt", itxt)])}
+        code, out = self.forbidden(marked, ["günstigste", "lösung"])
+        self.assertEqual(code, 1, out)
+        for name in ("a.jpg", "b.webp", "c.jpg", "d.gif"):
+            self.assertRegex(out, r"(?m)^FAIL %s FORBIDDEN: .*günstigste" % re.escape(name), name)
+        for name in ("a.jpg", "b.webp", "c.jpg", "d.gif", "e.png"):
+            self.assertRegex(out, r"(?m)^FAIL %s FORBIDDEN: .*lösung" % re.escape(name), name)
+
+    def test_text_that_is_not_utf8_is_still_read_as_latin1(self):
+        raw = "Zürich Lösung".encode("latin-1")  # valid Latin-1, not valid UTF-8
+        with self.assertRaises(UnicodeDecodeError):
+            raw.decode("utf-8")
+        data = b"\xff\xd8\xff\xfe" + struct.pack(">H", len(raw) + 2) + raw + b"\xff\xd9"
+        code, out = self.forbidden({"a.jpg": data}, ["zürich", "lösung"])
+        self.assertEqual(code, 1, out)
+        self.assertRegex(out, r"(?m)^FAIL a\.jpg FORBIDDEN: .*zürich")
+        self.assertRegex(out, r"(?m)^FAIL a\.jpg FORBIDDEN: .*lösung")
+
     def test_no_images_is_skipped_and_bad_input_exits_2(self):
         tmp, root = self.folder({"readme.txt": b"hello"})
         code, out = run("--dir", str(root))

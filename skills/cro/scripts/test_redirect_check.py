@@ -159,6 +159,22 @@ class FollowTests(unittest.TestCase):
         self.assertRegex(out, r"FAIL %s/m300 REDIRECT_STATUS" % re.escape(self.base))
         self.assertRegex(out, r"FAIL %s/m305 REDIRECT_STATUS" % re.escape(self.base))
 
+    def test_a_from_address_that_cannot_be_parsed_is_bad_input_and_nothing_is_sent(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        cases = Path(tmp.name) / "cases.json"
+        bad = {"from": "http://[::1", "to": "https://example.com/", "status": 200}
+        good = {"from": self.base + "/final", "to": self.base + "/final", "status": 200}
+        for body in ([bad], [good, bad]):
+            _Chain.agents = []
+            cases.write_text(json.dumps(body), encoding="utf-8")
+            code, out = run("--cases", str(cases))
+            self.assertNotIn("Traceback", out)
+            self.assertEqual(code, 2, out)
+            self.assertTrue(out.startswith("redirect_check: "), out)
+            self.assertIn("http://[::1", out)
+            self.assertEqual(_Chain.agents, [])  # the whole file is checked before the first request
+
     def test_an_unreachable_host_ends_the_chain_with_status_0(self):
         self.assertEqual(redirect_check.follow("http://127.0.0.1:1/x"), [("http://127.0.0.1:1/x", 0)])
 

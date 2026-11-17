@@ -96,6 +96,11 @@ def load_cases(path):
             and (case.get("hops") is None or (isinstance(case["hops"], list) and all(isinstance(s, int) for s in case["hops"])))
     if not ok:
         raise BadInput('%s must be a list of {"from": url, "to": url, "status": int, "hops": [int] (optional)}' % path)
+    for case in cases:
+        try:
+            urllib.parse.urlparse(case["from"])
+        except ValueError:
+            raise BadInput("cannot read the from address %s" % case["from"])
     return cases
 
 

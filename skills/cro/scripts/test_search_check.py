@@ -419,6 +419,17 @@ class FirstSentenceMetaLinesTest(unittest.TestCase):
         html = "<h1>Pump maintenance</h1><p>%s</p><p>%s</p>" % (eleven, self.PUMP)
         self.assertEqual(search_check.first_sentence_after_h1(html), self.PUMP)
 
+    def test_a_first_sentence_that_ends_inside_a_link_is_still_the_first_sentence(self):
+        html = ('<h1>Bike repair</h1><p>Harbor Lane Cycles offers <a href="/r">bike repair in Harbor Lane.</a></p>'
+                "<p>Open six days a week.</p>")
+        self.assertEqual(search_check.first_sentence_after_h1(html),
+                         "Harbor Lane Cycles offers bike repair in Harbor Lane.")
+        result = check_html(html)
+        self.assertEqual(result["placements"]["first_sentence"]["status"], "found")
+
+    def test_a_byline_whose_name_is_a_link_is_still_skipped(self):
+        self._skipped('<p>By <a href="/team">the editorial team</a></p>')
+
     def test_a_meta_line_alone_is_still_read_when_nothing_follows(self):
         html = "<h1>Pump maintenance</h1><p>Book a slot</p><h2>Prices</h2>"
         self.assertEqual(search_check.first_sentence_after_h1(html), "Book a slot")

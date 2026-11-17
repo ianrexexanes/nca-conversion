@@ -43,11 +43,12 @@ CLOSED_SENTENCE = re.compile(r"[.!?][\"'\u2019\u201d\u00bb)\]]*$")
 WORD = re.compile(r"[^\W_]+")
 
 
-def _is_first_sentence(own, has_time):
+def _is_first_sentence(own, has_time, whole):
     """A date, byline or rating line is not the first sentence: it holds a time element, or it ends with no
-    end mark and runs under twelve words."""
-    text = " ".join(" ".join(own).split())
-    return not has_time and (bool(CLOSED_SENTENCE.search(text)) or len(WORD.findall(text)) >= 12)
+    end mark and runs under twelve words. The end mark is looked for in the block's whole text, links and
+    buttons included; the twelve words are counted outside them."""
+    ended = CLOSED_SENTENCE.search(" ".join(" ".join(whole).split()))
+    return not has_time and (bool(ended) or len(WORD.findall(" ".join(own))) >= 12)
 
 
 def normalise(text: str) -> str:
@@ -93,7 +94,7 @@ class _Text(HTMLParser):
     def _block_edge(self, tag):
         if tag in BLOCKS and self.h1_state == "after" and self.after_open:
             if self.block_own:
-                if _is_first_sentence(self.own, self.has_time):
+                if _is_first_sentence(self.own, self.has_time, self.block):
                     self.after, self.after_open = self.block, False
                 elif not self.fallback:
                     self.fallback = self.block
@@ -163,7 +164,7 @@ def page_text(html: str) -> str:
 
 def first_sentence_after_h1(html: str):
     parser = _parse(html, SKIP)
-    last = parser.block if parser.block_own and _is_first_sentence(parser.own, parser.has_time) else []
+    last = parser.block if parser.block_own and _is_first_sentence(parser.own, parser.has_time, parser.block) else []
     text = " ".join(" ".join(parser.after or last or parser.fallback or (parser.block if parser.block_own else [])).split())
     if not text:
         return None

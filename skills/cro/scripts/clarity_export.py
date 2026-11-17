@@ -119,7 +119,7 @@ def fetch(url, token, loopback):
         raise Refused("the token was not sent because it cannot be used in a header") from None
     try:
         data = json.loads(body)
-    except ValueError:
+    except (ValueError, RecursionError):
         data = None
     if not isinstance(data, list) or not all(
             isinstance(item, dict) and isinstance(item.get("metricName"), str) and isinstance(item.get("information"), list)

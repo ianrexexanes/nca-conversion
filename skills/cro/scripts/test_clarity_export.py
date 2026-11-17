@@ -147,6 +147,20 @@ class RequestTest(ExportCase):
             self.assertEqual(json.loads(out)["metrics"], {})
             self.assertNotIn(TOKEN, out + err)
 
+    def test_an_answer_nested_too_deep_is_refused_like_one_that_is_not_json(self):
+        reasons = {}
+        for label, body in (("not json", b"not json"), ("too deep", b"[" * 200000)):
+            self.api.respond = lambda n, p, body=body: (200, body, {})
+            try:
+                code, out, err = self.run_main()
+            except RecursionError as error:
+                self.fail(f"{label}: the run ended in {type(error).__name__}")
+            self.assertEqual(code, 3, label)
+            self.assertNotIn("Traceback", out + err, label)
+            self.assertNotIn("RecursionError", out + err, label)
+            reasons[label] = json.loads(out)["reason"]
+        self.assertEqual(reasons["too deep"], reasons["not json"])
+
     def test_unreachable_address_is_exit_3_and_counts(self):
         self.api.stop()
         code, out, err = self.run_main()

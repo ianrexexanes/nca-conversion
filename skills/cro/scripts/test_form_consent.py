@@ -22,7 +22,7 @@ import cro_runtime  # noqa: E402
 import form_check  # noqa: E402
 import form_consent  # noqa: E402
 from http.server import ThreadingHTTPServer  # noqa: E402
-from form_tests import FormServer, Run, run_script, start_server  # noqa: E402
+from form_tests import FormServer, Run, run_script  # noqa: E402
 from guard_tests import SKIP, GuardLeakPathsMixin  # noqa: E402
 
 TODAY = date.today().isoformat()
@@ -143,6 +143,29 @@ class SinglePressTests(unittest.TestCase):
         self.assertIs(run.form["submit"]["pressed"], True)
 
 
+class ElsewhereAnswerTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.server, cls.base = start_answer_server()
+        cls.addClassCleanup(cls.server.server_close)
+        cls.addClassCleanup(cls.server.shutdown)
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.addClassCleanup(cls.tmp.cleanup)
+
+    def test_an_answer_of_500_from_where_the_page_script_sent_the_form_is_a_fail(self):
+        run = run_script(SCRIPT, "%s/form-elsewhere-500.html" % self.base, *GOOD, tmp=self.tmp.name)
+        self.assertEqual(run.code, 1, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead-elsewhere-500"])
+        self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("FAIL", "SEND") and "/lead-elsewhere-500" in d and "500" in d], run.lines)
+        self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("WARN", "SEND") and "lead arrived" in d], run.lines)
+
+    def test_an_answer_of_200_from_where_the_page_script_sent_the_form_is_not_a_fail(self):
+        run = run_script(SCRIPT, "%s/form-elsewhere-200.html" % self.base, *GOOD, tmp=self.tmp.name)
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead-elsewhere-200"])
+        self.assertEqual([r for lv, _f, r, _d in run.lines if lv == "FAIL"], [], run.lines)
+
+
 class FakeTerminal:
     """Standard input for an in-process run: isatty() and readline() are the test's to set."""
 
@@ -206,7 +229,7 @@ class TerminalQuestionTests(unittest.TestCase):
 class FormConsentTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server, cls.base = start_server()
+        cls.server, cls.base = start_answer_server()  # answers /api/lead too, so the ajax test's lead is answered 200
         cls.addClassCleanup(cls.server.server_close)
         cls.addClassCleanup(cls.server.shutdown)
         cls.tmp = tempfile.TemporaryDirectory()

@@ -229,7 +229,8 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
             add_issue(entry, "SKIPPED", "SEND", "the form sent to %s, not to its action host %s, so nothing was sent"
                       % (host_of(posts[0]["url"]) or posts[0]["url"], host))
         return False
-    if form_check.address(sent[0]["url"]) not in ours:
+    elsewhere = form_check.address(sent[0]["url"]) not in ours
+    if elsewhere:
         aborted = [e for e in after if e["rule"] == "consent:used" and form_check.address(e["url"]) in ours]
         if aborted:
             add_issue(entry, "FAIL", "SEND", "the request to %s took the single send and the form's own request was aborted, so the "
@@ -237,14 +238,13 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
             return False
         add_issue(entry, "WARN", "SEND", "the one consented request went to %s, not to the form's action address %s, most likely the "
                   "page's script sending the form there; check that the test lead arrived before any rerun" % (sent[0]["url"], action))
-        return True
     status = sent[0]["status"]
     if status is None and page_error is None:
         add_issue(entry, "WARN", "SEND", "the form's host had not answered %d seconds after the press, so whether the test lead arrived "
                   "is not known; check before any rerun" % round(waited() / 1000))
     elif status is not None and status >= 400:
-        add_issue(entry, "FAIL", "SEND", "the action host %s answered HTTP %d" % (host, status))
-    return ok
+        add_issue(entry, "FAIL", "SEND", "%s answered HTTP %d" % (sent[0]["url"] if elsewhere else "the action host " + host, status))
+    return True if elsewhere else ok
 
 
 def main(argv=None):

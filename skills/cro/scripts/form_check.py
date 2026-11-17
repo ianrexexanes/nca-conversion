@@ -65,6 +65,8 @@ const rendered = (el) => {
 };
 const faded = (el) => { for (let e = el; e; e = e.parentElement) { if (getComputedStyle(e).opacity === '0') return true; } return false; };
 const formShown = (form) => !faded(form) && (rendered(form) || [...form.querySelectorAll('input, select, textarea, button')].some(rendered));
+// A form that was not shown when the mark was set keeps its text in every snapshot, so being revealed (a scroll-reveal that has not played) is not a change.
+const formReads = (form) => window.__formCheckShown === false || formShown(form);
 const formOf = (i) => {
   if (window.__formCheckMark === true && window.__formCheckIndex === i) {
     const kept = window.__formCheckForm;
@@ -172,7 +174,7 @@ return [...document.querySelectorAll('form')].map((form, i) => {
 }"""
 SNAPSHOT = "(i) => {" + HELPERS + r"""
 const form = formOf(i);
-return {marked: window.__formCheckMark === true, form: form && formShown(form) ? clean(form.innerText) : null,
+return {marked: window.__formCheckMark === true, form: form && formReads(form) ? clean(form.innerText) : null,
         regions: form ? regionsOf(form).map((r) => r.text) : []};
 }"""
 REGIONS = "(i) => {" + HELPERS + "const form = formOf(i); return form ? regionsOf(form) : [];}"
@@ -182,7 +184,7 @@ if (!form) return [];
 return [...form.querySelectorAll('input, select, textarea')].filter((e) => e.willValidate && !e.validity.valid)
   .map((e) => ({field: e.getAttribute('name') || e.id || e.tagName.toLowerCase(), message: e.validationMessage}));
 }"""
-FORM_TEXT = "(i) => {" + HELPERS + "const form = formOf(i); return form && formShown(form) ? clean(form.innerText).slice(0, 600) : null;}"
+FORM_TEXT = "(i) => {" + HELPERS + "const form = formOf(i); return form && formReads(form) ? clean(form.innerText).slice(0, 600) : null;}"
 PAGE_TEXT = r"""() => {
 const main = document.querySelector('main, [role=main]') || document.body;
 return (main.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 600);
@@ -195,8 +197,8 @@ form.setAttribute('target', '_self');
 form.querySelectorAll('[formtarget]').forEach((el) => el.setAttribute('formtarget', '_self'));
 }"""
 CONTROL = "button[type=submit], input[type=submit], input[type=image], button:not([type])"
-MARK = ("(i) => { window.__formCheckMark = true; window.__formCheckIndex = i; window.__formCheckSeen = false;"
-        " const form = document.querySelectorAll('form')[i] || null; window.__formCheckForm = form;"
+MARK = ("(i) => {" + HELPERS + " window.__formCheckMark = true; window.__formCheckIndex = i; window.__formCheckSeen = false;"
+        " const form = document.querySelectorAll('form')[i] || null; window.__formCheckForm = form; window.__formCheckShown = !!form && formShown(form);"
         " const control = form ? form.querySelector('" + CONTROL + "') : null;"
         " document.addEventListener('click', (e) => { if (control && control.contains(e.target)) window.__formCheckSeen = true; }, true);"
         " document.addEventListener('submit', (e) => { if (form && e.target === form) window.__formCheckSeen = true; }, true); }")

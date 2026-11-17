@@ -174,6 +174,15 @@ class FormCheckTests(unittest.TestCase):
         self.assertEqual(submit.get("status_source"), "page", submit)
         self.assertIn("Thanks, we will reply within one day.", submit["status_text"] or "")
 
+    def test_a_form_revealed_by_the_press_is_not_a_change_and_the_real_answer_is_waited_for(self):
+        run = self.run_page("form-revealed-on-press.html", "--simulate", "success")
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        submit = run.form["submit"]
+        self.assertEqual(submit["state"], "changed", submit)
+        self.assertEqual(submit.get("status_source"), "region", submit)
+        self.assertEqual(submit["status_text"], "Thanks, we will reply within one day.", submit)
+        self.assertGreaterEqual(submit["time_ms"], 700, submit)
+
     def test_a_press_that_changes_nothing_reports_no_outcome_text(self):
         run = self.run_page("form-quiet.html")
         self.assertEqual(run.code, 0, (run.out, run.err))

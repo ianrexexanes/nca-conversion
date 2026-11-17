@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form fixture</title>
+<link rel="stylesheet" href="/form-base.css">
+</head><body><main><h1>Book a pump check</h1>
+<div id="wrap" style="opacity: 0">
+
+<form id="reveal" action="/lead" method="post">
+<label for="f-name">Your name</label><input id="f-name" name="name" type="text" required autocomplete="name"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" required autocomplete="email" inputmode="email">
+<button type="submit">Send request</button>
+</form>
+<p id="answer" role="status"></p>
+</div>
+</main><script>
+// The wrapper starts at opacity 0, as a scroll-reveal does before it has played. The click reveals it, then the form posts by script
+// and writes the thank-you sentence into its status region 800 ms after the answer.
+var form = document.querySelector("form");
+form.querySelector("button").addEventListener("click", function () {
+  document.getElementById("wrap").style.opacity = "1";
+}, true);
+form.addEventListener("submit", function (event) {
+  event.preventDefault();
+  fetch(form.getAttribute("action"), { method: "POST", body: new FormData(form) }).then(function () {
+    setTimeout(function () {
+      document.getElementById("answer").textContent = "Thanks, we will reply within one day.";
+    }, 800);
+  });
+});
+</script></body></html>

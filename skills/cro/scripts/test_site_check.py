@@ -528,6 +528,20 @@ class SiteCheckTests(unittest.TestCase):
         code, out = self.site({"/index.html": page_html(CLEAN_DECK)}, None, "--pages", str(bad))
         self.assertEqual(code, 2, out)
 
+    def test_a_pages_entry_with_a_wrong_type_is_bad_input(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        listing = Path(tmp.name) / "pages.json"
+        entry = {"url": "/index.html", "mode": "search"}
+        for label, bad in (("keyword", dict(entry, keyword=5)), ("paid", dict(entry, paid="yes")), ("paid null", dict(entry, paid=None))):
+            with self.subTest(label):
+                listing.write_text(json.dumps([bad]), encoding="utf-8")
+                code, out = self.site({"/index.html": page_html(CLEAN_DECK)}, None, "--pages", str(listing))
+                self.assertEqual(code, 2, out)
+                self.assertTrue(out.startswith("site_check: "), out)
+                self.assertNotIn("Traceback", out)
+                self.assertEqual(len(out.strip().splitlines()), 1, out)  # one line saying why, and no row
+
 
 class _Recorder(BaseHTTPRequestHandler):
     root = None

@@ -422,6 +422,7 @@ def load_pages_list(path):
     except (OSError, ValueError):
         raise BadInput("cannot read %s as JSON" % path)
     if not isinstance(data, list) or not all(isinstance(e, dict) and isinstance(e.get("url"), str) and e.get("mode") in ("search", "direct")
+                                             and isinstance(e.get("paid", False), bool) and isinstance(e.get("keyword"), (str, type(None)))
                                              for e in data):
         raise BadInput('%s must be a JSON list of {"url", "mode": "search" | "direct", "paid", "keyword"}' % path)
     return data

@@ -27,6 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import cro_runtime  # noqa: E402
 from deck_check import parse_deck  # noqa: E402
 from design_check import contrast, normal  # noqa: E402
+from form_check import BadInput as AddressRefused, check_address  # noqa: E402
 
 DEFAULT_WIDTHS = (375, 390, 820, 1440)
 PHONE_BELOW = 600  # render_check's two views: a phone context under this width, a desktop at or above it
@@ -269,6 +270,11 @@ def parse_args(argv):
     args = parser.parse_args(argv)
     if not args.urls:
         raise BadInput("no page address given")
+    for url in args.urls:
+        try:
+            check_address(url)
+        except AddressRefused as error:
+            raise BadInput(str(error))
     widths = []
     for part in args.widths.split(","):
         if not re.fullmatch(r"[0-9]+", part.strip()) or int(part) < 1:

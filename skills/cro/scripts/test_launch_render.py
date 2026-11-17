@@ -282,6 +282,15 @@ class LaunchRenderInputTests(unittest.TestCase):
         self.assertNotIn("Traceback", done.stderr)
 
 
+    def test_a_page_address_that_is_not_an_address_is_bad_input(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            done = subprocess.run([sys.executable, str(SCRIPT), "not a url", "--out", tmp],
+                                  capture_output=True, text=True, timeout=60)
+        self.assertEqual(done.returncode, 2, done.stdout + done.stderr)
+        self.assertIn("launch_render: the page address must start with http:// or https://", done.stderr)
+        self.assertNotIn("Traceback", done.stderr)
+
+
 @SKIP
 class LaunchRenderLeakPaths(GuardLeakPathsMixin, unittest.TestCase):
     @classmethod

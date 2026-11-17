@@ -2650,6 +2650,11 @@ class ReferenceTextRound3Tests(unittest.TestCase):
         self.assertIn("Read `submit.state`, `submit.status_text`, `submit.status_source` and the picture", step)
         self.assertIn("`status_source` is `region`, `form`, `page` or `none`; `none` with a null `status_text` means nothing on the page changed.", step)
 
+    def test_an_unwritable_text_folder_stops_the_run_before_any_row(self):
+        step = self.ref("check.md", 1)
+        self.assertIn("that one run is the site gate too. A text folder that cannot be written stops the run with exit 2 "
+                      "before any row is worked out.", step)
+
 
 if __name__ == "__main__":
     unittest.main()

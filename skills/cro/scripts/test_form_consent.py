@@ -60,6 +60,13 @@ class BadInputTests(unittest.TestCase):
                      ["--owner", "Line\nBreak"]):
             self.assertEqual(run_with(args), 2, args)
 
+    def test_an_address_that_cannot_be_parsed_is_refused_before_a_browser_opens(self):
+        try:
+            code = run_with([], url="http://[::1")  # guarded_launch is patched to raise if it is called
+        except ValueError as error:
+            self.fail("an unparseable address escaped as %r instead of exit 2" % error)
+        self.assertEqual(code, 2)
+
     def test_a_missing_flag_or_address_exits_2_and_names_the_script(self):
         with tempfile.TemporaryDirectory() as tmp:
             for argv in ([], ["http://127.0.0.1:9/x.html", "--out", tmp], ["http://127.0.0.1:9/x.html", "--out", tmp, *GOOD[:4]]):

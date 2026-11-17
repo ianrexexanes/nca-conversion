@@ -228,8 +228,12 @@ def one_line(text) -> str:
 
 
 def check_address(url):
-    parts = urlsplit(url)
-    if parts.scheme not in ("http", "https") or not parts.hostname:
+    try:
+        parts = urlsplit(url)
+        host = parts.hostname
+    except ValueError:  # an address urlsplit cannot read, such as "http://[::1"
+        parts, host = None, None
+    if parts is None or parts.scheme not in ("http", "https") or not host:
         raise BadInput("the page address must start with http:// or https://, got %r" % url)
 
 

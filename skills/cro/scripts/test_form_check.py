@@ -336,6 +336,13 @@ class FormCheckTests(unittest.TestCase):
                 self.assertIn("form_check", done.stderr)
             self.assertEqual(len(FormServer.requests), before)
 
+    def test_an_address_that_cannot_be_parsed_is_bad_input_not_a_traceback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            done = subprocess.run([sys.executable, str(SCRIPT), "http://[::1", "--out", tmp], capture_output=True, text=True, timeout=60)
+            self.assertEqual(done.returncode, 2, done.stderr)
+            self.assertTrue(done.stderr.startswith("form_check: "), done.stderr)
+            self.assertNotIn("Traceback", done.stderr)
+
 
 @SKIP
 class FormCheckLeakPaths(GuardLeakPathsMixin, unittest.TestCase):

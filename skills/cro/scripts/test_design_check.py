@@ -88,6 +88,19 @@ class RuleTest(unittest.TestCase):
                 self.assertIn(("FAIL", "type." + name, "TYPE_SIZE"),
                               [(f["level"], f["key"], f["rule"]) for f in data["findings"]], (token, name))
 
+    def test_a_type_size_too_large_to_read_is_a_fail_row_without_a_traceback(self):
+        text = '{"colors": {"text": "#333333", "background": "#ffffff", "action": "#0047b3", "action_text": "#ffffff"},' \
+               ' "type": {"h1_px": 1%s, "body_px": 16}}' % ("0" * 400)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "t.json"
+            path.write_text(text, encoding="utf-8")
+            code, out, err = run(path, "--json")
+        self.assertNotIn("Traceback", err)
+        self.assertEqual(code, 1)
+        rows = [(f["level"], f["key"], f["rule"]) for f in json.loads(out)["findings"]]
+        self.assertIn(("FAIL", "type.h1_px", "TYPE_SIZE"), rows)
+        self.assertNotIn("HEADLINE_RATIO", [r[2] for r in rows])
+
     def test_body_black_warns_on_pure_black_text_and_only_that(self):
         code, data = findings(BLACK)
         self.assertEqual(code, 0)

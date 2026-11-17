@@ -86,10 +86,15 @@ def check(colors, sizes):
     for name, value in colors.items():
         if name != "action" and value == colors["action"]:
             add("WARN", "colors." + name, "ACTION_ISOLATED", "equals the action colour %s; the button should be the only thing in it" % value)
-    unusable = [name for name in REQUIRED_SIZES if not math.isfinite(sizes[name])]  # JSON allows NaN and Infinity
+    def readable(value):
+        try:
+            return math.isfinite(value)  # JSON allows NaN and Infinity
+        except OverflowError:  # a whole number too large for a float
+            return False
+    unusable = [name for name in REQUIRED_SIZES if not readable(sizes[name])]
     for name in unusable:
         add("FAIL", "type." + name, "TYPE_SIZE", "%s is not a finite number of pixels" % name)
-    ratio = sizes["h1_px"] / sizes["body_px"]
+    ratio = None if unusable else sizes["h1_px"] / sizes["body_px"]
     if not unusable and not RATIO_MIN <= ratio <= RATIO_MAX:
         add("WARN", "type.h1_px", "HEADLINE_RATIO", "the headline is %.2f times the body size; three to four is the rule" % ratio)
     if colors["text"] == "#000000":

@@ -413,9 +413,11 @@ def make_internal_link(dist, fetch_page):
                 return None
             path = urllib.parse.unquote(target.path) or "/"
             file = dist / path.lstrip("/")
-            if there(file, "dir") or path.endswith("/"):
-                file = file / "index.html"
-            if there(file, "file") or (not file.suffix and there(file.with_name(file.name + ".html"), "file")):
+            if path.endswith("/"):
+                found = there(file / "index.html", "file")
+            else:
+                found = any(there(c, "file") for c in (file, file.with_name(file.name + ".html"), file / "index.html"))
+            if found:
                 return None
             return "no such file in the dist folder"
         try:

@@ -425,6 +425,19 @@ class SiteCheckTests(unittest.TestCase):
                 self.assertRegex(out, r"(?m)^FAIL sitemap-0\.xml SITEMAP: sitemap-0\.xml ")
                 self.assertNotRegex(out, r"(?m)^FAIL sitemap-index\.xml SITEMAP")
 
+    def test_a_link_to_a_page_beside_a_folder_of_the_same_name_resolves(self):
+        pages = {"/index.html": page_html(CLEAN_DECK, body_extra='<a href="/about">A</a><a href="/about/">B</a><a href="/missing">C</a>'),
+                 "/about.html": page_html(CLEAN_DECK, canonical=ORIGIN + "/about"),
+                 "/about/team.html": page_html(CLEAN_DECK, canonical=ORIGIN + "/about/team.html")}
+        out = self.site(pages)[1]
+        links = re.findall(r"(?m)^FAIL /index\.html LINK: (\S+?):", out)
+        self.assertEqual(sorted(links), ["/about/", "/missing"], out)
+
+    def test_a_link_to_a_page_beside_a_folder_still_resolves_for_a_folder_with_an_index(self):
+        pages = {"/index.html": page_html(CLEAN_DECK, body_extra='<a href="/team">T</a><a href="/team/">T2</a>'),
+                 "/team/index.html": page_html(CLEAN_DECK, canonical=ORIGIN + "/team/")}
+        self.assertNotIn("LINK", rules_in(self.site(pages)[1]))
+
     def test_a_sitemap_index_inside_a_sitemap_index_warns(self):
         files = {"sitemap.xml": None, "sitemap-index.xml": sitemap_index([ORIGIN + "/sitemap-pages.xml"]),
                  "sitemap-pages.xml": sitemap_index([ORIGIN + "/sitemap-deeper.xml"])}

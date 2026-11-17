@@ -179,7 +179,7 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
         in_flight = lambda: any((e := sender.by_request.get(r)) is not None and e["status"] is None  # noqa: E731
                                 and e["outcome"] in (None, "consented") and "failure" not in e for r in navigations)
         entry["submit"], text = press(page, info["i"], info, WAIT_MS, stop, into=kept, hold=in_flight,
-                                   shown=lambda: len(sender.entries) > mark)
+                                   shown=lambda: bool(navigations) or any(e["outcome"] == "consented" for e in posts()))
         submit = entry["submit"]
         # wait for the form's host to answer before anything is judged: first for a late request, then for its answer
         pressed_back = waited()

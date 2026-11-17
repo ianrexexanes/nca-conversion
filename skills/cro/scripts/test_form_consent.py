@@ -328,6 +328,13 @@ class FollowUpTests(HeldAnswerTests):
         self.assertEqual(run.form["submit"]["state"], "changed", run.form["submit"])
         self.assertLess(run.form["submit"]["time_ms"], 350, run.form["submit"])
 
+    def test_a_request_that_is_not_the_send_does_not_end_the_wait_before_the_first_read(self):
+        run, _took = self.bounded_run("form-background-requests.html", wait=8000, bound=30)
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/api/lead"])
+        self.assertEqual(run.form["submit"]["state"], "changed", run.form["submit"])
+        self.assertGreaterEqual(run.form["submit"]["time_ms"], 380, run.form["submit"])
+
     test_a_post_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None  # inherited tests run once, in their own class
     test_a_page_after_the_send_that_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None
     test_a_page_blocked_by_a_synchronous_request_to_a_slow_host_still_ends_the_run = None

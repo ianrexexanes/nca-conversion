@@ -546,7 +546,7 @@ def read_outcome(page, i, submit):
 def press(page, i, info, limit_ms, stop=None, into=None, hold=None, shown=None):
     """Press submit once and record what followed. Returns the form's submit dict and the thank-you text.
     into, a dict, receives the submit dict as "submit" at once, so a caller that loses the page inside press still holds it.
-    shown(), given with hold, is true once the caller's record holds a request made since the press."""
+    shown(), given with hold, is true once the caller's record holds the send the press was made for, or a navigation of the page, made since the press."""
     submit = {"text": info["submit"]["text"], "regions": info["regions"], "pressed": False, "validation": [],
               "state": "none", "status_text": None, "status_source": "none", "time_ms": None}
     if into is not None:
@@ -563,8 +563,9 @@ def press(page, i, info, limit_ms, stop=None, into=None, hold=None, shown=None):
         if hold is not None:
             # A read begun in the instant a navigation starts can wait for its answer past its limit (seen in 1 of 4 runs, UNVERIFIED
             # why), so the caller's record is given time to show the press before the first read: the wait ends as soon as shown() says
-            # the record holds a request made since the press, or after 400 ms. What is left: a press that starts nothing for 400 ms is first
-            # read then, so a change it makes before that is timed up to 0.4 s late.
+            # the record holds the send or a navigation made since the press, or after 400 ms; a request of the page that is neither does
+            # not end it. What is left: a press whose send starts later than 400 ms after it is first read then, so a change it makes
+            # before that is timed up to 0.4 s late.
             pause = time.monotonic()
             while (time.monotonic() - pause) * 1000 < 400 and not (shown is not None and shown()):
                 page.wait_for_timeout(25)

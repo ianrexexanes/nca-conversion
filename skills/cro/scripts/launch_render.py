@@ -30,6 +30,8 @@ from design_check import contrast, normal  # noqa: E402
 from form_check import BadInput as AddressRefused, check_address  # noqa: E402
 
 DEFAULT_WIDTHS = (375, 390, 820, 1440)
+# texts of a page error that show a failed network call; add only a text seen in a run
+NETWORK_FAILURES = ("Failed to fetch",)
 PHONE_BELOW = 600  # render_check's two views: a phone context under this width, a desktop at or above it
 PHONE_HEIGHT, DESKTOP_HEIGHT = 844, 900
 HEX = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})\Z")
@@ -562,7 +564,12 @@ def main(argv=None):
                 rows = analyse(facts, args, widest, width, width == readable)
                 if width == readable and widest not in reads:
                     rows.append(("SKIPPED", "HEADLINE_RATIO", "the widest view (%d px) did not load, so the headline ratio was not checked" % widest))
-                rows += [("FAIL", "PAGE_ERROR", one_line(e)[:300]) for e in recorder.errors]
+                blocked = sum(1 for e in recorder.entries if e["outcome"] == "blocked")
+                for e in recorder.errors:
+                    if blocked and any(t in e for t in NETWORK_FAILURES):
+                        rows.append(("WARN", "PAGE_ERROR", "%s; the guard blocked %d request(s) on this view, so this may be its own doing: confirm in an ordinary browser" % (one_line(e)[:300], blocked)))
+                    else:
+                        rows.append(("FAIL", "PAGE_ERROR", one_line(e)[:300]))
                 view["findings"].extend({"level": lv, "rule": rule, "detail": detail} for lv, rule, detail in rows)
             for view in entry["views"]:
                 for f in view["findings"]:

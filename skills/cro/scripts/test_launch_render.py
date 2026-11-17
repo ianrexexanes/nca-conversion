@@ -198,6 +198,20 @@ class LaunchRenderTests(unittest.TestCase):
         _c, out, rows = self.render("throws.html", 1440)
         self.assertTrue(self.has(rows, "FAIL", "PAGE_ERROR", 1440, "page says boom"), out)
 
+    def test_a_failed_network_call_after_a_blocked_request_is_a_warning(self):
+        _c, out, rows = self.render("post-on-load.html", 1440)
+        self.assertTrue(self.has(rows, "WARN", "PAGE_ERROR", 1440, "the guard blocked 1 request(s) on this view, so this may be its own doing: confirm in an ordinary browser"), out)
+        self.assertFalse(self.has(rows, "FAIL", "PAGE_ERROR", 1440), out)
+
+    def test_a_failed_network_call_where_nothing_was_blocked_still_fails(self):
+        _c, out, rows = self.render("get-fails.html", 1440)
+        self.assertTrue(self.has(rows, "FAIL", "PAGE_ERROR", 1440, "Failed to fetch"), out)
+        self.assertFalse(self.has(rows, "WARN", "PAGE_ERROR", 1440), out)
+
+    def test_a_page_error_with_blocked_requests_but_no_network_text_still_fails(self):
+        _c, out, rows = self.render("throws.html", 1440)
+        self.assertTrue(self.has(rows, "FAIL", "PAGE_ERROR", 1440, "page says boom"), out)
+
     def test_body_black_warns(self):
         _c, out, rows = self.render("black.html", 1440)
         self.assertTrue(self.has(rows, "WARN", "BODY_BLACK", 1440), out)

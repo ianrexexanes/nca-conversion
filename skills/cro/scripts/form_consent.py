@@ -9,8 +9,7 @@ sends while it loads, is read or is filled can take the send. The script finds t
 that submits by GET (the guard counts only non-GET requests), fills it (the address in its email field, "Test submission,
 consented by <owner>, <date>" in the other text fields), and only then sets the Recorder's allow_post_host to that host and
 presses submit once, timing the press to the thank-you state. After the press it waits for the form's host to answer, closes the consent, and only then judges the send; a send the host has not answered by the end of the wait is a WARN. So is a page that cannot be read after the press when the request has left: the thank-you state is not known, so check that the test lead arrived before any rerun. A failure of the script after the consent was opened prints a line on standard error to the same effect. The guard lets exactly one non-GET request leave the page, to that host; a
-second is aborted. A resend inside the browser's network stack after a connection that closed with no answer is below the guard: it is
-reported afterwards (a FAIL SEND for a host that ended the connection), like the redirect that keeps the method. Afterwards the consented request must be to the form's own action (or the pressed control's formaction), and no
+second is aborted. A resend inside the browser's network stack after a connection that closed with no answer is below the guard, and the script cannot see it. When the retry also gets no answer, the run reports a FAIL SEND. When the retry is answered, the run reads as one clean send although the host may hold the submission twice. Afterwards the consented request must be to the form's own action (or the pressed control's formaction), and no
 non-GET request may show as completed, which is what a 307 or 308 redirect hop looks like; either is a FAIL SEND, exit 1. A form
 that sends anywhere else, or by GET, is SKIPPED and exit 3, with nothing sent. So is a form whose own validation refuses the fill. The yes in the chat comes first, as `form.md` step 7 says. Then, unless the action host is loopback (127.0.0.1, ::1 or localhost), the script asks at the terminal before it opens the consent: it prints the action host and goes on only when that host is typed back on standard input. With no terminal on standard input, or any other answer, the form is SKIPPED and exit 3, with nothing sent. No flag, variable or file answers for the terminal.
 Exit 0 when the send went through, 1 on a FAIL, 2 on bad input, 3 when nothing was sent. The browser is closed last, with
@@ -271,6 +270,9 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
     status = sent[0]["status"]
     failure = sent[0].get("failure") if status is None else None  # an entry with a status is judged by its status, whatever failure says
     if failure and any(code in failure for code in HANG_UPS):
+        # Chrome sends a request again by itself when the connection it used closes before any answer (HttpNetworkTransaction::ShouldResendRequest,
+        # https://chromium.googlesource.com/chromium/src/+/ca9d6916c5fedf6f0ee73dfc397cb0f65ad326b9/net/http/http_network_transaction.cc, read
+        # 2026-11-17); seen on loopback as two POSTs in the server's log for one request of the page; UNVERIFIED which connections count as reused.
         add_issue(entry, "FAIL", "SEND", "the request left and the form's host ended the connection with no answer (%s); a browser can send "
                   "such a request again by itself, so the host may have received the submission twice, once or not at all; check before any "
                   "rerun" % failure)

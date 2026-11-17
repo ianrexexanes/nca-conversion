@@ -466,7 +466,9 @@ def safe_eval(page, script, arg, default):
     """page.evaluate(script, arg), or default when it raises. With READ_BOUND_MS set, the read goes through wait_for_function, which
     keeps its timeout while the page is held by a request in flight, where evaluate waits for the answer without a limit (observed
     by probe on Playwright 1.62.0, UNVERIFIED beyond it; the call is documented at
-    https://playwright.dev/python/docs/api/class-page#page-wait-for-function). A read the page does not answer in time gives default."""
+    https://playwright.dev/python/docs/api/class-page#page-wait-for-function). The limit can fail for a read in progress at the instant a
+    navigation begins (1 of 4 runs of a held-answer test, 6 of 24 back-to-back attempts of a reviewer's probe, none of 30 at the loop's 100 ms
+    pace); the pause in press is for that. A read the page does not answer in time gives default."""
     global READ_MISSED
     try:
         if READ_BOUND_MS is None:
@@ -539,9 +541,10 @@ def read_outcome(page, i, submit):
     return text
 
 
-def press(page, i, info, limit_ms, stop=None, into=None, hold=None):
+def press(page, i, info, limit_ms, stop=None, into=None, hold=None, shown=None):
     """Press submit once and record what followed. Returns the form's submit dict and the thank-you text.
-    into, a dict, receives the submit dict as "submit" at once, so a caller that loses the page inside press still holds it."""
+    into, a dict, receives the submit dict as "submit" at once, so a caller that loses the page inside press still holds it.
+    shown(), given with hold, is true once the caller's record holds a request made since the press."""
     submit = {"text": info["submit"]["text"], "regions": info["regions"], "pressed": False, "validation": [],
               "state": "none", "status_text": None, "status_source": "none", "time_ms": None}
     if into is not None:
@@ -557,8 +560,12 @@ def press(page, i, info, limit_ms, stop=None, into=None, hold=None):
     if submit["pressed"]:
         if hold is not None:
             # A read begun in the instant a navigation starts can wait for its answer past its limit (seen in 1 of 4 runs, UNVERIFIED
-            # why), so the caller's record is given time to show the request before the first read.
-            page.wait_for_timeout(400)
+            # why), so the caller's record is given time to show the press before the first read: the wait ends as soon as shown() says
+            # the record holds a request made since the press, or after 400 ms. What is left: a press that starts nothing for 400 ms is first
+            # read then, so a change it makes before that is timed up to 0.4 s late.
+            pause = time.monotonic()
+            while (time.monotonic() - pause) * 1000 < 400 and not (shown is not None and shown()):
+                page.wait_for_timeout(25)
         submit["state"], submit["time_ms"] = wait_for_state(page, i, before, started, limit_ms, stop, hold=hold)
         if hold is None or not hold():  # a page held by a request in flight is not asked
             submit["validation"] = [] if submit["state"] == "navigated" else safe_eval(page, VALIDATION, i, [])

@@ -320,6 +320,13 @@ class FollowUpTests(HeldAnswerTests):
         self.assertNotIn("ended the connection", run.out)
         self.assertNotIn("had not answered", run.out)
 
+    def test_a_form_that_changes_at_the_click_is_timed_from_the_press_and_not_from_a_fixed_pause(self):
+        run, _took = self.bounded_run("form-changes-at-click.html", wait=8000, bound=30)
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/api/lead"])
+        self.assertEqual(run.form["submit"]["state"], "changed", run.form["submit"])
+        self.assertLess(run.form["submit"]["time_ms"], 350, run.form["submit"])
+
     test_a_post_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None  # inherited tests run once, in their own class
     test_a_page_after_the_send_that_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None
     test_a_page_blocked_by_a_synchronous_request_to_a_slow_host_still_ends_the_run = None

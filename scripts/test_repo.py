@@ -2687,6 +2687,11 @@ class ReferenceTextRound3Tests(unittest.TestCase):
         self.assertIn("Targets under 44 CSS pixels come as one `WARN` `TARGET` row for each view, with the count and examples; a "
                       "target under 24 pixels with no clear space around it is a `FAIL` row of its own.", step)
 
+    def test_a_label_with_an_arrow_is_still_the_label(self):
+        step = self.ref("check.md", 5)
+        self.assertIn("A button carries the label when its text matches it once every character that is not a letter or a digit is "
+                      "dropped from both ends, so \"Book my pump check \u2192\" is the label for \"Book my pump check\".", step)
+
 
 if __name__ == "__main__":
     unittest.main()

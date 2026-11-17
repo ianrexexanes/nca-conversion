@@ -6,6 +6,8 @@ import pty
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 import unittest
 from datetime import date, timedelta
 from pathlib import Path
@@ -19,6 +21,7 @@ import clarity_export  # noqa: E402
 import cro_runtime  # noqa: E402
 import form_check  # noqa: E402
 import form_consent  # noqa: E402
+from http.server import ThreadingHTTPServer  # noqa: E402
 from form_tests import FormServer, Run, run_script, start_server  # noqa: E402
 from guard_tests import SKIP, GuardLeakPathsMixin  # noqa: E402
 
@@ -75,12 +78,69 @@ class BadInputTests(unittest.TestCase):
                 self.assertIn("form_consent", done.stderr)
 
 
+class AnswerServer(FormServer):
+    """The recording server with the extra answers these tests need: a POST that answers after 6 seconds, and answers of 200 and 500."""
+    ANSWERS = {"/lead-6s": (200, 6.0), "/lead-elsewhere-500": (500, 0), "/lead-elsewhere-200": (200, 0), "/api/lead": (200, 0)}
+
+    def _go(self):
+        path = self.path.split("?", 1)[0]
+        if self.command == "POST" and path in self.ANSWERS:
+            length = int(self.headers.get("Content-Length") or 0)
+            body = self.rfile.read(length).decode("utf-8", "replace") if length else ""
+            with FormServer.lock:
+                FormServer.requests.append((self.command, self.path, self.headers.get("User-Agent", ""), body))
+            status, delay = self.ANSWERS[path]
+            time.sleep(delay)
+            try:
+                if path == "/lead-6s":
+                    self._send(status, b"<!doctype html><title>Thanks</title><main><h1>Thank you</h1><p>We reply within one working day.</p></main>",
+                               "text/html; charset=utf-8")
+                else:
+                    self._send(status, b'{"ok": true}', "application/json", {"Access-Control-Allow-Origin": "*"})
+            except OSError:
+                pass
+        else:
+            super()._go()
+
+    do_GET = do_HEAD = do_POST = do_OPTIONS = _go
+
+
+def start_answer_server():
+    server = ThreadingHTTPServer(("127.0.0.1", 0), AnswerServer)
+    server.daemon_threads = True
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server, "http://127.0.0.1:%d" % server.server_address[1]
+
+
 class ReadMethodNameTests(unittest.TestCase):
     def test_the_read_methods_have_one_name_and_no_other_copy(self):
         self.assertFalse(hasattr(form_consent, "NON_GET"))
         literal = '("GET", "HEAD", ' + '"OPTIONS")'
         for script in ("form_check.py", "form_consent.py"):
             self.assertNotIn(literal, (HERE / script).read_text(encoding="utf-8"), script)
+
+
+class SinglePressTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.server, cls.base = start_answer_server()
+        cls.addClassCleanup(cls.server.server_close)
+        cls.addClassCleanup(cls.server.shutdown)
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.addClassCleanup(cls.tmp.cleanup)
+
+    def test_a_form_answered_after_six_seconds_is_pressed_once_and_reported_pressed(self):
+        run = run_script(SCRIPT, "%s/form-answer-6s.html" % self.base, *GOOD, tmp=self.tmp.name)
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead-6s"])
+        self.assertIs(run.form["submit"]["pressed"], True)
+        self.assertEqual(run.form["submit"]["state"], "navigated")
+        self.assertEqual(len([e for e in run.log if e["method"] not in cro_runtime.ALLOWED_METHODS]), 1, run.log)
+
+    def test_a_submit_control_covered_by_another_element_is_still_pressed_once(self):
+        run = run_script(SCRIPT, "%s/form-covered-submit.html" % self.base, *GOOD, tmp=self.tmp.name)
+        self.assertEqual([p for _m, p in run.posts()], ["/lead-303"], (run.out, run.err))
+        self.assertIs(run.form["submit"]["pressed"], True)
 
 
 class FakeTerminal:

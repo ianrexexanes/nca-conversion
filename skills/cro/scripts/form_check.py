@@ -191,7 +191,13 @@ if (!form) return;
 form.setAttribute('target', '_self');
 form.querySelectorAll('[formtarget]').forEach((el) => el.setAttribute('formtarget', '_self'));
 }"""
-MARK = "(i) => { window.__formCheckMark = true; window.__formCheckIndex = i; window.__formCheckForm = document.querySelectorAll('form')[i] || null; }"
+CONTROL = "button[type=submit], input[type=submit], input[type=image], button:not([type])"
+MARK = ("(i) => { window.__formCheckMark = true; window.__formCheckIndex = i; window.__formCheckSeen = false;"
+        " const form = document.querySelectorAll('form')[i] || null; window.__formCheckForm = form;"
+        " const control = form ? form.querySelector('" + CONTROL + "') : null;"
+        " document.addEventListener('click', (e) => { if (control && control.contains(e.target)) window.__formCheckSeen = true; }, true);"
+        " document.addEventListener('submit', (e) => { if (form && e.target === form) window.__formCheckSeen = true; }, true); }")
+LANDED = "() => ({marked: window.__formCheckMark === true, seen: window.__formCheckSeen === true})"
 FORM_NODE = "([i, pressed]) => {" + HELPERS + "return pressed && window.__formCheckMark !== true ? null : formOf(i);}"
 SET_FIELD = r"""(el, [action, value]) => {
 if (action === 'fill') {
@@ -425,14 +431,20 @@ def install_action_route(page, recorder, infos, simulate):
 
 
 def click_submit(page, i):
-    """Press the form's submit control once. Returns whether it was pressed."""
-    button = page.locator("form").nth(i).locator(
-        "button[type=submit], input[type=submit], input[type=image], button:not([type])").first
+    """Press the form's submit control once. Returns whether a click landed. The click returns once it is made (no_wait_after),
+    so a form that answers late does not time it out; when it raises anyway, the page says whether it landed, and a second
+    click by script is made only when the page saw neither a click on the control nor a submit of the form."""
+    button = page.locator("form").nth(i).locator(CONTROL).first
     try:
-        button.click(timeout=4000)
+        button.click(timeout=4000, no_wait_after=True)
         return True
     except PlaywrightError:
         pass
+    landed = safe_eval(page, LANDED, None, None)
+    if page.is_closed():
+        return False  # the page is gone: no click was made
+    if landed is None or not landed["marked"] or landed["seen"]:
+        return True  # the document was replaced, or it saw the click or the submit: the press was made
     try:
         button.evaluate("el => el.click()")
         return True

@@ -407,6 +407,18 @@ class FormConsentTests(unittest.TestCase):
                 form_consent.main(["%s/form-lead.html" % self.base, "--out", folder, *GOOD])
         self.assertIn("a submission may have been sent", err.getvalue())
 
+    def test_an_interrupt_after_the_consent_was_opened_prints_the_line_and_goes_on(self):
+        def interrupted(page, i, path):
+            raise KeyboardInterrupt
+
+        err = io.StringIO()
+        folder = tempfile.mkdtemp(dir=self.tmp.name)
+        with mock.patch.object(form_consent, "snap_form", interrupted), mock.patch.object(sys, "stdin", FakeTerminal(False)), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+            with self.assertRaises(KeyboardInterrupt):
+                form_consent.main(["%s/form-lead.html" % self.base, "--out", folder, *GOOD])
+        self.assertIn("a submission may have been sent", err.getvalue())
+
     def test_a_307_after_the_consented_post_is_a_fail(self):
         run = self.consent("form-307.html")
         self.assertEqual(run.code, 1, (run.err, run.lines))

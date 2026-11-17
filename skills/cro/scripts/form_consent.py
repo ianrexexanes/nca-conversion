@@ -277,7 +277,7 @@ def main(argv=None):
         except form_check.PlaywrightError as error:
             print("form_consent: the page could not be read: %s" % first_line(error), file=sys.stderr)
             code = 3
-        except Exception:
+        except (Exception, KeyboardInterrupt):
             if getattr(session, "consent_opened", False):
                 print("form_consent: the script failed after the consent was opened; a submission may have been sent, check that the test "
                       "lead arrived before any rerun", file=sys.stderr)

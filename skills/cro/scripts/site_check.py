@@ -5,10 +5,12 @@
                   [--visible-text DIR]
 
 --dist reads every .html file under DIR; a page's URL is its path from DIR (`/index.html`). --url fetches each address with
-page_facts.fetch, which sends an ordinary Chrome agent. Without --deck the copy rules are skipped, not passed.
+page_facts.fetch_final, which sends an ordinary Chrome agent; a same-host link on those pages is checked for its status alone
+(link_status sends the same headers and never reads the body). Without --deck the copy rules are skipped, not passed.
 --map names the namespace a page shows, and for a deck with variants its letter: `--map /b.html=p.b`. --pages is a JSON list
 [{"url": str, "mode": "search" | "direct", "paid": bool, "keyword": str | null}] and switches NOINDEX on. --forbid is one word or
-phrase per line, `#` lines and blank lines ignored. --visible-text writes each page's text to DIR/<page slug>.txt.
+phrase per line, `#` lines and blank lines ignored. --visible-text writes DIR/<page slug>.txt for each page: the title on line 1, the meta description on line 2 (empty when
+there is none), then the page text; a folder that cannot be written is exit 2 before any row is worked out. PLACEHOLDER and FORBIDDEN also read the title and the meta description.
 Every line is `<FAIL|WARN|SKIPPED> <page URL> <RULE>: <detail>`, then `site_check: <f> FAIL, <w> WARN`. Exit 1 on any FAIL, 2 on
 bad input.
 
@@ -405,7 +407,11 @@ def site_files(dist, pages, add):
 
 def link_status(url, timeout=30.0):
     """Raise when `url` does not answer with a good status. Redirects are followed; the body is never read."""
-    request = urllib.request.Request(url, headers={"User-Agent": CHROME_UA, "Accept": "text/html,application/xhtml+xml,*/*;q=0.8"})
+    request = urllib.request.Request(url, headers={  # the same three headers page_facts.fetch sends
+        "User-Agent": CHROME_UA,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,de;q=0.8",
+    })
     with urllib.request.urlopen(request, timeout=timeout):  # noqa: S310 - the page's own link, same host
         pass  # leaving the block closes the connection with the body unread
 

@@ -837,15 +837,17 @@ class SiteCheckUrlTests(unittest.TestCase):
 class _Linker(BaseHTTPRequestHandler):
     """A loopback site for the live link check: /slow sends its headers at once and its body after 5 seconds."""
     page = ""
+    headers_seen = []
 
     def do_GET(self):
+        _Linker.headers_seen.append({k: self.headers.get(k) for k in ("User-Agent", "Accept", "Accept-Language")})
         body = _Linker.page.encode("utf-8") if self.path == "/index.html" else b"<html><body>ok</body></html>"
         if self.path == "/gone":
             self.send_response(404)
             self.end_headers()
-        elif self.path == "/hop":
+        elif self.path in ("/hop", "/hop-bad"):
             self.send_response(302)
-            self.send_header("Location", "/ok")
+            self.send_header("Location", "/ok" if self.path == "/hop" else "/gone")
             self.end_headers()
         else:
             self.send_response(200)
@@ -885,6 +887,23 @@ class SiteCheckLinkTests(unittest.TestCase):
     def test_a_link_that_answers_404_is_a_link_row(self):
         out, _ = self.linked("/gone")
         self.assertRegex(out, r"(?m)^FAIL \S+/index\.html LINK: /gone: the address answered .*404")
+
+    def test_a_link_that_redirects_to_a_page_that_answers_404_is_a_link_row(self):
+        out, _ = self.linked("/hop-bad")
+        self.assertRegex(out, r"(?m)^FAIL \S+/index\.html LINK: /hop-bad: the address answered .*404")
+
+    def test_the_link_check_sends_the_same_headers_as_page_facts_fetch(self):
+        server = ThreadingHTTPServer(("127.0.0.1", 0), _Linker)
+        server.daemon_threads = True
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        url = "http://127.0.0.1:%d/ok" % server.server_address[1]
+        _Linker.headers_seen = []
+        site_check.link_status(url)
+        page_facts.fetch(url)
+        checked, fetched = _Linker.headers_seen
+        self.assertEqual(checked, fetched)
 
     def test_a_link_that_redirects_to_a_good_page_gives_no_link_row(self):
         out, _ = self.linked("/hop")

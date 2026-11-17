@@ -2640,6 +2640,11 @@ class ReferenceTextRound3Tests(unittest.TestCase):
         self.assertIn("The press is made once: a second press by script is made only when the first did not land, "
                       "and `pressed` in `form.json` is true whenever a click landed.", step)
 
+    def test_a_consented_answer_of_400_or_more_fails_wherever_the_request_went(self):
+        step = self.ref("form.md", 7)
+        self.assertIn("when the answer to the one consented request was HTTP 400 or more, wherever that request went, with the address "
+                      "and the status in the line,", step)
+
 
 if __name__ == "__main__":
     unittest.main()

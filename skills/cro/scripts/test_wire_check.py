@@ -360,6 +360,30 @@ class WireCheckTest(unittest.TestCase):
         self.bad(WIRE_A, "--deck", str(FIXTURES / "no-such-deck.md"), "--variant", "a")
         self.bad(self.write("<p>no main here</p>"), "--deck", DECK, "--variant", "a")
 
+    def test_an_attribute_with_no_value_is_a_row_not_a_traceback(self):
+        deck = self.write(TINY_DECK, "deck.md")
+        cases = [
+            ("data-section", TINY_FRAME.replace('data-section="p.hero"', "data-section"), "LAYOUT"),
+            ("data-section empty", TINY_FRAME.replace('data-section="p.hero"', 'data-section=""'), "LAYOUT"),
+            ("data-layout", TINY_FRAME.replace('data-layout="split-media"', "data-layout"), "LAYOUT"),
+            ("data-key", TINY_FRAME.replace('data-key="p.hero.h1"', "data-key"), "MISSING_KEY"),
+            ("data-key on a void element", TINY_FRAME.replace("</section>", "<img data-key>\n</section>", 1), "NOT_IN_DECK"),
+            ("data-visual", TINY_FRAME.replace('data-visual="p.hero.visual"', "data-visual"), "VISUAL"),
+            ("data-visual on a void element", TINY_FRAME.replace("</section>", "<img data-visual>\n</section>", 1), "VISUAL"),
+        ]
+        for label, frame, rule in cases:
+            with self.subTest(label):
+                code, out = run(self.write(frame), "--deck", deck)
+                self.assertNotIn("Traceback", out)
+                self.assertEqual(code, 1, out)
+                self.assertIn(" %s: " % rule, out)
+                self.assertRegex(out, r"wire_check: \d+ FAIL, \d+ WARN\n$")
+        with self.subTest("data-ns"):
+            code, out = run(self.write(TINY_FRAME.replace('data-ns="p"', "data-ns")), "--deck", deck)
+            self.assertNotIn("Traceback", out)
+            self.assertEqual(code, 2, out)
+            self.assertTrue(out.startswith("wire_check: "), out)
+
     def test_the_planted_fixture_trips_the_rules_it_plants(self):
         code, out = run(WIRE_PLANTED, "--deck", DECK, "--variant", "a")
         self.assertEqual(code, 1)

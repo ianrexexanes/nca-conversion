@@ -65,7 +65,7 @@ class Frame(HTMLParser):
         self.stack = []
 
     def handle_starttag(self, tag, attrs):
-        attrs = dict(attrs)
+        attrs = {name: "" if value is None else value for name, value in attrs}  # an attribute with no value reads as empty
         if tag == "main" and self.main is None:
             self.main = attrs
         if tag == "br":
@@ -227,6 +227,9 @@ def check(deck, frame, ns, v):
 
     for section in frame.sections:
         name = section["name"]
+        if not name:
+            add("FAIL", "main", "LAYOUT", "a data-section with no name")
+            continue
         short = name.rsplit(".", 1)[-1]
         layout = section["layout"]
         if not layout:

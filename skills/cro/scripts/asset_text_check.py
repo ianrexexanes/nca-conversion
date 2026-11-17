@@ -62,7 +62,9 @@ def png_text(data):
 
 EXIF_ASCII_PREFIX = b"Exif\x00\x00"
 # Tag numbers: https://exiftool.org/TagNames/EXIF.html (IFD0 and ExifIFD tables); UserComment's eight-byte character code
-# (ASCII, UNICODE) is the Exif specification's table as quoted in https://github.com/exiftool/exiftool/issues/367
+# (ASCII, UNICODE) is the Exif specification's table as quoted in https://github.com/exiftool/exiftool/issues/367.
+# Writers differ in the byte order of a UNICODE comment (https://exiftool.org/faq.html, FAQ 10: native EXIF order by default,
+# settable by ExifUnicodeByteOrder), so both orders are read. What the Exif standard itself fixes is UNVERIFIED.
 EXIF_POINTER = 0x8769
 USER_COMMENT = 0x9286
 XP_TAGS = range(0x9C9B, 0x9CA0)  # XPTitle, XPComment, XPAuthor, XPKeywords, XPSubject: BYTE, UTF-16LE
@@ -70,38 +72,47 @@ TIFF_SIZES = {1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 7: 1, 9: 4, 10: 8}
 
 
 def exif_text(block):
-    """The text fields of an EXIF block: ASCII-type entries of the first directory and of the Exif sub-directory, UserComment by its
-    character code and the Windows XP tags as UTF-16LE. Thumbnail data and maker notes are never read; a block that cannot be parsed gives nothing."""
+    """The text fields of an EXIF block: ASCII-type entries of the first directory and of the Exif sub-directory (the first pointer
+    of the first directory, followed once), UserComment by its character code (UNICODE in both byte orders) and the Windows XP tags
+    as UTF-16LE. Data is read only for an entry that becomes text; a text entry whose data runs past the block is skipped, and the
+    fields read together never exceed the block's length. A directory that runs past the block ends the read and what was gathered
+    is returned; a block with no TIFF header gives nothing. Thumbnail data and maker notes are never read."""
     block = block[len(EXIF_ASCII_PREFIX):] if block.startswith(EXIF_ASCII_PREFIX) else block
     order = {b"II": "<", b"MM": ">"}.get(block[:2])
-    try:
-        if order is None or struct.unpack(order + "H", block[2:4])[0] != 42:
-            return []
-        first = struct.unpack(order + "I", block[4:8])[0]
-        parts, directories = [], [(first, True)]  # the Exif sub-directory is appended when IFD0 points at it
-        for offset, is_first in directories:
-            count = struct.unpack(order + "H", block[offset:offset + 2])[0]
-            for i in range(count):
-                tag, kind, items, value = struct.unpack(order + "HHI4s", block[offset + 2 + 12 * i:offset + 14 + 12 * i])
-                if is_first and tag == EXIF_POINTER and kind == 4:
-                    directories.append((struct.unpack(order + "I", value)[0], False))
-                    continue
-                size = TIFF_SIZES.get(kind, 0) * items
-                data = value[:size] if size <= 4 else block[struct.unpack(order + "I", value)[0]:][:size]
-                if len(data) != size:
-                    raise ValueError("a field runs past the block")
-                if kind == 2:
-                    parts.append(utf8_or_latin(data.replace(b"\x00", b" ")))
-                elif is_first and kind == 1 and tag in XP_TAGS:
-                    parts.append(data.decode("utf-16-le", "replace").replace("\x00", " "))
-                elif not is_first and tag == USER_COMMENT and kind == 7:
-                    if data[:8] == b"UNICODE\x00":
-                        parts.append(data[8:].decode("utf-16-le" if order == "<" else "utf-16-be", "replace").replace("\x00", " "))
-                    elif data[:8] in (b"ASCII\x00\x00\x00", b"\x00" * 8):
-                        parts.append(utf8_or_latin(data[8:].replace(b"\x00", b" ")))
-        return parts
-    except (struct.error, ValueError, IndexError):
+    if order is None or len(block) < 8 or struct.unpack(order + "H", block[2:4])[0] != 42:
         return []
+    other = "<" if order == ">" else ">"
+    parts, used, followed = [], 0, False
+    directories = [(struct.unpack(order + "I", block[4:8])[0], True)]  # the Exif sub-directory is appended when IFD0 points at it
+    for offset, is_first in directories:
+        if offset + 2 > len(block):
+            break
+        for i in range(struct.unpack(order + "H", block[offset:offset + 2])[0]):
+            raw = block[offset + 2 + 12 * i:offset + 14 + 12 * i]
+            if len(raw) < 12:
+                return parts
+            tag, kind, items, value = struct.unpack(order + "HHI4s", raw)
+            if is_first and tag == EXIF_POINTER and kind == 4:
+                if not followed:
+                    directories.append((struct.unpack(order + "I", value)[0], False))
+                    followed = True
+                continue
+            if not (kind == 2 or (is_first and kind == 1 and tag in XP_TAGS) or (not is_first and tag == USER_COMMENT and kind == 7)):
+                continue
+            where = struct.unpack(order + "I", value)[0]
+            data = value[:items] if items <= 4 else block[where:where + items]
+            if len(data) != items or used + items > len(block):
+                continue
+            used += items
+            if kind == 2:
+                parts.append(utf8_or_latin(data.replace(b"\x00", b" ")))
+            elif kind == 1:
+                parts.append(data.decode("utf-16-le", "replace").replace("\x00", " "))
+            elif data[:8] == b"UNICODE\x00":
+                parts += [data[8:].decode("utf-16-le" if o == "<" else "utf-16-be", "replace").replace("\x00", " ") for o in (order, other)]
+            elif data[:8] in (b"ASCII\x00\x00\x00", b"\x00" * 8):
+                parts.append(utf8_or_latin(data[8:].replace(b"\x00", b" ")))
+    return parts
 
 
 def jpeg_text(data):

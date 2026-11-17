@@ -90,6 +90,30 @@ def exif(ifd0=(), sub=(), thumb=b"", big=False):
     return out
 
 
+def tiff(entries, data=b"", count=None, big=False):
+    """A TIFF block with one directory: entries are (tag, type, items, value), the value four bytes or an absolute offset.
+    The data area starts at tiff_base(len(entries))."""
+    e = ">" if big else "<"
+    table = b""
+    for tag, kind, items, value in entries:
+        table += struct.pack(e + "HHI", tag, kind, items) + (value if isinstance(value, bytes) else struct.pack(e + "I", value))
+    head = (b"MM\x00*" if big else b"II*\x00") + struct.pack(e + "I", 8)
+    return head + struct.pack(e + "H", len(entries) if count is None else count) + table + struct.pack(e + "I", 0) + data
+
+
+def tiff_base(n):
+    return 10 + 12 * n + 4
+
+
+def exif_texts(block):
+    sys.path.insert(0, str(HERE))
+    try:
+        import asset_text_check
+        return asset_text_check.exif_text(block)
+    finally:
+        sys.path.remove(str(HERE))
+
+
 def ascii_entry(tag, text):
     return (tag, 2, text.encode("utf-8") + b"\x00")
 
@@ -264,6 +288,47 @@ class AssetTextCheckTests(unittest.TestCase):
         self.assertNotIn("Traceback", out)
         self.assertEqual(code, 0, out)
         self.assertEqual(out.strip(), SUMMARY_0)
+
+    def test_a_readable_description_survives_a_binary_entry_that_runs_past_the_block(self):
+        base = tiff_base(2)
+        block = tiff([(0x010E, 2, 6, base), (0x927C, 7, 1000, 99999)], b"lorem\x00")
+        self.assertIn("lorem", " ".join(exif_texts(block)))
+
+    def test_a_text_entry_that_runs_past_the_block_is_skipped_between_two_readable_ones(self):
+        base = tiff_base(3)
+        block = tiff([(0x010E, 2, 6, base), (0x010F, 2, 500, 99999), (0x0110, 2, 6, base + 6)], b"one11\x00two22\x00")
+        text = " ".join(exif_texts(block))
+        self.assertIn("one", text)
+        self.assertIn("two", text)
+
+    def test_a_directory_count_past_the_block_still_returns_the_entries_that_are_there(self):
+        block = tiff([(0x010E, 2, 6, tiff_base(2)), (0x010F, 2, 6, tiff_base(2))], b"one11\x00", count=10)
+        self.assertIn("one", " ".join(exif_texts(block)))
+
+    def test_three_exif_pointers_to_one_directory_return_its_comment_once(self):
+        base = tiff_base(3)
+        sub = struct.pack("<H", 1) + struct.pack("<HHII", 0x9286, 7, 13, base + 18) + struct.pack("<I", 0)
+        block = tiff([(0x8769, 4, 1, base)] * 3, sub + b"ASCII\x00\x00\x00MARK\x00")
+        self.assertEqual(" ".join(exif_texts(block)).count("MARK"), 1)
+
+    def test_many_entries_naming_one_large_field_are_capped_by_the_block_length(self):
+        base = tiff_base(300)
+        block = tiff([(0x010E, 2, 2000, base)] * 300, b"MARK" + b"x" * 1995 + b"\x00")
+        self.assertLessEqual(" ".join(exif_texts(block)).count("MARK"), len(block) // 2000)
+
+    def test_a_unicode_user_comment_is_found_in_either_byte_order(self):
+        for big in (False, True):
+            wrong = "utf-16-le" if big else "utf-16-be"
+            block = exif(sub=[(0x9286, 7, b"UNICODE\x00" + "lorem TODO".encode(wrong))], big=big)
+            self.assertIn("TODO", " ".join(exif_texts(block)), big)
+
+    def test_a_placeholder_beside_a_bad_binary_entry_is_a_fail_row(self):
+        base = tiff_base(2)
+        block = tiff([(0x010E, 2, 17, base), (0x927C, 7, 1000, 99999)], b"lorem ipsum TODO\x00")
+        tmp, root = self.folder({"a.jpg": jpeg_exif(block)})
+        code, out = run("--dir", str(root))
+        self.assertEqual(code, 1, out)
+        self.assertRegex(out, r"(?m)^FAIL a\.jpg ASSET_TEXT: ")
 
     def test_no_images_is_skipped_and_bad_input_exits_2(self):
         tmp, root = self.folder({"readme.txt": b"hello"})

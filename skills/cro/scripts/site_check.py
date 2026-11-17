@@ -20,6 +20,7 @@ import json
 import re
 import sys
 import urllib.parse
+import urllib.request
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
@@ -28,7 +29,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parents[1] / "conversion-page-audit" / "scripts"))
 from deck_check import parse_deck  # noqa: E402
-from page_facts import decode_body, extract_facts, fetch, fetch_final  # noqa: E402
+from page_facts import CHROME_UA, decode_body, extract_facts, fetch_final  # noqa: E402
 from search_check import normalise, page_text  # noqa: E402
 from wire_check import rendered, squash  # noqa: E402
 
@@ -402,6 +403,13 @@ def site_files(dist, pages, add):
             add("FAIL", owner, "ROBOTS", "robots.txt blocks %s, which the sitemap lists" % url)
 
 
+def link_status(url, timeout=30.0):
+    """Raise when `url` does not answer with a good status. Redirects are followed; the body is never read."""
+    request = urllib.request.Request(url, headers={"User-Agent": CHROME_UA, "Accept": "text/html,application/xhtml+xml,*/*;q=0.8"})
+    with urllib.request.urlopen(request, timeout=timeout):  # noqa: S310 - the page's own link, same host
+        pass  # leaving the block closes the connection with the body unread
+
+
 def make_internal_link(dist, fetch_page):
     cache = {}
 
@@ -583,7 +591,7 @@ def main(argv=None):
     for url, why in skipped:
         add("SKIPPED", url, "LAUNCH_PAGE", why)
     dist = Path(args.dist) if args.dist else None
-    internal_link = make_internal_link(dist, fetch)
+    internal_link = make_internal_link(dist, link_status)
     for page in pages:
         page_rows(page, deck, mapped, forbid, add, internal_link)
     if dist is not None:

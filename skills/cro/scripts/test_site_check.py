@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -831,6 +832,63 @@ class SiteCheckUrlTests(unittest.TestCase):
         code, out = run("--url", "http://127.0.0.1:1/index.html")
         self.assertEqual(code, 2, out)
         self.assertTrue(out.startswith("site_check: "), out)
+
+
+class _Linker(BaseHTTPRequestHandler):
+    """A loopback site for the live link check: /slow sends its headers at once and its body after 5 seconds."""
+    page = ""
+
+    def do_GET(self):
+        body = _Linker.page.encode("utf-8") if self.path == "/index.html" else b"<html><body>ok</body></html>"
+        if self.path == "/gone":
+            self.send_response(404)
+            self.end_headers()
+        elif self.path == "/hop":
+            self.send_response(302)
+            self.send_header("Location", "/ok")
+            self.end_headers()
+        else:
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            try:
+                if self.path == "/slow":
+                    self.wfile.flush()
+                    time.sleep(5)
+                self.wfile.write(body)
+            except OSError:
+                pass  # the check closed the connection once it had the status
+
+    def log_message(self, *args):
+        pass
+
+
+class SiteCheckLinkTests(unittest.TestCase):
+    def linked(self, href):
+        _Linker.page = page_html(CLEAN_DECK, body_extra='<a href="%s">Link</a>' % href)
+        server = ThreadingHTTPServer(("127.0.0.1", 0), _Linker)
+        server.daemon_threads = True
+        server.block_on_close = False
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        started = time.monotonic()
+        out = run("--url", "http://127.0.0.1:%d/index.html" % server.server_address[1])[1]
+        return out, time.monotonic() - started
+
+    def test_a_link_whose_body_is_slow_is_judged_without_reading_the_body(self):
+        out, seconds = self.linked("/slow")
+        self.assertNotIn("LINK", rules_in(out), out)
+        self.assertLess(seconds, 2, "the whole run took %.1f seconds: the body was downloaded" % seconds)
+
+    def test_a_link_that_answers_404_is_a_link_row(self):
+        out, _ = self.linked("/gone")
+        self.assertRegex(out, r"(?m)^FAIL \S+/index\.html LINK: /gone: the address answered .*404")
+
+    def test_a_link_that_redirects_to_a_good_page_gives_no_link_row(self):
+        out, _ = self.linked("/hop")
+        self.assertNotIn("LINK", rules_in(out), out)
 
 
 if __name__ == "__main__":

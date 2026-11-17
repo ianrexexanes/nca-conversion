@@ -66,7 +66,8 @@ MEASURE_PAGE = r"""
     const box = el.getBoundingClientRect();
     const style = getComputedStyle(el);
     return box.width > 1 && box.height > 1 && box.right > 0 && box.bottom + window.scrollY > 0
-      && style.visibility !== 'hidden' && style.display !== 'none' && parseFloat(style.opacity) !== 0;
+      && style.visibility !== 'hidden' && style.display !== 'none' && parseFloat(style.opacity) !== 0
+      && el.checkVisibility({opacityProperty: true, visibilityProperty: true});  // an ancestor's display, visibility and opacity too
   };
   const textOf = (el) => clean(el.tagName === 'INPUT' ? el.value : el.textContent);
   const name = (el) => {

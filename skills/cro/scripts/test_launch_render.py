@@ -107,6 +107,14 @@ class LaunchRenderTests(unittest.TestCase):
         self.assertFalse(self.has(rows, "FAIL", "LABEL_FOLD", 1440), out)
         self.assertFalse(self.has(rows, "FAIL", "ONE_TARGET", 1440), out)
 
+    def test_a_label_in_a_hidden_container_is_not_the_label_in_the_first_screen(self):
+        _c, out, rows = self.render("hidden-label.html", 1440, "--deck", str(VARIANTS), "--variant", "b")
+        self.assertTrue(self.has(rows, "FAIL", "LABEL_FOLD", 1440, "p.cta.hook.b"), out)
+
+    def test_a_link_in_a_hidden_menu_is_not_judged_for_target(self):
+        _c, out, rows = self.render("hidden-menu.html", 390)
+        self.assertFalse([r for r in rows if r[3] == "TARGET"], out)
+
     def test_a_page_that_is_not_found_fails_status(self):
         code, out, rows = self.render("no-such-page.html", 1440)
         self.assertTrue(self.has(rows, "FAIL", "STATUS", 1440, "HTTP 404"), out)

@@ -208,6 +208,28 @@ class CompareTests(Base):
         self.assertIn('H1: "Lanterns made by hand" -> "A new headline"', lines)
         self.assertNotIn("The result cannot be put down to either change.", lines)
 
+    def test_first_sentence_is_not_compared_across_the_version_that_reads_it_differently(self):
+        def read_by(version, status):
+            def search(d):
+                d["placements"]["first_sentence"].update(status=status, text="x")
+            return {"score.json": lambda d: d.update(plugin_version=version), "search.json": search}
+        old = self.variant(SEARCH, "fs-040", **read_by("0.4.0", "missing"))
+        new = self.variant(SEARCH, "fs-041", **read_by("0.4.1", "found"))
+        lines = self.lines(old, new)
+        self.assertEqual([l for l in lines if l.startswith("Search first_sentence")],
+                         ["Search first_sentence: not compared: the first sentence is read differently from 0.4.1"])
+        self.assertIn("Search title: FOUND -> FOUND", lines)  # the other placements are compared as today
+        unversioned = self.variant(SEARCH, "fs-none", **{"search.json": read_by("0.4.0", "missing")["search.json"]})
+        sheet = json.loads((Path(unversioned) / "score.json").read_text(encoding="utf-8"))
+        sheet.pop("plugin_version", None)
+        (Path(unversioned) / "score.json").write_text(json.dumps(sheet), encoding="utf-8")
+        self.assertIn("Search first_sentence: not compared: the first sentence is read differently from 0.4.1",
+                      self.lines(unversioned, new))  # no plugin_version reads as before 0.4.1
+        same = self.variant(SEARCH, "fs-041b", **read_by("0.4.1", "missing"))
+        self.assertIn("Search first_sentence: MISSING -> FOUND", self.lines(same, new))
+        older = self.variant(SEARCH, "fs-030", **read_by("0.3.0", "missing"))
+        self.assertIn("Search first_sentence: MISSING -> MISSING", self.lines(older, old))
+
     def test_nested_text_reading_change_is_not_compared_as_a_page_change(self):
         # the same unchanged page: 0.3.0 read <h1>Grow <a>faster</a></h1> as "Grow", 0.4.0 reads "Grow faster"
         def read_by(version, h1, h2, extra_link):

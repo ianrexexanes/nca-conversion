@@ -233,7 +233,14 @@ def _variants(data):
     return {search_check.normalise(v) for v in found if isinstance(v, str)} if isinstance(found, list) else set()
 
 
-def search_block(b, a):
+def _first_sentence_reading(sheet):
+    """True when the search check beside this sheet was made by 0.4.1 or later, which reads the first sentence differently.
+    A sheet with no plugin_version reads as before 0.4.1, as in _nested_text_reading."""
+    version = sheet.get("plugin_version")
+    return version is not None and tuple(int(p) for p in version.split(".")) >= (0, 4, 1)
+
+
+def search_block(b, a, sheets=None):
     if b is None and a is None:
         return []
     if b is None or a is None:
@@ -245,7 +252,10 @@ def search_block(b, a):
     if _variants(b) != _variants(a):
         return ["Search: not compared: spelling variants differ"]
     labels = search_check.LABELS
-    return [f"Search {name}: {labels[b['placements'][name]['status']]} -> {labels[a['placements'][name]['status']]}"
+    shifted = sheets is not None and _first_sentence_reading(sheets[0]) != _first_sentence_reading(sheets[1])
+    return ["Search first_sentence: not compared: the first sentence is read differently from 0.4.1"
+            if shifted and name == "first_sentence" else
+            f"Search {name}: {labels[b['placements'][name]['status']]} -> {labels[a['placements'][name]['status']]}"
             for name in search_check.PLACEMENTS]
 
 
@@ -347,7 +357,7 @@ def facts_block(b, a, sheets=None):
 def compare(b, a):
     lines = score_block(b["sheet"], a["sheet"], b["speed"], a["speed"])
     lines += speed_block(b["speed"], a["speed"])
-    lines += search_block(b["search"], a["search"])
+    lines += search_block(b["search"], a["search"], (b["sheet"], a["sheet"]))
     lines += facts_block(b["facts"], a["facts"], (b["sheet"], a["sheet"]))
     return lines
 

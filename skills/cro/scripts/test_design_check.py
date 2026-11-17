@@ -145,6 +145,18 @@ class BadInputTest(unittest.TestCase):
         del no_size["type"]["body_px"]
         self.bad(json.dumps(no_size))
 
+    def test_a_colour_with_a_trailing_line_break_is_not_a_colour(self):
+        tokens = json.loads(CLEAN.read_text())
+        for value in ("#abc\n", "#aabbcc\n"):
+            t = json.loads(json.dumps(tokens))
+            t["colors"]["text"] = value
+            with tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "t.json"
+                path.write_text(json.dumps(t), encoding="utf-8")
+                code, out, err = run(path)
+            self.assertEqual((code, out), (2, ""), err)
+            self.assertEqual(err, "design_check: colors.text is not #rgb or #rrggbb\n")
+
     def test_missing_file_exits_2(self):
         code, _out, err = run(HERE / "nonexistent.json")
         self.assertEqual(code, 2)

@@ -17,7 +17,7 @@ REQUIRED_COLORS = ("text", "background", "action", "action_text")
 REQUIRED_SIZES = ("h1_px", "body_px")
 TEXT_MIN, CONTROL_MIN = 4.5, 3.0
 RATIO_MIN, RATIO_MAX = 3, 4
-HEX = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
+HEX = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})\Z")
 
 
 class BadInput(Exception):

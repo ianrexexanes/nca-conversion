@@ -367,6 +367,10 @@ class FormConsentTests(unittest.TestCase):
         self.assertTrue([d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SEND") and "nothing was sent" in d], run.lines)
         self.assertEqual(run.data["forms"][0]["index"], 1)
         self.assertFalse(run.form["submit"]["pressed"], run.form["submit"])
+        rows = [d for lv, _f, r, d in run.lines if (lv, r) == ("SKIPPED", "SEND")]
+        self.assertEqual(len(rows), 1, run.lines)
+        self.assertIn("the page could not be read after the press (Page.wait_for_timeout", rows[0])
+        self.assertNotIn("may need a field", rows[0])
 
     def test_a_page_lost_inside_the_press_still_says_it_was_pressed(self):
         # the page is closed when the press has seen the change and not yet returned: the click is made, the form's host has not
@@ -386,6 +390,10 @@ class FormConsentTests(unittest.TestCase):
         self.assertNotIn("nothing was sent", run.out + run.err)
         self.assertEqual(run.form["submit"]["pressed"], True)
         self.assertEqual(run.form["submit"]["state"], "none")
+        rows = [d for lv, _f, r, d in run.lines if (lv, r) == ("WARN", "SEND")]
+        self.assertEqual(len(rows), 1, run.lines)
+        self.assertIn("the form's host had not answered yet", rows[0])
+        self.assertNotIn("seconds after the press", rows[0])
 
     def test_a_defect_after_the_consent_was_opened_tells_the_reader_to_check_first(self):
         def broken(page, i, path):

@@ -196,8 +196,9 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
     after = sender.entries[mark:]
     sent = [e for e in after if e["outcome"] == "consented"]
     if page_error is not None and sent:
-        add_issue(entry, "WARN", "SEND", "the page could not be read after the press (%s), so the thank-you state is not known; check that "
-                  "the test lead arrived before any rerun" % first_line(page_error))
+        add_issue(entry, "WARN", "SEND", "the page could not be read after the press (%s), so the thank-you state is not known%s; check that "
+                  "the test lead arrived before any rerun" % (first_line(page_error), "" if sent[0]["status"] is not None
+                                                              else "; the form's host had not answered yet"))
     ours = {a for a in (form_check.address(info["action"]), form_check.address(action)) if a}
     ok = True
     sent_at = after.index(sent[0]) if sent else len(after)
@@ -213,7 +214,10 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
                 ok = False
     if not sent:
         posts = [e for e in after if e["method"] not in NON_GET and e["outcome"] == "blocked"]
-        if not posts:
+        if not posts and page_error is not None:
+            add_issue(entry, "SKIPPED", "SEND", "the page could not be read after the press (%s) and no request to %s had left; "
+                      "nothing was sent" % (first_line(page_error), host))
+        elif not posts:
             add_issue(entry, "SKIPPED", "SEND", "the press sent nothing to %s; nothing was sent. The form may need a field this test "
                       "data does not fill" % host)
         elif posts[0]["rule"] == "consent:no-marker":
@@ -236,10 +240,10 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
                   "page's script sending the form there; check that the test lead arrived before any rerun" % (sent[0]["url"], action))
         return True
     status = sent[0]["status"]
-    if status is None:
+    if status is None and page_error is None:
         add_issue(entry, "WARN", "SEND", "the form's host had not answered %d seconds after the press, so whether the test lead arrived "
                   "is not known; check before any rerun" % round(waited() / 1000))
-    elif status >= 400:
+    elif status is not None and status >= 400:
         add_issue(entry, "FAIL", "SEND", "the action host %s answered HTTP %d" % (host, status))
     return ok
 

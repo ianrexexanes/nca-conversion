@@ -139,11 +139,18 @@ MEASURE_PAGE = r"""
       const form = el.form || el.closest('form');
       return submits && form ? formTarget(form) : 'script';
     };
-    candidates = Array.from(document.querySelectorAll('a, button, input[type=submit], input[type=button], [role=button]'))
-      .filter((el) => visible(el) && textOf(el) === opts.label)
+    const matched = Array.from(document.querySelectorAll('a, button, input[type=submit], input[type=button], [role=button]'))
+      .filter((el) => visible(el) && textOf(el) === opts.label);
+    // matches inside one another are one element: the outermost, going where a match inside it goes when it only runs a script
+    candidates = matched.filter((el) => !matched.some((outer) => outer !== el && outer.contains(el)))
       .map((el) => {
         const box = el.getBoundingClientRect();
-        return {name: name(el), top: box.top, bottom: box.bottom, left: box.left, right: box.right, target: resolve(el)};
+        let target = resolve(el);
+        if (target === 'script') {
+          const inner = matched.map(resolve).find((t, i) => el.contains(matched[i]) && t !== 'script');
+          if (inner !== undefined) target = inner;
+        }
+        return {name: name(el), top: box.top, bottom: box.bottom, left: box.left, right: box.right, target: target};
       });
     out.viewport = {w: window.innerWidth, h: window.innerHeight};
   }

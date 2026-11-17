@@ -127,6 +127,14 @@ class LaunchRenderTests(unittest.TestCase):
         _c, out, rows = self.render("clean.html", 1440, "--deck", str(VARIANTS), "--variant", "c")
         self.assertFalse(self.has(rows, "FAIL", "ONE_TARGET", 1440), out)
 
+    def test_a_button_inside_a_link_is_one_call_to_action(self):
+        _c, out, rows = self.render("button-in-link.html", 1440, "--deck", str(VARIANTS), "--variant", "c")
+        self.assertFalse(self.has(rows, "FAIL", "ONE_TARGET", 1440), out)
+
+    def test_a_link_inside_a_role_button_goes_where_the_link_goes(self):
+        _c, out, rows = self.render("link-in-role-button.html", 1440, "--deck", str(VARIANTS), "--variant", "c")
+        self.assertFalse(self.has(rows, "FAIL", "ONE_TARGET", 1440), out)
+
     def test_target_under_24_fails_and_under_44_warns(self):
         _c, out, rows = self.render("targets.html", 390)
         self.assertTrue(self.has(rows, "FAIL", "TARGET", 390, "button#tiny-a 20x20"), out)

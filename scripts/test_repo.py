@@ -2637,8 +2637,11 @@ class ReferenceTextRound3Tests(unittest.TestCase):
 
     def test_the_consented_press_is_made_once_and_pressed_means_a_click_landed(self):
         step = self.ref("form.md", 7)
-        self.assertIn("The press is made once: a second press by script is made only when the first did not land, "
-                      "and `pressed` in `form.json` is true whenever a click landed.", step)
+        self.assertIn("The press is made once: a second press by script is made only when the first raised an error and the page saw "
+                      "neither a click nor a submit. `pressed` in `form.json` is true when a click was made or cannot be shown to have "
+                      "failed. It is false when the form has no submit control, when the first click raised an error and the page had "
+                      "closed, or when the press by script failed too. Whether the send went out is told by `network.consented` in "
+                      "`form.json` and by the `SEND` lines, never by `pressed` alone.", step)
 
     def test_a_consented_answer_of_400_or_more_fails_wherever_the_request_went(self):
         step = self.ref("form.md", 7)

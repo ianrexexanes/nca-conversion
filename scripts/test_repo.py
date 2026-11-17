@@ -2702,6 +2702,11 @@ class ReferenceTextRound3Tests(unittest.TestCase):
         text = (ROOT / "skills/cro/references/setup.md").read_text(encoding="utf-8")
         self.assertIn("| `hallmark-lint` | where the lint script of the highest installed Hallmark version is, or `not found` | no |", text)
 
+    def test_a_deck_variant_is_one_lowercase_letter(self):
+        text = self.ref("hero.md")
+        self.assertIn("takes the lettered form, `<ns>.hero.<v>.<slot>`, where `<v>` is one lowercase letter", text)
+        self.assertIn("A key with fewer than three parts is an `UNKNOWN_KEY` WARN.", text)
+
 
 if __name__ == "__main__":
     unittest.main()

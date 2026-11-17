@@ -335,6 +335,17 @@ class FollowUpTests(HeldAnswerTests):
         self.assertEqual(run.form["submit"]["state"], "changed", run.form["submit"])
         self.assertGreaterEqual(run.form["submit"]["time_ms"], 380, run.form["submit"])
 
+    def test_a_page_that_moves_on_after_the_answer_and_does_not_arrive_is_warned_about(self):
+        run, _took = self.bounded_run("form-moves-to-held-page.html", wait=8000, bound=18)
+        self.assertEqual(run.code, 0, (run.out, run.err))
+        self.assertEqual([p for _m, p in run.posts()], ["/lead-1500"])
+        warns = [d for lv, _f, r, d in run.lines if (lv, r) == ("WARN", "SEND")]
+        self.assertEqual(len(warns), 1, run.lines)
+        for words in ("had not loaded", "answered HTTP 200", "check that the test lead arrived"):
+            self.assertIn(words, warns[0])
+        self.assertEqual([d for lv, _f, _r, d in run.lines if lv == "FAIL"], [], run.lines)
+        self.assertFalse((run.dir / "form1-consented.png").exists())
+
     test_a_post_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None  # inherited tests run once, in their own class
     test_a_page_after_the_send_that_the_host_holds_past_the_wait_ends_the_run_with_the_warning = None
     test_a_page_blocked_by_a_synchronous_request_to_a_slow_host_still_ends_the_run = None

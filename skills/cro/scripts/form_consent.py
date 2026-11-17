@@ -202,7 +202,12 @@ def run_consent(args, browser, major, session, doc, out_dir, timeout_ms):
             if now is not None:
                 submit["state"], submit["time_ms"] = form_check.wait_for_state(
                     page, info["i"], None, pressed_at, waited() + 3000, resume=((now["form"], now["regions"]), submit["time_ms"]), hold=in_flight)
-                text = form_check.read_outcome(page, info["i"], submit)
+                if not in_flight():  # a page that began to move on inside the re-read is not asked
+                    text = form_check.read_outcome(page, info["i"], submit)
+        # A page that began to move on after the answer and has not arrived is not asked, so there is no read and no picture, and the WARN at
+        # the judgement says the page that follows the send had not loaded. What is left: a move that begins after this last look is not seen,
+        # and the picture can then wait on the page for as long as Playwright's own limits allow.
+        held = held or in_flight()
         if not page.url.startswith("chrome-error://"):  # the browser's own error page is not the form's thank-you step
             entry["thank_you"]["text"] = text
             if entry["submit"]["state"] == "navigated":

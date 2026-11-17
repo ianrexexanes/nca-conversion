@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form fixture</title>
+<link rel="stylesheet" href="/form-base.css">
+</head><body><main><h1>Book a pump check</h1>
+<form id="moves-to-held" action="/lead-1500" method="post">
+<label for="f-name">Your name</label><input id="f-name" name="name" type="text" required autocomplete="name"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" required autocomplete="email" inputmode="email">
+<button type="submit">Send request</button>
+</form>
+</main><script>
+// Shows "Sending...", posts by script to a host that answers after 1.5 s, and 200 ms after the answer moves on to a page the server holds.
+var form = document.querySelector("form");
+form.addEventListener("submit", function (event) {
+  event.preventDefault();
+  form.querySelector("button").textContent = "Sending...";
+  fetch(form.getAttribute("action"), { method: "POST", body: new FormData(form) }).then(function () {
+    setTimeout(function () { location = "/page-held"; }, 200);
+  });
+});
+</script></body></html>

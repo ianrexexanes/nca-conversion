@@ -132,6 +132,32 @@ class HallmarkLintTest(unittest.TestCase):
         self.assertEqual(code_none, code_one)
 
 
+class HallmarkVersionTest(unittest.TestCase):
+    def _detail(self, versions):
+        with tempfile.TemporaryDirectory() as home:
+            for version in versions:
+                script = Path(home, ".claude", "plugins", "cache", "stand-in", "hallmark", version, "hallmark", "scripts", "sloplint.mjs")
+                script.parent.mkdir(parents=True)
+                script.write_text("// stand-in\n", encoding="utf-8")
+            with mock.patch.object(doctor.Path, "home", return_value=Path(home)):
+                return doctor.check_hallmark_lint(roots=[])["detail"]
+
+    def test_the_highest_version_is_named_when_two_are_cached(self):
+        detail = self._detail(["1.9.0", "2.0.0"])
+        self.assertIn("/hallmark/2.0.0/", detail)
+        self.assertNotIn("/hallmark/1.9.0/", detail)
+
+    def test_versions_compare_as_numbers_not_as_text(self):
+        detail = self._detail(["2.0.0", "10.0.0"])
+        self.assertIn("/hallmark/10.0.0/", detail)
+        self.assertNotIn("/hallmark/2.0.0/", detail)
+
+    def test_a_folder_that_is_not_dotted_numbers_sorts_below_every_version(self):
+        detail = self._detail(["0-beta", "0.1.0"])
+        self.assertIn("/hallmark/0.1.0/", detail)
+        self.assertNotIn("/hallmark/0-beta/", detail)
+
+
 class HallmarkRenderTierTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()

@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -83,10 +84,18 @@ def resolves_puppeteer(roots):
     return False
 
 
+def version_key(script):
+    """Sort key for a sloplint.mjs path: its version folder as a tuple of integers; a name that is not dotted numbers sorts below all."""
+    name = script.parts[-4]
+    if re.fullmatch(r"\d+(\.\d+)*", name):
+        return (1, tuple(int(part) for part in name.split(".")))
+    return (0, ())
+
+
 def check_hallmark_lint(roots=None):
-    """The first sloplint.mjs in a Hallmark install under the home's plugin cache (its 2.0.0 layout), OK only when its render
+    """The sloplint.mjs of the highest Hallmark version under the home's plugin cache (its 2.0.0 layout), OK only when its render
     tier can load puppeteer. roots is the list of folders to resolve from; it defaults to puppeteer_roots(script)."""
-    found = sorted(Path.home().glob(".claude/plugins/cache/*/hallmark/*/hallmark/scripts/sloplint.mjs"))
+    found = sorted(Path.home().glob(".claude/plugins/cache/*/hallmark/*/hallmark/scripts/sloplint.mjs"), key=version_key, reverse=True)
     if not found:
         return row("hallmark-lint", "WARN", "not found")
     if resolves_puppeteer(puppeteer_roots(found[0]) if roots is None else roots):

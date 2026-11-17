@@ -127,6 +127,16 @@ GENERIC_LABELS = frozenset({
 GAP = re.compile(r"\[NEEDED:[^\]]*\]|\[[A-Z][A-Z0-9 _-]*(?::[^\]]*)?\]|NOT ESTABLISHED")
 # What stops a final deck: a named gap. A bracketed capital word with no colon (`[PDF]`, `[EU]`) is real copy: a WARN.
 NAMED_GAP = re.compile(r"\[NEEDED:|NOT ESTABLISHED|\[[A-Z][A-Z0-9 _-]*:")
+# Under --final a bracket with no colon fails when it holds two or more capital words, or one of these words
+# (Ian's ruling of 2026-11-17); any other single bracketed capital word, such as [PDF] or [EU], stays a WARN
+PLACEHOLDER_WORDS = ("TBD", "TODO", "X", "NAME", "PHONE", "EMAIL", "DATE", "LOGO", "LINK", "PRICE")
+
+
+def is_placeholder_bracket(gap):
+    if not gap.startswith("["):
+        return False
+    words = [w for w in re.split(r"[ _-]+", gap[1:-1]) if re.fullmatch(r"[A-Z][A-Z0-9]*", w)]
+    return len(words) >= 2 or (len(words) == 1 and words[0] in PLACEHOLDER_WORDS)
 STOCK = re.compile(r"\bstock\b", re.I)
 NOTE_LINE = re.compile(r"^- [^:]+: .+, because .+\.$")
 NOTE_NONE = "- None: the register changed no rule."
@@ -394,7 +404,7 @@ def check_namespace(deck, ns, part, final, add):
     for k in keys:
         found = [m.group(0) for m in GAP.finditer(values[k])]
         if found:
-            named = next((g for g in found if NAMED_GAP.match(g)), None)
+            named = next((g for g in found if NAMED_GAP.match(g) or is_placeholder_bracket(g)), None)
             add("FAIL" if final and named else "WARN", k, "PLACEHOLDER", "gap left open: %s" % (named or found[0]))
 
 

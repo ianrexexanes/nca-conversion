@@ -434,6 +434,19 @@ class DeckCheckTest(unittest.TestCase):
             self.assertEqual(level_of("PLACEHOLDER", deck, final=True), "WARN", label)
             self.assertNotIn("PLACEHOLDER", fails(deck, final=True), label)
 
+    def test_a_classic_bracket_placeholder_fails_with_final_and_warns_without(self):
+        for label in ("[CLIENT NAME]", "[PHONE]", "[X]", "[TBD]"):
+            deck = with_line(read("deck-clean-direct.md"), "p.hero.strip", "Used at " + label)
+            self.assertEqual(level_of("PLACEHOLDER", deck, final=True), "FAIL", label)
+            self.assertEqual(level_of("PLACEHOLDER", deck), "WARN", label)
+            self.assertEqual(run_final(deck), 1, label)
+
+    def test_a_bracketed_abbreviation_warns_and_exits_zero_with_final(self):
+        for label in ("[PDF]", "[EU]", "[B]"):
+            deck = with_line(read("deck-clean-direct.md"), "p.hero.strip", "Download the checklist " + label)
+            self.assertEqual(level_of("PLACEHOLDER", deck, final=True), "WARN", label)
+            self.assertEqual(run_final(deck), 0, label)
+
     def test_a_named_gap_still_fails_with_final(self):
         for gap in ("[NEEDED: a logo]", "[OWNER: reply time]", "NOT ESTABLISHED"):
             deck = with_line(read("deck-clean-direct.md"), "p.hero.strip", "Trusted by " + gap)
